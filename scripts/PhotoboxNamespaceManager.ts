@@ -7,6 +7,7 @@
 /// <reference path="../t6s-core/core-backend/t6s-core/core/scripts/infotype/CmdList.ts" />
 /// <reference path="../t6s-core/core-backend/t6s-core/core/scripts/infotype/Cmd.ts" />
 /// <reference path="../t6s-core/core-backend/scripts/Logger.ts" />
+/// <reference path="../t6s-core/core-backend/t6s-core/core/scripts/infotype/priorities/InfoPriority.ts" />
 
 class PhotoboxNamespaceManager extends SourceNamespaceManager {
 
@@ -59,7 +60,7 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 			this._cmdSession = cmd;
 
 			this.sendNewInfoToClient(cmdList);
-		} else if (from == "validPicture") {
+		} else if (from == "endSession") {
 			this._cmdSession.setDurationToDisplay(0);
 
 			var cmd : Cmd = new Cmd(uuid.v1());

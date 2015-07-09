@@ -29,7 +29,8 @@ class PhotoboxRouter extends RouterItf {
 		var self = this;
 
 		// define the '/' route
-		this.router.post('/', function(req : any, res : any) { self.newNotification(req, res); });
+		this.router.post('/startSession', function(req : any, res : any) { self.startSession(req, res); });
+		this.router.post('/endSession', function(req : any, res : any) { self.endSession(req, res); });
 	}
 
 	/**
@@ -39,8 +40,16 @@ class PhotoboxRouter extends RouterItf {
 	 * @param {Express.Request} req - Request object.
 	 * @param {Express.Response} res - Response object.
 	 */
-	newNotification(req : any, res : any) {
-		this.server.broadcastExternalMessage("notify", req.body);
+	startSession(req : any, res : any) {
+		// TODO : It's not a broadcast !
+		this.server.broadcastExternalMessage("startSession", req.body);
+
+		res.end();
+	}
+
+	endSession(req : any, res : any) {
+		// TODO : It's not a broadcast !
+		this.server.broadcastExternalMessage("endSession", req.body);
 
 		res.end();
 	}

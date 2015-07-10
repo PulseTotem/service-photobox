@@ -22,7 +22,10 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 	 */
 	constructor(socket : any) {
 		super(socket);
-		this.addListenerToSocket('subscribe', this.subscribe);
+		this.addListenerToSocket('Subscribe', this.subscribe);
+
+		this._params = null;
+		this._cmdSession = null;
 	}
 
 	/**
@@ -51,8 +54,8 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 	 */
 	onExternalMessage(from : string, message : any) {
 		if (from == "startSession") {
-			var cmdList : CmdList = new CmdList(uuid.v1());
-			var cmd : Cmd = new Cmd(uuid.v1());
+			var cmdList:CmdList = new CmdList(uuid.v1());
+			var cmd:Cmd = new Cmd(uuid.v1());
 			cmd.setCmd("startSession");
 			cmd.setPriority(InfoPriority.HIGH);
 			cmd.setDurationToDisplay(30000);
@@ -60,6 +63,27 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 			this._cmdSession = cmd;
 
 			this.sendNewInfoToClient(cmdList);
+
+		} else if (from == "counter" && message.counterTime != undefined) {
+			if (this._cmdSession == null) {
+				this._cmdSession = new Cmd(uuid.v1());
+			}
+
+			this._cmdSession.setDurationToDisplay(30000);
+			this._cmdSession.setPriority(InfoPriority.HIGH);
+			this._cmdSession.setCmd("counter");
+
+			var args : Array<string> = new Array();
+			args.push(message.counterTime);
+			args.push("http://localhost:6012/rest/postPic");
+			this._cmdSession.setArgs(args);
+
+
+			var cmdList : CmdList = new CmdList(uuid.v1());
+			cmdList.addCmd(this._cmdSession);
+
+			this.sendNewInfoToClient(cmdList);
+
 		} else if (from == "endSession") {
 			this._cmdSession.setDurationToDisplay(0);
 

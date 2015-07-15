@@ -72,6 +72,12 @@ class PhotoboxRouter extends RouterItf {
 		var self = this;
 		var rootUpload =  __dirname + "/uploads/";
 
+		fs.open(rootUpload, 'r', function (err, fd) {
+			if (err) {
+				fs.mkdirSync(rootUpload);
+			}
+		});
+
 		fs.readFile(req.files.webcam.path, function (err, data) {
 
 			var imageName = req.files.webcam.name;

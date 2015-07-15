@@ -76,6 +76,7 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 
 	private startCounter(message : any) {
 		if (this._cmdSession == null) {
+			Logger.debug("Create a new CmdSession");
 			this._cmdSession = new Cmd(uuid.v1());
 		}
 
@@ -96,15 +97,11 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 	}
 
 	private endSession(message : any) {
-		this._cmdSession.setDurationToDisplay(0);
-
-		var cmd : Cmd = new Cmd(uuid.v1());
-		cmd.setCmd("validatedPicture");
-		cmd.setPriority(InfoPriority.HIGH);
-		cmd.setDurationToDisplay(10);
+		this._cmdSession.setDurationToDisplay(1);
+		this._cmdSession.setCmd("validatedPicture");
+		this._cmdSession.setPriority(InfoPriority.HIGH);
 
 		var cmdList : CmdList = new CmdList(uuid.v1());
-		cmdList.addCmd(cmd);
 		cmdList.addCmd(this._cmdSession);
 
 		this.sendNewInfoToClient(cmdList);

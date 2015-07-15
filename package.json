@@ -13,6 +13,7 @@
 		"grunt-contrib-yuidoc": "~0.5.2",
 		"grunt-npm-install": "~0.1.0",
 		"grunt-update-json": "~0.1.3",
-		"grunt-contrib-symlink": "~0.3.0"
+		"grunt-contrib-symlink": "~0.3.0",
+	  	"lwip": "~0.0.7"
 	}
 }

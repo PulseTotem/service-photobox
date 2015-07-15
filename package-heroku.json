@@ -1,0 +1,7 @@
+{
+  "name": "service-photobox",
+  "version": "1.0.0",
+  "devDependencies": {
+    "lwip": "~0.0.7"
+  }
+}

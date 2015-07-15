@@ -7,6 +7,7 @@
 
 var fs : any = require('fs');
 var lwip : any = require('lwip');
+var cloudinary : any = require('cloudinary');
 
 /**
  * NotifierRouter class.
@@ -36,6 +37,7 @@ class PhotoboxRouter extends RouterItf {
 		this.router.post('/endSession', function(req : any, res : any) { self.endSession(req, res); });
 		this.router.post('/counter', function(req : any, res : any) { self.counter(req, res); });
 		this.router.post('/postPic', function(req : any, res : any) { self.postPic(req, res); });
+		this.router.post('/cloudinaryPic', function(req : any, res : any) { self.cloudinaryPic(req, res); });
 	}
 
 	/**
@@ -68,7 +70,7 @@ class PhotoboxRouter extends RouterItf {
 	}
 
 	postPic(req : any, res : any) {
-		Logger.debug("Upload a picture");
+		Logger.debug("Upload a picture locally");
 		var self = this;
 		var rootUpload =  __dirname + "/uploads/";
 
@@ -88,14 +90,15 @@ class PhotoboxRouter extends RouterItf {
 				res.status(500).send({ error: 'Error when uploading picture' });
 			} else {
 				var newPath = rootUpload + imageName;
+				var uploadedImages = [];
 
-				/// write file to uploads/fullsize folder
 				fs.writeFile(newPath, data, function (err) {
 
 					if (err) {
 						Logger.error("Error when writing file : "+JSON.stringify(err));
 						res.status(500).send({ error: 'Error when writing file'});
 					} else {
+						uploadedImages.push(newPath);
 
 						var nameExt = self.getFileExtension(imageName);
 						lwip.open(newPath, function (errOpen, image) {
@@ -112,6 +115,7 @@ class PhotoboxRouter extends RouterItf {
 											Logger.error("Error when resizing image in 640px wide");
 											res.status(500).send({ error: 'Error when writing file'});
 										} else {
+											uploadedImages.push(newName);
 											Logger.debug("Resized image saved : "+newName);
 
 											image.resize(320, 180, function (errscale, imageScale) {
@@ -121,8 +125,9 @@ class PhotoboxRouter extends RouterItf {
 														Logger.error("Error when resizing image in 320px wide");
 														res.status(500).send({ error: 'Error when writing file'});
 													} else {
+														uploadedImages.push(newName);
 														Logger.debug("Resized image saved : "+newName);
-														res.status(200).send({message: "Upload ok"});
+														res.status(200).send({message: "Upload ok", files: JSON.stringify(uploadedImages)});
 													}
 												})
 											});
@@ -145,5 +150,30 @@ class PhotoboxRouter extends RouterItf {
 		res.push(filename.substring(0, indexLastDot));
 		res.push(filename.substring(indexLastDot+1, filename.length));
 		return res;
+	}
+
+	cloudinaryPic(req : any, res : any) {
+		Logger.debug("Upload a picture to cloudinary");
+		cloudinary.config({
+			cloud_name: 'pulsetotem',
+			api_key: '961435335945823',
+			api_secret: 'fBnekdGtXb8TOZs43dxIECvCX5c'
+		});
+
+		cloudinary.uploader.upload(req.files.webcam.path, function(result) {
+			var uploadedImages = [];
+			uploadedImages.push(result.url);
+
+			var img_640 = cloudinary.url(result.public_id, { width: 640, height: 360, crop: 'scale' } );
+			uploadedImages.push(img_640);
+
+			var img_320 = cloudinary.url(result.public_id, { width: 320, height: 180, crop: 'scale' } );
+			uploadedImages.push(img_320);
+
+			Logger.debug("Upload the following images : "+JSON.stringify(uploadedImages));
+			res.status(200).send({message: "Upload ok", files: JSON.stringify(uploadedImages)});
+		}, {
+			tags: ['photobox']
+		});
 	}
 }

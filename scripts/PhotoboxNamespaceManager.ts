@@ -55,7 +55,7 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 	onExternalMessage(from : string, message : any) {
 		if (from == "startSession") {
 			this.startSession(message);
-		} else if (from == "counter" && message.counterTime != undefined && message.urlService != undefined) {
+		} else if (from == "counter") {
 			this.startCounter(message);
 		} else if (from == "endSession") {
 			this.endSession(message);
@@ -85,8 +85,8 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 		this._cmdSession.setCmd("counter");
 
 		var args : Array<string> = new Array();
-		args.push(message.counterTime);
-		args.push(message.urlService);
+		args.push(this._params.InfoDuration);
+		args.push(this._params.URL);
 		this._cmdSession.setArgs(args);
 
 

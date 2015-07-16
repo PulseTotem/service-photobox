@@ -17,7 +17,7 @@
  * @extends SourceServer
  */
 class Photobox extends SourceServer {
-
+	public static ROOT_UPLOAD = "uploads";
 
 
 	/**
@@ -43,6 +43,20 @@ class Photobox extends SourceServer {
 		this.addAPIEndpoint("rest", PhotoboxRouter);
 
 		this.addNamespace("Photobox", PhotoboxNamespaceManager);
+
+		var rootUpload = Photobox.ROOT_UPLOAD;
+
+		fs.open(rootUpload, 'r', function (err, fd) {
+			if (err) {
+				try {
+					fs.mkdirSync(rootUpload);
+				} catch (e) {
+					Logger.error("This service is unable to create the upload directory (path: "+rootUpload+"). Consequently the local storage is unavailable.");
+				}
+
+			}
+		});
+		this.serveStaticDirectory(rootUpload);
 	}
 }
 

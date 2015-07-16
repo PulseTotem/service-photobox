@@ -73,6 +73,7 @@ class PhotoboxRouter extends RouterItf {
 		Logger.debug("Upload a picture locally");
 		var self = this;
 		var rootUpload =  Photobox.ROOT_UPLOAD+"/";
+		var host = "http://"+req.headers.host+"/";
 
 		fs.readFile(req.files.webcam.path, function (err, data) {
 
@@ -92,7 +93,7 @@ class PhotoboxRouter extends RouterItf {
 						Logger.error("Error when writing file : "+JSON.stringify(err));
 						res.status(500).json({ error: 'Error when writing file'});
 					} else {
-						uploadedImages.push(newPath);
+						uploadedImages.push(host+newPath);
 
 						var nameExt = self.getFileExtension(imageName);
 						lwip.open(newPath, function (errOpen, image) {
@@ -109,7 +110,7 @@ class PhotoboxRouter extends RouterItf {
 											Logger.error("Error when resizing image in 640px wide");
 											res.status(500).json({ error: 'Error when writing file'});
 										} else {
-											uploadedImages.push(newName);
+											uploadedImages.push(host+newName);
 											Logger.debug("Resized image saved : "+newName);
 
 											image.resize(320, 180, function (errscale, imageScale) {
@@ -119,7 +120,7 @@ class PhotoboxRouter extends RouterItf {
 														Logger.error("Error when resizing image in 320px wide");
 														res.status(500).json({ error: 'Error when writing file'});
 													} else {
-														uploadedImages.push(newName);
+														uploadedImages.push(host+newName);
 														Logger.debug("Resized image saved : "+newName);
 														res.status(200).json({message: "Upload ok", files: uploadedImages});
 													}

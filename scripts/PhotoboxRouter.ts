@@ -17,11 +17,44 @@ var cloudinary : any = require('cloudinary');
  */
 class PhotoboxRouter extends RouterItf {
 
+	private _sessions : Array<PhotoboxSession>;
+
 	/**
 	 * Constructor.
 	 */
 	constructor() {
 		super();
+		this._sessions = new Array<PhotoboxSession>();
+	}
+
+	private retrieveSession(sessionId : string) : PhotoboxSession {
+		for (var i = 0; i < this._sessions.length; i++) {
+			if (this._sessions[i].getId() === sessionId) {
+				return this._sessions;
+			}
+		}
+		return null;
+	}
+
+	private deleteSession(sessionId : string) : boolean {
+		var self = this;
+		var findSession = function () {
+			for (var i = 0; i < self._sessions.length; i++) {
+				if (this._sessions[i].getId() === sessionId) {
+					return i;
+				}
+			}
+			return -1;
+		};
+
+		var index = findSession();
+
+		if (index != -1) {
+			this._sessions.splice(index, 1);
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	/**
@@ -33,50 +66,78 @@ class PhotoboxRouter extends RouterItf {
 		var self = this;
 
 		// define the '/' route
-		this.router.post('/preview', function(req : any, res : any) { self.startSession(req, res); });
-		this.router.post('/validate', function(req : any, res : any) { self.endSession(req, res); });
-		this.router.post('/counter', function(req : any, res : any) { self.counter(req, res); });
-		this.router.post('/post/local', function(req : any, res : any) { self.postLocal(req, res); });
-		this.router.post('/post/cloud', function(req : any, res : any) { self.postCloud(req, res); });
-		this.router.post('/retry/local', function(req : any, res : any) { self.retry(req, res); });
-		this.router.post('/retry/cloud', function(req : any, res : any) { self.retry(req, res, false); });
-		this.router.post('/delete/local', function(req : any, res : any) { self.exitDelete(req, res); });
-		this.router.post('/delete/cloud', function(req : any, res : any) { self.exitDelete(req, res, false); });
+		this.router.post('/start/:sessionid', function(req : any, res : any) { self.startSession(req, res); });
+		this.router.post('/counter/:sessionid', function(req : any, res : any) { self.counter(req, res); });
+		this.router.post('/post/:sessionid/:cloudStorage', function(req : any, res : any) { self.post(req, res); });
+
+		this.router.post('/validate', function(req : any, res : any) { self.validate(req, res); });
+		this.router.post('/retry/:sessionid', function(req : any, res : any) { self.retry(req, res); });
+		this.router.post('/unvalidate/:sessionid', function(req : any, res : any) { self.unvalidate(req, res); });
 	}
 
 	/**
-	 * New Notification.
+	 * Start a session with a given session id
 	 *
-	 * @method newNotification
+	 * @method startSession
 	 * @param {Express.Request} req - Request object.
 	 * @param {Express.Response} res - Response object.
 	 */
 	startSession(req : any, res : any) {
 		Logger.debug("Receive start session message");
-		// TODO : It's not a broadcast !
+
+		var sessionid = req.params.sessionid;
+
+		var session = new PhotoboxSession(sessionid);
+		this._sessions.push(session);
+
+		// TODO : It should not be a broadcast !
 		this.server.broadcastExternalMessage("startSession", req);
 
 		res.end();
 	}
 
-	endSession(req : any, res : any) {
-		// TODO : It's not a broadcast !
-		this.server.broadcastExternalMessage("endSession", req);
-
-		res.end();
-	}
-
+	/**
+	 * Launch a counter time to take the picture.
+	 *
+	 * @method counter
+	 * @param req
+	 * @param res
+	 */
 	counter(req : any, res : any) {
-		// TODO : It's not a broadcast !
-		this.server.broadcastExternalMessage("counter", req);
+		var sessionid = req.params.sessionid;
 
-		res.end();
+		var session = this.retrieveSession(sessionid);
+		if (session == null) {
+			res.status(404);
+		} else {
+			// TODO : It's not a broadcast !
+			this.server.broadcastExternalMessage("counter", req);
+
+			res.end();
+		}
 	}
 
-	postLocal(req : any, res : any) {
+	post(req : any, res : any) {
+		var sessionid = req.params.sessionid;
+		var cloudstorage = req.params.cloudStorage;
+		var session : PhotoboxSession = this.retrieveSession(sessionid);
+
+		if (session == null) {
+			res.status(404);
+		} else {
+			session.setCloudStorage(cloudstorage);
+			if (cloudstorage) {
+				this.postCloud(req, res, session);
+			} else {
+				this.postLocal(req, res, session);
+			}
+		}
+	}
+
+	postLocal(req : any, res : any, session : PhotoboxSession) {
 		Logger.debug("Upload a picture locally");
 		var self = this;
-		var rootUpload =  Photobox.ROOT_UPLOAD+"/";
+		var rootUpload =  PhotoboxUtils.ROOT_UPLOAD+"/";
 		var host = "http://"+req.headers.host+"/";
 
 		fs.readFile(req.files.webcam.path, function (err, data) {
@@ -89,17 +150,15 @@ class PhotoboxRouter extends RouterItf {
 				res.status(500).json({ error: 'Error when uploading picture' });
 			} else {
 				var newPath = rootUpload + imageName;
-				var uploadedImages = [];
-
 				fs.writeFile(newPath, data, function (err) {
 
 					if (err) {
 						Logger.error("Error when writing file : "+JSON.stringify(err));
 						res.status(500).json({ error: 'Error when writing file'});
 					} else {
-						uploadedImages.push(host+newPath);
+						session.addPictureURL(host+newPath);
 
-						var nameExt = self.getFileExtension(imageName);
+						var nameExt = PhotoboxUtils.getFileExtension(imageName);
 						lwip.open(newPath, function (errOpen, image) {
 							if (errOpen) {
 								Logger.error("Error when opening file with lwip");
@@ -112,7 +171,7 @@ class PhotoboxRouter extends RouterItf {
 											Logger.error("Error when resizing image in 640px wide");
 											res.status(500).json({ error: 'Error when writing file'});
 										} else {
-											uploadedImages.push(host+newName);
+											session.addPictureURL(host+newName);
 
 											image.resize(320, 180, function (errscale, imageScale) {
 												var newName = rootUpload + nameExt[0]+ "_320."+nameExt[1];
@@ -121,9 +180,9 @@ class PhotoboxRouter extends RouterItf {
 														Logger.error("Error when resizing image in 320px wide");
 														res.status(500).json({ error: 'Error when writing file'});
 													} else {
-														uploadedImages.push(host+newName);
-														Logger.debug("All images saved : "+uploadedImages);
-														res.status(200).json({message: "Upload ok", files: uploadedImages, type: "local"});
+														session.addPictureURL(host+newName);
+														Logger.debug("All images saved : "+JSON.stringify(session.getPicturesURL()));
+														res.status(200).json({message: "Upload ok", files: session.getPicturesURL()});
 													}
 												})
 											});
@@ -139,17 +198,7 @@ class PhotoboxRouter extends RouterItf {
 		});
 	}
 
-	getFileExtension(filename : string) : Array<string> {
-		var res = [];
-		var indexLastSlash = filename.lastIndexOf('/');
-		var indexLastDot = filename.lastIndexOf('.');
-
-		res.push(filename.substring(indexLastSlash+1, indexLastDot));
-		res.push(filename.substring(indexLastDot+1, filename.length));
-		return res;
-	}
-
-	postCloud(req : any, res : any) {
+	postCloud(req : any, res : any, session : PhotoboxSession) {
 		Logger.debug("Upload a picture to cloudinary");
 		cloudinary.config({
 			cloud_name: 'pulsetotem',
@@ -158,64 +207,62 @@ class PhotoboxRouter extends RouterItf {
 		});
 
 		cloudinary.uploader.upload(req.files.webcam.path, function(result) {
-			var uploadedImages = [];
-			uploadedImages.push(result.url);
+			session.addPictureURL(result.url);
 
 			var img_640 = cloudinary.url(result.public_id, { width: 640, height: 360, crop: 'scale' } );
-			uploadedImages.push(img_640);
+			session.addPictureURL(img_640);
 
 			var img_320 = cloudinary.url(result.public_id, { width: 320, height: 180, crop: 'scale' } );
-			uploadedImages.push(img_320);
+			session.addPictureURL(img_320);
 
-			Logger.debug("Upload the following images : "+JSON.stringify(uploadedImages));
-			res.status(200).json({message: "Upload ok", files: uploadedImages, type: "cloud"});
+			Logger.debug("Upload the following images : "+JSON.stringify(session.getPicturesURL));
+			res.status(200).json({message: "Upload ok", files: session.getPicturesURL()});
 		}, {
 			tags: ['photobox']
 		});
 	}
 
-	private deleteLocal(files, hostname) {
-		for (var key in files) {
-			var completeHostname = "http://"+hostname+"/";
-			var file : string = files[key].substr(completeHostname.length);
+	validate(req : any, res : any) {
 
-			if (file.indexOf(Photobox.ROOT_UPLOAD) == 0 && file.length > Photobox.ROOT_UPLOAD.length+2) {
-				try {
-					fs.unlinkSync(file);
-					Logger.debug("Delete the following file: "+file);
-				} catch (e) {
-					Logger.error("Error when trying to delete the following file: "+file+". "+e);
-				}
-			} else {
-				Logger.info("Try to delete an unauthorized file : "+file);
-			}
+		var sessionid = req.params.sessionid;
+		var del = this.deleteSession(sessionid);
+
+		if (del) {
+			// TODO : It's not a broadcast !
+			this.server.broadcastExternalMessage("endSession", req);
+			res.end();
+		} else {
+			res.status(404);
 		}
+
 	}
 
-	private deleteCloud(files) {
-		var firstFile = files[0];
-		var arrayExtension = this.getFileExtension(firstFile);
-		var public_id = arrayExtension[0];
-		cloudinary.api.delete_resources([public_id], function(result){});
+	unvalidate(req : any, res : any) {
+		var sessionid = req.params.sessionid;
+		var session : PhotoboxSession = this.retrieveSession(sessionid);
+
+		if (session != null) {
+			session.deletePictures(req.headers.host);
+			this.deleteSession(sessionid);
+			this.server.broadcastExternalMessage("endSession", req);
+			res.end();
+		} else {
+			res.status(404);
+		}
+
 	}
 
 	retry(req : any, res : any, local = true) {
-		var files = req.body;
-		if (local) {
-			this.deleteLocal(files, req.headers.host);
+		var sessionid = req.params.sessionid;
+		var session : PhotoboxSession = this.retrieveSession(sessionid);
+
+		if (session != null) {
+			session.deletePictures(req.headers.host);
+			this.server.broadcastExternalMessage("counter", req);
+			res.end();
 		} else {
-			this.deleteCloud(files);
+			res.status(404);
 		}
-		this.counter(req, res);
 	}
 
-	exitDelete(req : any, res : any, local = true) {
-		var files = req.body;
-		if (local) {
-			this.deleteLocal(files, req.headers.host);
-		} else {
-			this.deleteCloud(files);
-		}
-		this.endSession(req, res);
-	}
 }

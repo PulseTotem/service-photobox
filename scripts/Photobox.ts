@@ -7,7 +7,7 @@
 
 /// <reference path="./PhotoboxNamespaceManager.ts" />
 /// <reference path="./PhotoboxRouter.ts" />
-
+/// <reference path="./PhotoboxUtils.ts" />
 
 
 /**
@@ -17,8 +17,6 @@
  * @extends SourceServer
  */
 class Photobox extends SourceServer {
-	public static ROOT_UPLOAD = "uploads";
-
 
 	/**
 	 * Constructor.
@@ -44,7 +42,7 @@ class Photobox extends SourceServer {
 
 		this.addNamespace("Photobox", PhotoboxNamespaceManager);
 
-		var rootUpload = Photobox.ROOT_UPLOAD;
+		var rootUpload = PhotoboxUtils.ROOT_UPLOAD;
 
 		fs.open(rootUpload, 'r', function (err, fd) {
 			if (err) {

@@ -12,7 +12,6 @@
 class PhotoboxNamespaceManager extends SourceNamespaceManager {
 
 	private _params : any;
-	private _cmdSession : Cmd;
 
 	/**
 	 * Constructor.
@@ -25,7 +24,6 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 		this.addListenerToSocket('Subscribe', this.subscribe);
 
 		this._params = null;
-		this._cmdSession = null;
 	}
 
 	/**
@@ -64,54 +62,47 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 
 	private startSession(message : any) {
 		var cmdList:CmdList = new CmdList(uuid.v1());
-		var cmd:Cmd = new Cmd(uuid.v1());
+		var cmd:Cmd = new Cmd(message.params.sessionid);
 		cmd.setCmd("startSession");
 		cmd.setPriority(InfoPriority.HIGH);
 		cmd.setDurationToDisplay(30000);
 		cmdList.addCmd(cmd);
-		this._cmdSession = cmd;
 
 		this.sendNewInfoToClient(cmdList);
 	}
 
 	private startCounter(message : any) {
-		if (this._cmdSession == null) {
-			Logger.debug("Create a new CmdSession");
-			this._cmdSession = new Cmd(uuid.v1());
-		}
-
-		this._cmdSession.setDurationToDisplay(30000);
-		this._cmdSession.setPriority(InfoPriority.HIGH);
-		this._cmdSession.setCmd("counter");
+		var cmd:Cmd = new Cmd(message.params.sessionid);
+		
+		cmd.setDurationToDisplay(30000);
+		cmd.setPriority(InfoPriority.HIGH);
+		cmd.setCmd("counter");
 
 		var args : Array<string> = new Array();
 		args.push(this._params.InfoDuration);
 
 		var cloudStorage = JSON.parse(this._params.CloudStorage);
-		var postUrl = "http://"+message.headers.host+"/rest/post/";
-		if (cloudStorage) {
-			postUrl += "cloud";
-		} else {
-			postUrl += "local";
-		}
+		var postUrl = "http://"+message.headers.host+"/rest/post/"+cmd.getId().toString()+"/"+cloudStorage.toString();
 
 		args.push(postUrl);
-		this._cmdSession.setArgs(args);
+		cmd.setArgs(args);
 
 
 		var cmdList : CmdList = new CmdList(uuid.v1());
-		cmdList.addCmd(this._cmdSession);
+		cmdList.addCmd(cmd);
 
 		this.sendNewInfoToClient(cmdList);
 	}
 
 	private endSession(message : any) {
-		this._cmdSession.setDurationToDisplay(1);
-		this._cmdSession.setCmd("validatedPicture");
-		this._cmdSession.setPriority(InfoPriority.HIGH);
+		var cmd:Cmd = new Cmd(message.params.sessionid);
+
+		cmd.setDurationToDisplay(1);
+		cmd.setCmd("validatedPicture");
+		cmd.setPriority(InfoPriority.HIGH);
 
 		var cmdList : CmdList = new CmdList(uuid.v1());
-		cmdList.addCmd(this._cmdSession);
+		cmdList.addCmd(cmd);
 
 		this.sendNewInfoToClient(cmdList);
 	}

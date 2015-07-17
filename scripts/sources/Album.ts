@@ -13,7 +13,7 @@ class Album extends SourceItf {
 		photoboxNamespaceManager.setParams(params);
 
 		var cloudStorage : boolean = JSON.parse(this.getParams().CloudStorage);
-		this._album = photoboxNamespaceManager.createOrGetTag(this.getParams().Tag, cloudStorage);
+		this._album = photoboxNamespaceManager.createTag(this.getParams().Tag, cloudStorage);
 	}
 
 	public run() {

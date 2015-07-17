@@ -92,7 +92,7 @@ class PhotoboxRouter extends RouterItf {
 		this.router.post('/counter/:sessionid', function(req : any, res : any) { self.counter(req, res); });
 		this.router.post('/post/:sessionid/:cloudStorage/:tag', function(req : any, res : any) { self.post(req, res); });
 
-		this.router.post('/validate', function(req : any, res : any) { self.validate(req, res); });
+		this.router.post('/validate/:sessionid', function(req : any, res : any) { self.validate(req, res); });
 		this.router.post('/retry/:sessionid', function(req : any, res : any) { self.retry(req, res); });
 		this.router.post('/unvalidate/:sessionid', function(req : any, res : any) { self.unvalidate(req, res); });
 	}
@@ -179,7 +179,7 @@ class PhotoboxRouter extends RouterItf {
 
 		fs.readFile(req.files.webcam.path, function (err, data) {
 			var extension = PhotoboxUtils.getFileExtension(req.files.webcam.name);
-			var imageName = PhotoboxUtils.getDirectoryFromTag(tag)+"/"+PhotoboxUtils.createImageName(tag);
+			var imageName = PhotoboxUtils.createImageName(tag);
 
 			/// If there's an error
 			if(!imageName){

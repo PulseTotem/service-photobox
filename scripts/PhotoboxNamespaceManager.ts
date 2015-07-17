@@ -11,7 +11,7 @@
 
 class PhotoboxNamespaceManager extends SourceNamespaceManager {
 
-	private static _albums : any;
+	private static _albums : any = {};
 	private _params : any;
 
 	/**
@@ -31,9 +31,23 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 		this._params = params;
 	}
 
-	public createOrGetTag(tag : string, cloudStorage : boolean) : PhotoboxAlbum {
-		if (PhotoboxNamespaceManager._albums[tag] === "undefined") {
+	public createTag(tag : string, cloudStorage : boolean) : PhotoboxAlbum {
+		if (PhotoboxNamespaceManager._albums[tag] == undefined) {
+			Logger.debug("Create the PhotoboxAlbum for tag: "+tag);
 			PhotoboxNamespaceManager._albums[tag] = new PhotoboxAlbum(tag, cloudStorage);
+		}
+		if (!cloudStorage) {
+			var uploadDir = PhotoboxUtils.getDirectoryFromTag(tag);
+			fs.open(uploadDir, 'r', function (err, fd) {
+				if (err) {
+					try {
+						fs.mkdirSync(uploadDir);
+					} catch (e) {
+						Logger.error("This service is unable to create the upload directory (path: "+uploadDir+"). Consequently the local storage is unavailable.");
+					}
+
+				}
+			});
 		}
 		return PhotoboxNamespaceManager._albums[tag];
 	}
@@ -61,7 +75,7 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 		var tag : string = message.tag;
 		var picture : Array<string> = message.pics;
 
-		var album : PhotoboxAlbum = this.createOrGetTag(tag);
+		var album : PhotoboxAlbum = PhotoboxNamespaceManager._albums[tag];
 		album.addPicture(picture);
 	}
 

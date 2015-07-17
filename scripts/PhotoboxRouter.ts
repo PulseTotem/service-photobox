@@ -287,7 +287,7 @@ class PhotoboxRouter extends RouterItf {
 
 	}
 
-	retry(req : any, res : any, local = true) {
+	retry(req : any, res : any) {
 		var sessionid = req.params.sessionid;
 		var session : PhotoboxSession = this.retrieveSession(sessionid);
 

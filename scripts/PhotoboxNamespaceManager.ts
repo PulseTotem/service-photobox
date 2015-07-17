@@ -21,26 +21,13 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 	 */
 	constructor(socket : any) {
 		super(socket);
-		this.addListenerToSocket('Subscribe', this.subscribe);
+		this.addListenerToSocket('Subscribe', function (params, photoboxNamespaceManager) { new Subscribe(params, photoboxNamespaceManager); });
 
 		this._params = null;
 	}
 
-	/**
-	 * Subscribe to notifications.
-	 *
-	 * @method subscribe
-	 * @param {Object} params - Params to subscribe to notifications : ???.
-	 * @param {NotifierNamespaceManager} self - the NotifierNamespaceManager's instance.
-	 */
-	subscribe(params : any, self : PhotoboxNamespaceManager = null) {
-		if(self == null) {
-			self = this;
-		}
-
-		Logger.debug("listenNotifications Action with params :");
-		Logger.debug(params);
-		self._params = params;
+	public setParams(params : any) {
+		this._params = params;
 	}
 
 	/**
@@ -79,7 +66,7 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 		cmd.setCmd("counter");
 
 		var args : Array<string> = new Array();
-		args.push(this._params.InfoDuration);
+		args.push(this._params.CounterDuration);
 
 		var cloudStorage = JSON.parse(this._params.CloudStorage);
 		var postUrl = "http://"+message.headers.host+"/rest/post/"+cmd.getId().toString()+"/"+cloudStorage.toString();

@@ -38,20 +38,10 @@ class PhotoboxSession {
 	 */
 	private _pictureUrls : Array<string>;
 
-	/**
-	 * Determine the current step on the session: it can be 'preview', 'counter' or 'posted'.
-	 *
-	 * @property _step
-	 * @type {string}
-	 * @private
-	 */
-	private _step : string;
-
 	constructor(id : string) {
 		this._id = id;
 		this._cloudStorage = false;
 		this._pictureUrls = new Array<string>();
-		this._step = "preview";
 	}
 
 	/**
@@ -80,14 +70,6 @@ class PhotoboxSession {
 	}
 
 	/**
-	 * @method getStep
-	 * @returns {string}
-	 */
-	public getStep() {
-		return this._step;
-	}
-
-	/**
 	 * Define CloudStorage value.
 	 * @method setCloudStorage
 	 * @param cloudStorage
@@ -105,6 +87,13 @@ class PhotoboxSession {
 		this._pictureUrls.push(url);
 	}
 
+	/**
+	 * Delete pictures stored locally. This method needs the hostname in order to treat picture URLs.
+	 *
+	 * @method deleteLocal
+	 * @param hostname
+	 * @private
+	 */
 	private deleteLocal(hostname) {
 		for (var key in this._pictureUrls) {
 			var completeHostname = "http://"+hostname+"/";
@@ -123,6 +112,12 @@ class PhotoboxSession {
 		}
 	}
 
+	/**
+	 * Delete pictures stored on cloudinary.
+	 *
+	 * @method deleteCloud
+	 * @private
+	 */
 	private deleteCloud() {
 		var firstFile = this._pictureUrls[0];
 		var arrayExtension = PhotoboxUtils.getFileExtension(firstFile);
@@ -130,11 +125,21 @@ class PhotoboxSession {
 		cloudinary.api.delete_resources([public_id], function(result){});
 	}
 
+	/**
+	 * Delete pictures previously taken.
+	 *
+	 * @param hostname
+	 * @method deletePictures
+	 */
 	public deletePictures(hostname : string) {
-		if (this._cloudStorage) {
-			this.deleteCloud();
+		if (this._pictureUrls.length > 0) {
+			if (this._cloudStorage) {
+				this.deleteCloud();
+			} else {
+				this.deleteLocal(hostname);
+			}
 		} else {
-			this.deleteLocal(hostname);
+			Logger.error("Unable to delete pictures in session "+this.getId()+" as the array is empty.");
 		}
 	}
 }

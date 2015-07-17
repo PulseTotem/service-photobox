@@ -38,6 +38,8 @@ class PhotoboxSession {
 	 */
 	private _pictureUrls : Array<string>;
 
+	private _tag : string;
+
 	constructor(id : string) {
 		this._id = id;
 		this._cloudStorage = false;
@@ -85,6 +87,24 @@ class PhotoboxSession {
 	 */
 	public addPictureURL(url : string) {
 		this._pictureUrls.push(url);
+	}
+
+	/**
+	 * Set the tag for the session
+	 *
+	 * @method setTag
+	 * @param tag
+	 */
+	public setTag(tag : string) {
+		this._tag = tag;
+	}
+
+	/**
+	 *
+	 * @returns {string}
+	 */
+	public getTag() {
+		return this._tag;
 	}
 
 	/**

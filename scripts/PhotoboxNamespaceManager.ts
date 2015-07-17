@@ -11,6 +11,7 @@
 
 class PhotoboxNamespaceManager extends SourceNamespaceManager {
 
+	private static _albums : any;
 	private _params : any;
 
 	/**
@@ -30,6 +31,13 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 		this._params = params;
 	}
 
+	public createOrGetTag(tag : string, cloudStorage : boolean) : PhotoboxAlbum {
+		if (PhotoboxNamespaceManager._albums[tag] === "undefined") {
+			PhotoboxNamespaceManager._albums[tag] = new PhotoboxAlbum(tag, cloudStorage);
+		}
+		return PhotoboxNamespaceManager._albums[tag];
+	}
+
 	/**
 	 * Method called when external message come (from API Endpoints for example).
 	 *
@@ -44,7 +52,17 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 			this.startCounter(message);
 		} else if (from == "endSession") {
 			this.endSession(message);
+		} else if (from == "newPicture") {
+			this.pushPicture(message);
 		}
+	}
+
+	private pushPicture(message : any) {
+		var tag : string = message.tag;
+		var picture : Array<string> = message.pics;
+
+		var album : PhotoboxAlbum = this.createOrGetTag(tag);
+		album.addPicture(picture);
 	}
 
 	private startSession(message : any) {
@@ -69,7 +87,7 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 		args.push(this._params.CounterDuration);
 
 		var cloudStorage = JSON.parse(this._params.CloudStorage);
-		var postUrl = "http://"+message.headers.host+"/rest/post/"+cmd.getId().toString()+"/"+cloudStorage.toString();
+		var postUrl = "http://"+message.headers.host+"/rest/post/"+cmd.getId().toString()+"/"+cloudStorage.toString()+"/"+this._params.Tag;
 
 		args.push(postUrl);
 		cmd.setArgs(args);

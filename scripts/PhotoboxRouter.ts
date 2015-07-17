@@ -90,7 +90,7 @@ class PhotoboxRouter extends RouterItf {
 		// define the '/' route
 		this.router.post('/start/:sessionid', function(req : any, res : any) { self.startSession(req, res); });
 		this.router.post('/counter/:sessionid', function(req : any, res : any) { self.counter(req, res); });
-		this.router.post('/post/:sessionid/:cloudStorage', function(req : any, res : any) { self.post(req, res); });
+		this.router.post('/post/:sessionid/:cloudStorage/:tag', function(req : any, res : any) { self.post(req, res); });
 
 		this.router.post('/validate', function(req : any, res : any) { self.validate(req, res); });
 		this.router.post('/retry/:sessionid', function(req : any, res : any) { self.retry(req, res); });
@@ -154,7 +154,9 @@ class PhotoboxRouter extends RouterItf {
 	post(req : any, res : any) {
 		var sessionid = req.params.sessionid;
 		var cloudstorage = JSON.parse(req.params.cloudStorage);
+		var tag = req.params.tag;
 		var session : PhotoboxSession = this.retrieveSession(sessionid);
+		session.setTag(tag);
 
 		if (session == null) {
 			res.status(404).send("Session cannot be found.");
@@ -173,17 +175,18 @@ class PhotoboxRouter extends RouterItf {
 		var self = this;
 		var rootUpload =  PhotoboxUtils.ROOT_UPLOAD+"/";
 		var host = "http://"+req.headers.host+"/";
+		var tag = session.getTag();
 
 		fs.readFile(req.files.webcam.path, function (err, data) {
-
-			var imageName = req.files.webcam.name;
+			var extension = PhotoboxUtils.getFileExtension(req.files.webcam.name);
+			var imageName = PhotoboxUtils.getDirectoryFromTag(tag)+"/"+PhotoboxUtils.createImageName(tag);
 
 			/// If there's an error
 			if(!imageName){
 				Logger.error("Error when uploading picture. Path : "+req.files.webcam.path);
 				res.status(500).json({ error: 'Error when uploading picture' });
 			} else {
-				var newPath = rootUpload + imageName;
+				var newPath = imageName+"."+extension[1];
 				fs.writeFile(newPath, data, function (err) {
 
 					if (err) {
@@ -192,26 +195,25 @@ class PhotoboxRouter extends RouterItf {
 					} else {
 						session.addPictureURL(host+newPath);
 
-						var nameExt = PhotoboxUtils.getFileExtension(imageName);
 						lwip.open(newPath, function (errOpen, image) {
 							if (errOpen) {
 								Logger.error("Error when opening file with lwip");
 								res.status(500).json({ error: 'Error when writing file'});
 							} else {
-								image.resize(640, 360, function (errscale, imageScale) {
-									var newName = rootUpload + nameExt[0]+ "_640."+nameExt[1];
+								image.resize(PhotoboxUtils.MIDDLE_SIZE.width, PhotoboxUtils.MIDDLE_SIZE.height, function (errscale, imageScale) {
+									var newName = imageName + PhotoboxUtils.MIDDLE_SIZE.identifier+"."+extension[1];
 									imageScale.writeFile(newName, function (errWrite) {
 										if (errWrite) {
-											Logger.error("Error when resizing image in 640px wide");
+											Logger.error("Error when resizing image in middle size");
 											res.status(500).json({ error: 'Error when writing file'});
 										} else {
 											session.addPictureURL(host+newName);
 
-											image.resize(320, 180, function (errscale, imageScale) {
-												var newName = rootUpload + nameExt[0]+ "_320."+nameExt[1];
+											image.resize(PhotoboxUtils.SMALL_SIZE.width, PhotoboxUtils.SMALL_SIZE.height, function (errscale, imageScale) {
+												var newName = imageName + PhotoboxUtils.SMALL_SIZE.identifier+"."+extension[1];
 												imageScale.writeFile(newName, function (errWrite) {
 													if (errWrite) {
-														Logger.error("Error when resizing image in 320px wide");
+														Logger.error("Error when resizing image in small size");
 														res.status(500).json({ error: 'Error when writing file'});
 													} else {
 														session.addPictureURL(host+newName);
@@ -252,7 +254,7 @@ class PhotoboxRouter extends RouterItf {
 			Logger.debug("Upload the following images : "+JSON.stringify(session.getPicturesURL()));
 			res.status(200).json({message: "Upload ok", files: session.getPicturesURL()});
 		}, {
-			tags: ['photobox']
+			tags: ['photobox', session.getTag()]
 		});
 	}
 
@@ -260,11 +262,13 @@ class PhotoboxRouter extends RouterItf {
 	validate(req : any, res : any) {
 
 		var sessionid = req.params.sessionid;
-		var del = this.deleteSession(sessionid);
+		var session : PhotoboxSession = this.retrieveSession(sessionid);
 
-		if (del) {
-			// TODO : It's not a broadcast !
+		if (session != null) {
+			this.server.broadcastExternalMessage("newPicture", {tag: session.getTag(), pics: session.getPicturesURL()});
 			this.server.broadcastExternalMessage("endSession", req);
+			this.deleteSession(sessionid);
+
 			res.end();
 		} else {
 			res.status(404).send("Session cannot be found.");

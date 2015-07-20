@@ -11,8 +11,9 @@
 
 class PhotoboxNamespaceManager extends SourceNamespaceManager {
 
+	private static _albums : any = {};
 	private _params : any;
-	private _cmdSession : Cmd;
+
 
 	/**
 	 * Constructor.
@@ -22,27 +23,35 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 	 */
 	constructor(socket : any) {
 		super(socket);
-		this.addListenerToSocket('Subscribe', this.subscribe);
+		this.addListenerToSocket('Subscribe', function (params, photoboxNamespaceManager) { new Subscribe(params, photoboxNamespaceManager); });
+		this.addListenerToSocket('Album', function (params, photoboxNamespaceManager) { new Album(params, photoboxNamespaceManager); });
 
 		this._params = null;
-		this._cmdSession = null;
 	}
 
-	/**
-	 * Subscribe to notifications.
-	 *
-	 * @method subscribe
-	 * @param {Object} params - Params to subscribe to notifications : ???.
-	 * @param {NotifierNamespaceManager} self - the NotifierNamespaceManager's instance.
-	 */
-	subscribe(params : any, self : PhotoboxNamespaceManager = null) {
-		if(self == null) {
-			self = this;
-		}
+	public setParams(params : any) {
+		this._params = params;
+	}
 
-		Logger.debug("listenNotifications Action with params :");
-		Logger.debug(params);
-		self._params = params;
+	public createTag(tag : string, cloudStorage : boolean) : PhotoboxAlbum {
+		if (PhotoboxNamespaceManager._albums[tag] == undefined) {
+			Logger.debug("Create the PhotoboxAlbum for tag: "+tag);
+			PhotoboxNamespaceManager._albums[tag] = new PhotoboxAlbum(tag, cloudStorage, Photobox.host);
+		}
+		if (!cloudStorage) {
+			var uploadDir = PhotoboxUtils.getDirectoryFromTag(tag);
+			fs.open(uploadDir, 'r', function (err, fd) {
+				if (err) {
+					try {
+						fs.mkdirSync(uploadDir);
+					} catch (e) {
+						Logger.error("This service is unable to create the upload directory (path: "+uploadDir+"). Consequently the local storage is unavailable.");
+					}
+
+				}
+			});
+		}
+		return PhotoboxNamespaceManager._albums[tag];
 	}
 
 	/**
@@ -59,50 +68,62 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 			this.startCounter(message);
 		} else if (from == "endSession") {
 			this.endSession(message);
+		} else if (from == "newPicture") {
+			this.pushPicture(message);
 		}
+	}
+
+	private pushPicture(message : any) {
+		var tag : string = message.tag;
+		var picture : Array<string> = message.pics;
+
+		var album : PhotoboxAlbum = PhotoboxNamespaceManager._albums[tag];
+		album.addPicture(picture);
 	}
 
 	private startSession(message : any) {
 		var cmdList:CmdList = new CmdList(uuid.v1());
-		var cmd:Cmd = new Cmd(uuid.v1());
+		var cmd:Cmd = new Cmd(message.params.sessionid);
 		cmd.setCmd("startSession");
 		cmd.setPriority(InfoPriority.HIGH);
 		cmd.setDurationToDisplay(30000);
 		cmdList.addCmd(cmd);
-		this._cmdSession = cmd;
 
 		this.sendNewInfoToClient(cmdList);
 	}
 
 	private startCounter(message : any) {
-		if (this._cmdSession == null) {
-			Logger.debug("Create a new CmdSession");
-			this._cmdSession = new Cmd(uuid.v1());
-		}
-
-		this._cmdSession.setDurationToDisplay(30000);
-		this._cmdSession.setPriority(InfoPriority.HIGH);
-		this._cmdSession.setCmd("counter");
+		var cmd:Cmd = new Cmd(message.params.sessionid);
+		
+		cmd.setDurationToDisplay(30000);
+		cmd.setPriority(InfoPriority.HIGH);
+		cmd.setCmd("counter");
 
 		var args : Array<string> = new Array();
-		args.push(this._params.InfoDuration);
-		args.push(this._params.URL);
-		this._cmdSession.setArgs(args);
+		args.push(this._params.CounterDuration);
+
+		var cloudStorage = JSON.parse(this._params.CloudStorage);
+		var postUrl = "http://"+message.headers.host+"/rest/post/"+cmd.getId().toString()+"/"+cloudStorage.toString()+"/"+this._params.Tag;
+
+		args.push(postUrl);
+		cmd.setArgs(args);
 
 
 		var cmdList : CmdList = new CmdList(uuid.v1());
-		cmdList.addCmd(this._cmdSession);
+		cmdList.addCmd(cmd);
 
 		this.sendNewInfoToClient(cmdList);
 	}
 
 	private endSession(message : any) {
-		this._cmdSession.setDurationToDisplay(1);
-		this._cmdSession.setCmd("validatedPicture");
-		this._cmdSession.setPriority(InfoPriority.HIGH);
+		var cmd:Cmd = new Cmd(message.params.sessionid);
+
+		cmd.setDurationToDisplay(1);
+		cmd.setCmd("validatedPicture");
+		cmd.setPriority(InfoPriority.HIGH);
 
 		var cmdList : CmdList = new CmdList(uuid.v1());
-		cmdList.addCmd(this._cmdSession);
+		cmdList.addCmd(cmd);
 
 		this.sendNewInfoToClient(cmdList);
 	}

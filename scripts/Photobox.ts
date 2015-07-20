@@ -18,6 +18,8 @@
  */
 class Photobox extends SourceServer {
 
+	public static host : string;
+
 	/**
 	 * Constructor.
 	 *
@@ -27,7 +29,10 @@ class Photobox extends SourceServer {
 	constructor(listeningPort : number, arguments : Array<string>) {
 		super(listeningPort, arguments);
 
+		Photobox.host = process.env.PHOTOBOX_HOST;
+
 		this.init();
+
 	}
 
 	/**

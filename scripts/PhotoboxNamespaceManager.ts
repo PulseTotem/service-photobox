@@ -14,6 +14,7 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 	private static _albums : any = {};
 	private _params : any;
 
+
 	/**
 	 * Constructor.
 	 *
@@ -22,19 +23,21 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 	 */
 	constructor(socket : any) {
 		super(socket);
-		this.addListenerToSocket('Subscribe', function (params, photoboxNamespaceManager) { new Subscribe(params, photoboxNamespaceManager); });
+		//this.addListenerToSocket('Subscribe', function (params, photoboxNamespaceManager) { new Subscribe(params, photoboxNamespaceManager); });
+		this.addListenerToSocket('Album', function (params, photoboxNamespaceManager) { new Album(params, photoboxNamespaceManager); });
 
 		this._params = null;
 	}
 
 	public setParams(params : any) {
+		Logger.debug("Set params...");
 		this._params = params;
 	}
 
 	public createTag(tag : string, cloudStorage : boolean) : PhotoboxAlbum {
 		if (PhotoboxNamespaceManager._albums[tag] == undefined) {
 			Logger.debug("Create the PhotoboxAlbum for tag: "+tag);
-			PhotoboxNamespaceManager._albums[tag] = new PhotoboxAlbum(tag, cloudStorage);
+			PhotoboxNamespaceManager._albums[tag] = new PhotoboxAlbum(tag, cloudStorage, Photobox.host);
 		}
 		if (!cloudStorage) {
 			var uploadDir = PhotoboxUtils.getDirectoryFromTag(tag);

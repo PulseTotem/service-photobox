@@ -9,14 +9,14 @@ class PhotoboxAlbum {
 	private _tag : string;
 	private _pictures : Array<Picture>;
 
-	constructor(tag : string, cloudStorage : boolean) {
+	constructor(tag : string, cloudStorage : boolean, host: string) {
 		this._tag = tag;
 		this._pictures = new Array<Picture>();
 
 		if (cloudStorage) {
 			this.retrievePicsFromCloud();
 		} else {
-			this.retrievePicsFromLocal();
+			this.retrievePicsFromLocal(host);
 		}
 	}
 
@@ -43,7 +43,7 @@ class PhotoboxAlbum {
 		});
 	}
 
-	private retrievePicsFromLocal() {
+	private retrievePicsFromLocal(host: string) {
 		var self = this;
 		fs.readdir(PhotoboxUtils.getDirectoryFromTag(this._tag), function (err, files) {
 			if (err) {
@@ -52,9 +52,11 @@ class PhotoboxAlbum {
 				files.forEach(function (file) {
 					if (file.indexOf(PhotoboxUtils.MIDDLE_SIZE.identifier) == -1 && file.indexOf(PhotoboxUtils.SMALL_SIZE.identifier) == -1) {
 						var urls : Array<string> = new Array<string>();
-						urls.push(file);
 						var fileext = PhotoboxUtils.getFileExtension(file);
-						var basename = file.substr(0, file.length - fileext[1].length - 1);
+						var basename = "http://"+host+"/"+PhotoboxUtils.getDirectoryFromTag(self._tag)+"/"+file.substr(0, file.length - fileext[1].length - 1);
+
+						urls.push(basename+"."+fileext[1]);
+
 						urls.push(basename+PhotoboxUtils.MIDDLE_SIZE.identifier+"."+fileext[1]);
 						urls.push(basename+PhotoboxUtils.SMALL_SIZE.identifier+"."+fileext[1]);
 
@@ -96,7 +98,7 @@ class PhotoboxAlbum {
 		this._pictures.push(pic);
 	}
 
-	public getLastPictures(limit : number) {
+	public getLastPictures(limit : number): Array<Picture> {
 		return this._pictures.slice(-limit);
 	}
 }

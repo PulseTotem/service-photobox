@@ -130,6 +130,7 @@ class PhotoboxSession {
 				Logger.info("Try to delete an unauthorized file : "+file);
 			}
 		}
+		this._pictureUrls = new Array<string>();
 	}
 
 	/**
@@ -143,6 +144,7 @@ class PhotoboxSession {
 		var arrayExtension = PhotoboxUtils.getFileExtension(firstFile);
 		var public_id = arrayExtension[0];
 		cloudinary.api.delete_resources([public_id], function(result){});
+		this._pictureUrls = new Array<string>();
 	}
 
 	/**

@@ -10,15 +10,14 @@ class Subscribe extends SourceItf {
 
 	constructor(params : any, photoboxNamespaceManager : PhotoboxNamespaceManager) {
 		super(params, photoboxNamespaceManager);
+		Logger.debug("Constructor de Subscribe: call setParams");
 		photoboxNamespaceManager.setParams(params);
 		var cloudStorage : boolean = JSON.parse(this.getParams().CloudStorage);
 		this._album = photoboxNamespaceManager.createTag(this.getParams().Tag, cloudStorage);
+		this.run();
 	}
 
 	public run() {
-		Logger.debug("listenNotifications Action with params :");
-		Logger.debug(this.getParams());
-
 		var arraylastPic = this._album.getLastPictures(1);
 
 		var cmd : Cmd = new Cmd("WaitMessage");

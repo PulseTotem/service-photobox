@@ -10,8 +10,9 @@ class Album extends SourceItf {
 
 	constructor(params : any, photoboxNamespaceManager : PhotoboxNamespaceManager) {
 		super(params, photoboxNamespaceManager);
-		Logger.debug(params);
-		photoboxNamespaceManager.setParams(params);
+		Logger.debug("Retrieve albums with params:");
+		Logger.debug(this.getParams());
+
 		var cloudStorage : boolean = JSON.parse(this.getParams().CloudStorage);
 		this._album = photoboxNamespaceManager.createTag(this.getParams().Tag, cloudStorage);
 		this.run();
@@ -19,9 +20,6 @@ class Album extends SourceItf {
 
 	public run() {
 		var self = this;
-
-		Logger.debug("Retrieve albums with params:");
-		Logger.debug(this.getParams());
 
 		var limit = parseInt(this.getParams().Limit);
 		var pictures : Array<Picture> = this._album.getLastPictures(limit);

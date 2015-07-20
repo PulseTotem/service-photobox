@@ -62,14 +62,16 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 	 * @param {any} message - Received message
 	 */
 	onExternalMessage(from : string, message : any) {
-		if (from == "startSession") {
-			this.startSession(message);
-		} else if (from == "counter") {
-			this.startCounter(message);
-		} else if (from == "endSession") {
-			this.endSession(message);
-		} else if (from == "newPicture") {
-			this.pushPicture(message);
+		if (this._params != null) {
+			if (from == "startSession") {
+				this.startSession(message);
+			} else if (from == "counter") {
+				this.startCounter(message);
+			} else if (from == "endSession") {
+				this.endSession(message);
+			} else if (from == "newPicture") {
+				this.pushPicture(message);
+			}
 		}
 	}
 
@@ -104,7 +106,7 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 
 		var cloudStorage = JSON.parse(this._params.CloudStorage);
 		var postUrl = "http://"+Photobox.host+"/rest/post/"+cmd.getId().toString()+"/"+cloudStorage.toString()+"/"+this._params.Tag;
-
+		Logger.debug("PostURL: "+postUrl);
 		args.push(postUrl);
 		cmd.setArgs(args);
 

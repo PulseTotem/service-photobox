@@ -10,7 +10,9 @@ class Subscribe extends SourceItf {
 
 	constructor(params : any, photoboxNamespaceManager : PhotoboxNamespaceManager) {
 		super(params, photoboxNamespaceManager);
-		Logger.debug("Constructor de Subscribe: call setParams");
+		Logger.debug("Retrieve subscribe with params:");
+		Logger.debug(this.getParams());
+
 		photoboxNamespaceManager.setParams(params);
 		var cloudStorage : boolean = JSON.parse(this.getParams().CloudStorage);
 		this._album = photoboxNamespaceManager.createTag(this.getParams().Tag, cloudStorage);

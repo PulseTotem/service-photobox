@@ -30,7 +30,7 @@ class Photobox extends SourceServer {
 		super(listeningPort, arguments);
 
 		Photobox.host = process.env.PHOTOBOX_HOST;
-
+		Logger.debug("Registered host: "+Photobox.host);
 		this.init();
 
 	}

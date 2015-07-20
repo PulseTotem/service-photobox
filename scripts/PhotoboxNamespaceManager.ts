@@ -103,7 +103,7 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 		args.push(this._params.CounterDuration);
 
 		var cloudStorage = JSON.parse(this._params.CloudStorage);
-		var postUrl = "http://"+message.headers.host+"/rest/post/"+cmd.getId().toString()+"/"+cloudStorage.toString()+"/"+this._params.Tag;
+		var postUrl = "http://"+Photobox.host+"/rest/post/"+cmd.getId().toString()+"/"+cloudStorage.toString()+"/"+this._params.Tag;
 
 		args.push(postUrl);
 		cmd.setArgs(args);

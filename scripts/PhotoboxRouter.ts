@@ -174,7 +174,7 @@ class PhotoboxRouter extends RouterItf {
 		Logger.debug("Upload a picture locally");
 		var self = this;
 		var rootUpload =  PhotoboxUtils.ROOT_UPLOAD+"/";
-		var host = "http://"+req.headers.host+"/";
+		var host = "http://"+Photobox.host+"/";
 		var tag = session.getTag();
 
 		fs.readFile(req.files.webcam.path, function (err, data) {

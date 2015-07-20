@@ -23,14 +23,13 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 	 */
 	constructor(socket : any) {
 		super(socket);
-		//this.addListenerToSocket('Subscribe', function (params, photoboxNamespaceManager) { new Subscribe(params, photoboxNamespaceManager); });
+		this.addListenerToSocket('Subscribe', function (params, photoboxNamespaceManager) { new Subscribe(params, photoboxNamespaceManager); });
 		this.addListenerToSocket('Album', function (params, photoboxNamespaceManager) { new Album(params, photoboxNamespaceManager); });
 
 		this._params = null;
 	}
 
 	public setParams(params : any) {
-		Logger.debug("Set params...");
 		this._params = params;
 	}
 

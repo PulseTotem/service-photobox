@@ -3,8 +3,6 @@
  */
 
 class PhotoboxUtils {
-	public static ROOT_UPLOAD = "uploads";
-
 	public static MIDDLE_SIZE = {
 		identifier: "_medium",
 		width: 640,
@@ -28,7 +26,7 @@ class PhotoboxUtils {
 	}
 
 	public static getDirectoryFromTag(tag : string) : string {
-		return PhotoboxUtils.ROOT_UPLOAD+"/"+tag;
+		return Photobox.upload_directory+"/"+tag;
 	}
 
 	public static createImageName(tag : string) : string {

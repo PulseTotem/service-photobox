@@ -119,7 +119,7 @@ class PhotoboxSession {
 			var completeHostname = "http://"+hostname+"/";
 			var file : string = this._pictureUrls[key].substr(completeHostname.length);
 
-			if (file.indexOf(PhotoboxUtils.ROOT_UPLOAD) == 0 && file.length > PhotoboxUtils.ROOT_UPLOAD.length+2) {
+			if (file.indexOf(Photobox.upload_directory) == 0 && file.length > Photobox.upload_directory.length+2) {
 				try {
 					fs.unlinkSync(file);
 					Logger.debug("Delete the following file: "+file);

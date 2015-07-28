@@ -95,6 +95,8 @@ class PhotoboxRouter extends RouterItf {
 		this.router.post('/validate/:sessionid', function(req : any, res : any) { self.validate(req, res); });
 		this.router.post('/retry/:sessionid', function(req : any, res : any) { self.retry(req, res); });
 		this.router.post('/unvalidate/:sessionid', function(req : any, res : any) { self.unvalidate(req, res); });
+
+		this.router.get('/pictures/:sessionid', function(req : any, res : any) { self.getPictures(req, res); });
 	}
 
 	/**
@@ -173,7 +175,7 @@ class PhotoboxRouter extends RouterItf {
 	private postLocal(req : any, res : any, session : PhotoboxSession) {
 		Logger.debug("Upload a picture locally");
 		var self = this;
-		var rootUpload =  PhotoboxUtils.ROOT_UPLOAD+"/";
+		var rootUpload =  Photobox.upload_directory+"/";
 		var host = "http://"+Photobox.host+"/";
 		var tag = session.getTag();
 
@@ -299,6 +301,22 @@ class PhotoboxRouter extends RouterItf {
 			session.deletePictures(req.headers.host);
 			this.server.broadcastExternalMessage("counter", req);
 			res.end();
+		} else {
+			res.status(404).send("Session cannot be found.");
+		}
+	}
+
+	getPictures(req : any, res : any) {
+		var sessionid = req.params.sessionid;
+		var session : PhotoboxSession = this.retrieveSession(sessionid);
+
+		if (session != null) {
+			var urls : Array<string> = session.getPicturesURL();
+			if (urls.length == 0) {
+				res.status(204).send("Picture not ready yet");
+			} else {
+				res.status(200).json(urls);
+			}
 		} else {
 			res.status(404).send("Session cannot be found.");
 		}

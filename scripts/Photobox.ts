@@ -19,6 +19,7 @@
 class Photobox extends SourceServer {
 
 	public static host : string;
+	public static upload_directory : string;
 
 	/**
 	 * Constructor.
@@ -30,7 +31,15 @@ class Photobox extends SourceServer {
 		super(listeningPort, arguments);
 
 		Photobox.host = process.env.PHOTOBOX_HOST;
+
+		if (process.env.PHOTOBOX_UPLOAD_DIR == "undefined") {
+			Photobox.upload_directory = "/var/photobox/uploads";
+		} else {
+			Photobox.upload_directory = process.env.PHOTOBOX_UPLOAD_DIR;
+		}
+
 		Logger.debug("Registered host: "+Photobox.host);
+		Logger.debug("Local storage directory :"+Photobox.upload_directory);
 		this.init();
 
 	}
@@ -47,19 +56,17 @@ class Photobox extends SourceServer {
 
 		this.addNamespace("Photobox", PhotoboxNamespaceManager);
 
-		var rootUpload = PhotoboxUtils.ROOT_UPLOAD;
-
-		fs.open(rootUpload, 'r', function (err, fd) {
+		fs.open(Photobox.upload_directory, 'r', function (err, fd) {
 			if (err) {
 				try {
-					fs.mkdirSync(rootUpload);
+					fs.mkdirSync(Photobox.upload_directory);
 				} catch (e) {
-					Logger.error("This service is unable to create the upload directory (path: "+rootUpload+"). Consequently the local storage is unavailable.");
+					Logger.error("This service is unable to create the upload directory (path: "+Photobox.upload_directory+"). Consequently the local storage is unavailable.");
 				}
 
 			}
 		});
-		this.serveStaticDirectory(rootUpload);
+		this.app.use("/uploads", express.static(Photobox.upload_directory));
 	}
 }
 

@@ -175,8 +175,7 @@ class PhotoboxRouter extends RouterItf {
 	private postLocal(req : any, res : any, session : PhotoboxSession) {
 		Logger.debug("Upload a picture locally");
 		var self = this;
-		var rootUpload =  Photobox.upload_directory+"/";
-		var host = "http://"+Photobox.host+"/";
+		var host = "http://"+Photobox.host+"/"+Photobox.serving_upload_dir+"/";
 		var tag = session.getTag();
 
 		fs.readFile(req.files.webcam.path, function (err, data) {
@@ -188,14 +187,14 @@ class PhotoboxRouter extends RouterItf {
 				Logger.error("Error when uploading picture. Path : "+req.files.webcam.path);
 				res.status(500).json({ error: 'Error when uploading picture' });
 			} else {
-				var newPath = imageName+"."+extension[1];
+				var newPath = Photobox.upload_directory+"/"+imageName+"."+extension[1];
 				fs.writeFile(newPath, data, function (err) {
 
 					if (err) {
 						Logger.error("Error when writing file : "+JSON.stringify(err));
 						res.status(500).json({ error: 'Error when writing file'});
 					} else {
-						session.addPictureURL(host+newPath);
+						session.addPictureURL(host+imageName+"."+extension[1]);
 
 						lwip.open(newPath, function (errOpen, image) {
 							if (errOpen) {
@@ -203,22 +202,22 @@ class PhotoboxRouter extends RouterItf {
 								res.status(500).json({ error: 'Error when writing file'});
 							} else {
 								image.resize(PhotoboxUtils.MIDDLE_SIZE.width, PhotoboxUtils.MIDDLE_SIZE.height, function (errscale, imageScale) {
-									var newName = imageName + PhotoboxUtils.MIDDLE_SIZE.identifier+"."+extension[1];
+									var newName = Photobox.upload_directory+"/"+imageName + PhotoboxUtils.MIDDLE_SIZE.identifier+"."+extension[1];
 									imageScale.writeFile(newName, function (errWrite) {
 										if (errWrite) {
 											Logger.error("Error when resizing image in middle size");
 											res.status(500).json({ error: 'Error when writing file'});
 										} else {
-											session.addPictureURL(host+newName);
+											session.addPictureURL(host+imageName + PhotoboxUtils.MIDDLE_SIZE.identifier+"."+extension[1]);
 
 											image.resize(PhotoboxUtils.SMALL_SIZE.width, PhotoboxUtils.SMALL_SIZE.height, function (errscale, imageScale) {
-												var newName = imageName + PhotoboxUtils.SMALL_SIZE.identifier+"."+extension[1];
+												var newName = Photobox.upload_directory+"/"+imageName + PhotoboxUtils.SMALL_SIZE.identifier+"."+extension[1];
 												imageScale.writeFile(newName, function (errWrite) {
 													if (errWrite) {
 														Logger.error("Error when resizing image in small size");
 														res.status(500).json({ error: 'Error when writing file'});
 													} else {
-														session.addPictureURL(host+newName);
+														session.addPictureURL(host+imageName + PhotoboxUtils.SMALL_SIZE.identifier+"."+extension[1]);
 														Logger.debug("All images saved : "+JSON.stringify(session.getPicturesURL()));
 														res.status(200).json({message: "Upload ok", files: session.getPicturesURL()});
 													}

@@ -53,7 +53,7 @@ class PhotoboxAlbum {
 					if (file.indexOf(PhotoboxUtils.MIDDLE_SIZE.identifier) == -1 && file.indexOf(PhotoboxUtils.SMALL_SIZE.identifier) == -1) {
 						var urls : Array<string> = new Array<string>();
 						var fileext = PhotoboxUtils.getFileExtension(file);
-						var basename = "http://"+host+"/"+PhotoboxUtils.getDirectoryFromTag(self._tag)+"/"+file.substr(0, file.length - fileext[1].length - 1);
+						var basename = "http://"+host+"/"+Photobox.serving_upload_dir+"/"+self._tag+"/"+file.substr(0, file.length - fileext[1].length - 1);
 
 						urls.push(basename+"."+fileext[1]);
 

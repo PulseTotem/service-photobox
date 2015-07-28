@@ -33,6 +33,6 @@ class PhotoboxUtils {
 		var now = new Date();
 		var stringDate = now.getDate().toString()+now.getTime().toString();
 
-		return PhotoboxUtils.getDirectoryFromTag(tag)+"/"+stringDate;
+		return tag+"/"+stringDate;
 	}
 }

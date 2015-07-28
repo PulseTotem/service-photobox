@@ -20,6 +20,7 @@ class Photobox extends SourceServer {
 
 	public static host : string;
 	public static upload_directory : string;
+	public static serving_upload_dir : string = "uploads";
 
 	/**
 	 * Constructor.
@@ -66,7 +67,7 @@ class Photobox extends SourceServer {
 
 			}
 		});
-		this.app.use("/uploads", express.static(Photobox.upload_directory));
+		this.app.use("/"+Photobox.serving_upload_dir, express.static(Photobox.upload_directory));
 	}
 }
 

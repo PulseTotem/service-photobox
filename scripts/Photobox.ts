@@ -59,6 +59,7 @@ class Photobox extends SourceServer {
 
 		fs.open(Photobox.upload_directory, 'r', function (err, fd) {
 			if (err) {
+				Logger.debug("The directory "+Photobox.upload_directory+" is not accessible. The following error has been encountered: "+err);
 				try {
 					fs.mkdirSync(Photobox.upload_directory);
 				} catch (e) {

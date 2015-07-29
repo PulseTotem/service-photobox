@@ -97,7 +97,7 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 	}
 
 	private startCounter(message : any) {
-		var cmd:Cmd = new Cmd(message.params.sessionid);
+		var cmd:Cmd = new Cmd(message._id);
 		
 		cmd.setDurationToDisplay(30000);
 		cmd.setPriority(InfoPriority.HIGH);
@@ -120,7 +120,7 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 	}
 
 	private endSession(message : any) {
-		var cmd:Cmd = new Cmd(message.params.sessionid);
+		var cmd:Cmd = new Cmd(message._id);
 
 		cmd.setDurationToDisplay(1);
 		cmd.setCmd("validatedPicture");

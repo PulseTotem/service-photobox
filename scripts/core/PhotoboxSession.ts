@@ -31,13 +31,22 @@ class PhotoboxSession {
 	private _cloudStorage : boolean;
 
 	/**
-	 * The list of 3 pictures taken : the first one is the original, the second one is a medium size and the last one is the small size.
+	 * The list of 3 pictures URL taken : the first one is the original, the second one is a medium size and the last one is the small size.
 	 *
 	 * @property _pictureUrls
 	 * @type {Array<string>}
 	 * @private
 	 */
 	private _pictureUrls : Array<string>;
+
+	/**
+	 * The list of paths for local pictures
+	 *
+	 * @property _localPictures
+	 * @type {Array<String>}
+	 * @private
+	 */
+	private _localPictures : Array<string>;
 
 	/**
 	 * The tag name of the album for this session
@@ -141,6 +150,10 @@ class PhotoboxSession {
 		return this._tag;
 	}
 
+	public getStep() {
+		return this._step;
+	}
+
 	/**
 	 * Delete pictures stored locally. This method needs the hostname in order to treat picture URLs.
 	 *
@@ -149,22 +162,18 @@ class PhotoboxSession {
 	 * @private
 	 */
 	private deleteLocal() {
-		for (var key in this._pictureUrls) {
-			var completeHostname = "http://"+Photobox.host+"/";
-			var file : string = this._pictureUrls[key].substr(completeHostname.length);
+		for (var key in this._localPictures) {
+			var file : string = this._localPictures[key];
 
-			if (file.indexOf(Photobox.upload_directory) == 0 && file.length > Photobox.upload_directory.length+2) {
-				try {
-					fs.unlinkSync(file);
-					Logger.debug("Delete the following file: "+file);
-				} catch (e) {
-					Logger.error("Error when trying to delete the following file: "+file+". "+e);
-				}
-			} else {
-				Logger.info("Try to delete an unauthorized file : "+file);
+			try {
+				fs.unlinkSync(file);
+				Logger.debug("Delete the following file: "+file);
+			} catch (e) {
+				Logger.error("Error when trying to delete the following file: "+file+". "+e);
 			}
 		}
 		this._pictureUrls = new Array<string>();
+		this._localPictures = new Array<string>();
 	}
 
 	/**
@@ -202,12 +211,16 @@ class PhotoboxSession {
 
 	//////// METHODS TO MANIPULATE THE SESSION
 
+	/**
+	 * Method to call when the timeout is reached in any step.
+	 */
 	private reachedTimeout() {
 		Logger.debug("Reached timeout for session "+this._id);
 		this._step = PhotoboxSessionStep.END;
 		if (this._pictureUrls.length > 0) {
 			this.deletePictures();
 		}
+		this._server.broadcastExternalMessage("endSession", this);
 	}
 
 	/**
@@ -217,15 +230,225 @@ class PhotoboxSession {
 	 * @param res : The response object
 	 */
 	public start(res : any) {
-		// TODO : It should not be a broadcast !
-		var ack = this._server.broadcastExternalMessage("startSession", this);
-
-		if (ack) {
-			res.end();
-			this._step = PhotoboxSessionStep.START;
-			this._timeout = setTimeout(this.reachedTimeout, PhotoboxUtils.TIMEOUT_DURATION*1000);
+		Logger.debug("Start session : "+this._id);
+		if (this._step != null) {
+			res.status(500).send("Illegal action for the session state ! (state = "+this._step+")");
 		} else {
-			res.status(500).send("No client is currently connected.");
+			// TODO : It should not be a broadcast !
+			var ack = this._server.broadcastExternalMessage("startSession", this);
+
+			if (ack) {
+				res.end();
+				this._step = PhotoboxSessionStep.START;
+				this._timeout = setTimeout(this.reachedTimeout, PhotoboxUtils.TIMEOUT_DURATION*1000);
+			} else {
+				res.status(500).send("No client is currently connected.");
+				this._step = PhotoboxSessionStep.END;
+			}
+		}
+	}
+
+	/**
+	 * Second step of the session : counter should stop the timeout of first step, set the step and launch a message via namespace managers.
+	 *
+	 * @param res
+	 */
+	public counter(res : any) {
+		Logger.debug("Counter for session : "+this._id);
+		if (this._step != PhotoboxSessionStep.START) {
+			res.status(500).send("Illegal action for the session state ! (state = "+this._step+")");
+		} else {
+			clearTimeout(this._timeout);
+
+			var ack = this._server.broadcastExternalMessage("counter", this);
+
+			if (ack) {
+				res.end();
+				this._step = PhotoboxSessionStep.COUNTER;
+				this._timeout = setTimeout(this.reachedTimeout, PhotoboxUtils.TIMEOUT_DURATION*1000);
+			} else {
+				res.status(500).send("No client is currently connected.");
+				this._step = PhotoboxSessionStep.END;
+			}
+		}
+	}
+
+	public post(imageData : any, res : any) {
+		Logger.debug("Post picture on session : "+this._id);
+		if (this._step != PhotoboxSessionStep.COUNTER) {
+			res.status(500).send("Illegal action for the session state ! (state = "+this._step+")");
+		} else {
+			clearTimeout(this._timeout);
+
+			if (this.getCloudStorage()) {
+				this.postLocal(imageData, res);
+			} else {
+				this.postCloud(imageData, res);
+			}
+		}
+	}
+
+	private postLocal(imageData : any, res : any) {
+		Logger.debug("Photobox Session "+this._id+" | Upload a picture locally");
+		var self = this;
+		var uploadDir = PhotoboxUtils.getDirectoryFromTag(this._tag);
+
+		// first we read the uploaded file
+		fs.readFile(imageData.path, function (err, data) {
+
+			// manage error
+			if (err) {
+				res.status(500).json({ error: 'Error when retrieving the file'});
+				self._timeout = setTimeout(this.reachedTimeout, 10000);
+
+			// everything's ok for reading
+			} else {
+
+				// get pathes for the 3 images
+				var newPathes = PhotoboxUtils.getNewImageNamesFromOriginalImage(imageData.name);
+
+				// write the original image to the right place
+				fs.writeFile(uploadDir+newPathes[0], data, function (err) {
+
+					// manage error
+					if (err) {
+						Logger.error("Error when writing file : "+JSON.stringify(err));
+						res.status(500).json({ error: 'Error when writing file'});
+						self._timeout = setTimeout(this.reachedTimeout, 10000);
+
+					// everything's ok after writing the original image
+					} else {
+
+						// open the image with lwip for resizing
+						lwip.open(uploadDir+newPathes[0], function (errOpen, image) {
+
+							// in case of errors, it logs but it also delete the file on disk.
+							if (errOpen) {
+								Logger.error("Error when opening file with lwip"+JSON.stringify(errOpen));
+								res.status(500).json({ error: 'Error when writing file'});
+								fs.unlinkSync(uploadDir+newPathes[0]);
+								self._timeout = setTimeout(this.reachedTimeout, 10000);
+
+							// the image is opened with lwip
+							} else {
+
+								// TODO : create the watermark
+
+								// resize the picture to medium picture
+								image.resize(PhotoboxUtils.MIDDLE_SIZE.width, PhotoboxUtils.MIDDLE_SIZE.height, function (errscale, imageScale) {
+
+									if (errscale) {
+										Logger.error("Error when scaling original file with lwip"+JSON.stringify(errscale));
+										res.status(500).json({ error: 'Error when writing file'});
+										fs.unlinkSync(uploadDir+newPathes[0]);
+										self._timeout = setTimeout(this.reachedTimeout, 10000);
+									} else {
+										imageScale.writeFile(uploadDir+newPathes[1], function (errWrite) {
+
+											if (errWrite) {
+												Logger.error("Error when writing the first scaling file with lwip"+JSON.stringify(errOpen));
+												res.status(500).json({ error: 'Error when writing file'});
+												fs.unlinkSync(uploadDir+newPathes[0]);
+												self._timeout = setTimeout(this.reachedTimeout, 10000);
+											} else {
+												image.resize(PhotoboxUtils.SMALL_SIZE.width, PhotoboxUtils.SMALL_SIZE.height, function (errscale2, imageScale2) {
+
+													if (errscale2) {
+														Logger.error("Error when scaling original file with lwip a second time "+JSON.stringify(errscale2));
+														res.status(500).json({ error: 'Error when writing file'});
+														fs.unlinkSync(uploadDir+newPathes[0]);
+														fs.unlinkSync(uploadDir+newPathes[1]);
+														self._timeout = setTimeout(this.reachedTimeout, 10000);
+													} else {
+														imageScale2.writeFile(uploadDir+newPathes[2], function (errWrite) {
+															if (errWrite) {
+																Logger.error("Error when resizing image in small size "+JSON.stringify(errWrite));
+																res.status(500).json({ error: 'Error when writing file'});
+																fs.unlinkSync(uploadDir+newPathes[0]);
+																fs.unlinkSync(uploadDir+newPathes[1]);
+																self._timeout = setTimeout(this.reachedTimeout, 10000);
+															} else {
+																self.addPictureURL(PhotoboxUtils.getBaseURL(self.getTag())+newPathes[0]);
+																self._localPictures.push(uploadDir+newPathes[0]);
+
+																self.addPictureURL(PhotoboxUtils.getBaseURL(self.getTag())+newPathes[1]);
+																self._localPictures.push(uploadDir+newPathes[1]);
+
+																self.addPictureURL(PhotoboxUtils.getBaseURL(self.getTag())+newPathes[2]);
+																self._localPictures.push(uploadDir+newPathes[2]);
+
+																self._step = PhotoboxSessionStep.PENDINGVALIDATION;
+																self._timeout = setTimeout(this.reachedTimeout, PhotoboxUtils.TIMEOUT_DURATION*1000);
+
+																Logger.debug("All images saved : "+JSON.stringify(self.getPicturesURL()));
+																res.status(200).json({message: "Upload ok", files: self.getPicturesURL()});
+															}
+														});
+													}
+												});
+											}
+										});
+									}
+								});
+							}
+						});
+					}
+				});
+			}
+		});
+	}
+
+	private postCloud(imageData : any, res : any) {
+		Logger.debug("Upload a picture to cloudinary");
+		var self = this;
+		cloudinary.uploader.upload(imageData.path, function(result) {
+			if (result.url != "undefined") {
+				self.addPictureURL(result.url);
+
+				var img_640 = cloudinary.url(result.public_id, { width: PhotoboxUtils.MIDDLE_SIZE.width, height: PhotoboxUtils.MIDDLE_SIZE.height, crop: 'scale' } );
+				self.addPictureURL(img_640);
+
+				var img_320 = cloudinary.url(result.public_id, { width: PhotoboxUtils.SMALL_SIZE.width, height: PhotoboxUtils.SMALL_SIZE.height, crop: 'scale' } );
+				self.addPictureURL(img_320);
+
+				self._step = PhotoboxSessionStep.PENDINGVALIDATION;
+				self._timeout = setTimeout(this.reachedTimeout, PhotoboxUtils.TIMEOUT_DURATION*1000);
+
+				Logger.debug("Upload the following images : "+JSON.stringify(self.getPicturesURL()));
+				res.status(200).json({message: "Upload ok", files: self.getPicturesURL()});
+			} else {
+				Logger.error("Error when uploading picture via cloudinary: "+JSON.stringify(result));
+				res.status(500).json({error: 'Error when uploading on cloudinary.'});
+			}
+		}, {
+			tags: ['photobox', self.getTag()]
+		});
+	}
+
+	public validate(res : any) {
+		Logger.debug("Validate picture for session : "+this._id);
+
+		if (this._step != PhotoboxSessionStep.PENDINGVALIDATION) {
+			res.status(500).send("Illegal action for the session state ! (state = "+this._step+")");
+		} else {
+			this._server.broadcastExternalMessage("newPicture", {tag: this.getTag(), pics: this.getPicturesURL()});
+			this._server.broadcastExternalMessage("endSession", this);
+
+			res.end();
+			this._step = PhotoboxSessionStep.END;
+		}
+	}
+
+	public unvalidate(res : any) {
+		Logger.debug("Unvalidate picture for session : "+this._id);
+
+		if (this._step != PhotoboxSessionStep.PENDINGVALIDATION) {
+			res.status(500).send("Illegal action for the session state ! (state = "+this._step+")");
+		} else {
+			this.deletePictures();
+			this._server.broadcastExternalMessage("endSession", this);
+
+			res.end();
 			this._step = PhotoboxSessionStep.END;
 		}
 	}

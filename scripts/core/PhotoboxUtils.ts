@@ -28,13 +28,42 @@ class PhotoboxUtils {
 	}
 
 	public static getDirectoryFromTag(tag : string) : string {
-		return Photobox.upload_directory+"/"+tag;
+		return Photobox.upload_directory+"/"+tag+"/";
 	}
 
-	public static createImageName(tag : string) : string {
+	public static createImageName() : string {
 		var now = new Date();
 		var stringDate = now.getDate().toString()+now.getTime().toString();
 
-		return tag+"/"+stringDate;
+		return stringDate;
+	}
+
+	public static getCompleteHostname() : string {
+		return "http://"+Photobox.host+"/"+Photobox.serving_upload_dir+"/";
+	}
+
+	public static getBaseURL(tag : string) : string {
+		return PhotoboxUtils.getCompleteHostname()+tag+"/";
+	}
+
+	public static getNewImageNamesFromOriginalImage(imageName : string) : Array<string> {
+		var result : Array<string> = new Array<string>();
+
+		var basename = PhotoboxUtils.createImageName();
+		var extension = PhotoboxUtils.getFileExtension(imageName);
+
+		result.push(basename+"."+extension[1]);
+		result.push(basename+PhotoboxUtils.MIDDLE_SIZE.identifier+"."+extension[1]);
+		result.push(basename+PhotoboxUtils.SMALL_SIZE.identifier+"."+extension[1]);
+
+		return result;
+	}
+
+	public static configCloudinary() {
+		cloudinary.config({
+			cloud_name: 'pulsetotem',
+			api_key: '961435335945823',
+			api_secret: 'fBnekdGtXb8TOZs43dxIECvCX5c'
+		});
 	}
 }

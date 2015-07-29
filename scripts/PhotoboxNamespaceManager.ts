@@ -56,11 +56,12 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 	}
 
 	/**
-	 * Method called when external message come (from API Endpoints for example).
+	 * Method called when external message comes from PhotoboxRouter.
+	 *
 	 *
 	 * @method onExternalMessage
 	 * @param {string} from - Source description of message
-	 * @param {any} message - Received message
+	 * @param {any} message - The received message is a PhotoboxSession here.
 	 */
 	onExternalMessage(from : string, message : any) {
 		if (this._params != null) {
@@ -86,7 +87,7 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 
 	private startSession(message : any) {
 		var cmdList:CmdList = new CmdList(uuid.v1());
-		var cmd:Cmd = new Cmd(message.params.sessionid);
+		var cmd:Cmd = new Cmd(message._id);
 		cmd.setCmd("startSession");
 		cmd.setPriority(InfoPriority.HIGH);
 		cmd.setDurationToDisplay(30000);

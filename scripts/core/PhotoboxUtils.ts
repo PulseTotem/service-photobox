@@ -3,6 +3,8 @@
  */
 
 class PhotoboxUtils {
+	public static TIMEOUT_DURATION = 60;
+
 	public static MIDDLE_SIZE = {
 		identifier: "_medium",
 		width: 640,

@@ -116,13 +116,10 @@ class PhotoboxRouter extends RouterItf {
 			res.status(500).send("Please send a valid and unique sessionid");
 		} else {
 			Logger.debug("Create session with id: "+sessionid);
-			var session = new PhotoboxSession(sessionid);
+			var session = new PhotoboxSession(sessionid, this.server);
 			this._sessions.push(session);
 
-			// TODO : It should not be a broadcast !
-			this.server.broadcastExternalMessage("startSession", req);
-
-			res.end();
+			session.start(res);
 		}
 	}
 

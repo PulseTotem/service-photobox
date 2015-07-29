@@ -7,7 +7,7 @@
 
 /// <reference path="./PhotoboxNamespaceManager.ts" />
 /// <reference path="./PhotoboxRouter.ts" />
-/// <reference path="./PhotoboxUtils.ts" />
+/// <reference path="./core/PhotoboxUtils.ts" />
 
 
 /**

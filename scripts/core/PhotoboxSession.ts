@@ -3,6 +3,7 @@
  */
 
 /// <reference path="./PhotoboxUtils.ts" />
+/// <reference path="./PhotoboxSessionStep.ts" />
 
 /**
  * Represents a Session for Photobox usage.
@@ -38,13 +39,46 @@ class PhotoboxSession {
 	 */
 	private _pictureUrls : Array<string>;
 
+	/**
+	 * The tag name of the album for this session
+	 *
+	 * @property _tag
+	 * @type string
+	 * @private
+	 */
 	private _tag : string;
 
-	constructor(id : string) {
+	/**
+	 * The step reached by the session
+	 *
+	 * @property _step
+	 * @type {PhotoboxSessionStep}
+	 * @private
+	 */
+	private _step : PhotoboxSessionStep;
+
+	/**
+	 * The launched timeout.
+	 *
+	 * @property _timeout
+	 * @private
+	 */
+	private _timeout : any;
+
+	/**
+	 * The server to manipulate throughout the different steps
+	 */
+	private _server : Server;
+
+	constructor(id : string, server : Server) {
 		this._id = id;
+		this._server = server;
 		this._cloudStorage = false;
 		this._pictureUrls = new Array<string>();
+		this._timeout = null;
 	}
+
+
 
 	/**
 	 *
@@ -114,9 +148,9 @@ class PhotoboxSession {
 	 * @param hostname
 	 * @private
 	 */
-	private deleteLocal(hostname) {
+	private deleteLocal() {
 		for (var key in this._pictureUrls) {
-			var completeHostname = "http://"+hostname+"/";
+			var completeHostname = "http://"+Photobox.host+"/";
 			var file : string = this._pictureUrls[key].substr(completeHostname.length);
 
 			if (file.indexOf(Photobox.upload_directory) == 0 && file.length > Photobox.upload_directory.length+2) {
@@ -153,15 +187,46 @@ class PhotoboxSession {
 	 * @param hostname
 	 * @method deletePictures
 	 */
-	public deletePictures(hostname : string) {
+	public deletePictures() {
+		Logger.debug("Delete pictures in session "+this._id);
 		if (this._pictureUrls.length > 0) {
 			if (this._cloudStorage) {
 				this.deleteCloud();
 			} else {
-				this.deleteLocal(hostname);
+				this.deleteLocal();
 			}
 		} else {
 			Logger.error("Unable to delete pictures in session "+this.getId()+" as the array is empty.");
+		}
+	}
+
+	//////// METHODS TO MANIPULATE THE SESSION
+
+	private reachedTimeout() {
+		Logger.debug("Reached timeout for session "+this._id);
+		this._step = PhotoboxSessionStep.END;
+		if (this._pictureUrls.length > 0) {
+			this.deletePictures();
+		}
+	}
+
+	/**
+	 * First step of the session : start should set the step and launch a message via namespace managers.
+	 * If nothing is done during a timeout duration (see PhotoboxUtils), the session should end.
+	 *
+	 * @param res : The response object
+	 */
+	public start(res : any) {
+		// TODO : It should not be a broadcast !
+		var ack = this._server.broadcastExternalMessage("startSession", this);
+
+		if (ack) {
+			res.end();
+			this._step = PhotoboxSessionStep.START;
+			this._timeout = setTimeout(this.reachedTimeout, PhotoboxUtils.TIMEOUT_DURATION*1000);
+		} else {
+			res.status(500).send("No client is currently connected.");
+			this._step = PhotoboxSessionStep.END;
 		}
 	}
 }

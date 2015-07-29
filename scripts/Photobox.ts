@@ -31,10 +31,15 @@ class Photobox extends SourceServer {
 	constructor(listeningPort : number, arguments : Array<string>) {
 		super(listeningPort, arguments);
 
-		Photobox.host = process.env.PHOTOBOX_HOST;
 
-		if (process.env.PHOTOBOX_UPLOAD_DIR == "undefined") {
-			Photobox.upload_directory = "/var/photobox/uploads";
+		if (process.env.PHOTOBOX_HOST == undefined) {
+			Photobox.host = "localhost:6012";
+		} else {
+			Photobox.host = process.env.PHOTOBOX_HOST;
+		}
+
+		if (process.env.PHOTOBOX_UPLOAD_DIR == undefined) {
+			Photobox.upload_directory = "/tmp/uploads";
 		} else {
 			Photobox.upload_directory = process.env.PHOTOBOX_UPLOAD_DIR;
 		}

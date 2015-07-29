@@ -84,6 +84,7 @@ class PhotoboxSession {
 		this._server = server;
 		this._cloudStorage = false;
 		this._pictureUrls = new Array<string>();
+		this._localPictures = new Array<string>();
 		this._timeout = null;
 	}
 
@@ -231,6 +232,7 @@ class PhotoboxSession {
 	 */
 	public start(res : any) {
 		Logger.debug("Start session : "+this._id);
+		var self = this;
 		if (this._step != null) {
 			res.status(500).send("Illegal action for the session state ! (state = "+this._step+")");
 		} else {
@@ -240,7 +242,7 @@ class PhotoboxSession {
 			if (ack) {
 				res.end();
 				this._step = PhotoboxSessionStep.START;
-				this._timeout = setTimeout(this.reachedTimeout, PhotoboxUtils.TIMEOUT_DURATION*1000);
+				this._timeout = setTimeout(function() { self.reachedTimeout(); }, PhotoboxUtils.TIMEOUT_DURATION*1000);
 			} else {
 				res.status(500).send("No client is currently connected.");
 				this._step = PhotoboxSessionStep.END;
@@ -255,6 +257,7 @@ class PhotoboxSession {
 	 */
 	public counter(res : any) {
 		Logger.debug("Counter for session : "+this._id);
+		var self = this;
 		if (this._step != PhotoboxSessionStep.START) {
 			res.status(500).send("Illegal action for the session state ! (state = "+this._step+")");
 		} else {
@@ -265,9 +268,10 @@ class PhotoboxSession {
 			if (ack) {
 				res.end();
 				this._step = PhotoboxSessionStep.COUNTER;
-				this._timeout = setTimeout(this.reachedTimeout, PhotoboxUtils.TIMEOUT_DURATION*1000);
+				this._timeout = setTimeout(function() { self.reachedTimeout(); }, PhotoboxUtils.TIMEOUT_DURATION*1000);
 			} else {
 				res.status(500).send("No client is currently connected.");
+				this._server.broadcastExternalMessage("endSession", this);
 				this._step = PhotoboxSessionStep.END;
 			}
 		}
@@ -281,9 +285,9 @@ class PhotoboxSession {
 			clearTimeout(this._timeout);
 
 			if (this.getCloudStorage()) {
-				this.postLocal(imageData, res);
-			} else {
 				this.postCloud(imageData, res);
+			} else {
+				this.postLocal(imageData, res);
 			}
 		}
 	}
@@ -299,7 +303,7 @@ class PhotoboxSession {
 			// manage error
 			if (err) {
 				res.status(500).json({ error: 'Error when retrieving the file'});
-				self._timeout = setTimeout(this.reachedTimeout, 10000);
+				self._timeout = setTimeout(function() { self.reachedTimeout(); }, 10000);
 
 			// everything's ok for reading
 			} else {
@@ -314,7 +318,7 @@ class PhotoboxSession {
 					if (err) {
 						Logger.error("Error when writing file : "+JSON.stringify(err));
 						res.status(500).json({ error: 'Error when writing file'});
-						self._timeout = setTimeout(this.reachedTimeout, 10000);
+						self._timeout = setTimeout(function() { self.reachedTimeout(); }, 10000);
 
 					// everything's ok after writing the original image
 					} else {
@@ -327,7 +331,7 @@ class PhotoboxSession {
 								Logger.error("Error when opening file with lwip"+JSON.stringify(errOpen));
 								res.status(500).json({ error: 'Error when writing file'});
 								fs.unlinkSync(uploadDir+newPathes[0]);
-								self._timeout = setTimeout(this.reachedTimeout, 10000);
+								self._timeout = setTimeout(function() { self.reachedTimeout(); }, 10000);
 
 							// the image is opened with lwip
 							} else {
@@ -341,7 +345,7 @@ class PhotoboxSession {
 										Logger.error("Error when scaling original file with lwip"+JSON.stringify(errscale));
 										res.status(500).json({ error: 'Error when writing file'});
 										fs.unlinkSync(uploadDir+newPathes[0]);
-										self._timeout = setTimeout(this.reachedTimeout, 10000);
+										self._timeout = setTimeout(function() { self.reachedTimeout(); }, 10000);
 									} else {
 										imageScale.writeFile(uploadDir+newPathes[1], function (errWrite) {
 
@@ -349,7 +353,7 @@ class PhotoboxSession {
 												Logger.error("Error when writing the first scaling file with lwip"+JSON.stringify(errOpen));
 												res.status(500).json({ error: 'Error when writing file'});
 												fs.unlinkSync(uploadDir+newPathes[0]);
-												self._timeout = setTimeout(this.reachedTimeout, 10000);
+												self._timeout = setTimeout(function() { self.reachedTimeout(); }, 10000);
 											} else {
 												image.resize(PhotoboxUtils.SMALL_SIZE.width, PhotoboxUtils.SMALL_SIZE.height, function (errscale2, imageScale2) {
 
@@ -358,7 +362,7 @@ class PhotoboxSession {
 														res.status(500).json({ error: 'Error when writing file'});
 														fs.unlinkSync(uploadDir+newPathes[0]);
 														fs.unlinkSync(uploadDir+newPathes[1]);
-														self._timeout = setTimeout(this.reachedTimeout, 10000);
+														self._timeout = setTimeout(function() { self.reachedTimeout(); }, 10000);
 													} else {
 														imageScale2.writeFile(uploadDir+newPathes[2], function (errWrite) {
 															if (errWrite) {
@@ -366,7 +370,7 @@ class PhotoboxSession {
 																res.status(500).json({ error: 'Error when writing file'});
 																fs.unlinkSync(uploadDir+newPathes[0]);
 																fs.unlinkSync(uploadDir+newPathes[1]);
-																self._timeout = setTimeout(this.reachedTimeout, 10000);
+																self._timeout = setTimeout(function() { self.reachedTimeout(); }, 10000);
 															} else {
 																self.addPictureURL(PhotoboxUtils.getBaseURL(self.getTag())+newPathes[0]);
 																self._localPictures.push(uploadDir+newPathes[0]);
@@ -378,7 +382,7 @@ class PhotoboxSession {
 																self._localPictures.push(uploadDir+newPathes[2]);
 
 																self._step = PhotoboxSessionStep.PENDINGVALIDATION;
-																self._timeout = setTimeout(this.reachedTimeout, PhotoboxUtils.TIMEOUT_DURATION*1000);
+																self._timeout = setTimeout(function() { self.reachedTimeout(); }, PhotoboxUtils.TIMEOUT_DURATION*1000);
 
 																Logger.debug("All images saved : "+JSON.stringify(self.getPicturesURL()));
 																res.status(200).json({message: "Upload ok", files: self.getPicturesURL()});
@@ -401,6 +405,7 @@ class PhotoboxSession {
 	private postCloud(imageData : any, res : any) {
 		Logger.debug("Upload a picture to cloudinary");
 		var self = this;
+		PhotoboxUtils.configCloudinary();
 		cloudinary.uploader.upload(imageData.path, function(result) {
 			if (result.url != "undefined") {
 				self.addPictureURL(result.url);
@@ -412,7 +417,7 @@ class PhotoboxSession {
 				self.addPictureURL(img_320);
 
 				self._step = PhotoboxSessionStep.PENDINGVALIDATION;
-				self._timeout = setTimeout(this.reachedTimeout, PhotoboxUtils.TIMEOUT_DURATION*1000);
+				self._timeout = setTimeout(function() { self.reachedTimeout(); }, PhotoboxUtils.TIMEOUT_DURATION*1000);
 
 				Logger.debug("Upload the following images : "+JSON.stringify(self.getPicturesURL()));
 				res.status(200).json({message: "Upload ok", files: self.getPicturesURL()});

@@ -70,7 +70,8 @@ class Photobox extends SourceServer {
 				} catch (e) {
 					Logger.error("This service is unable to create the upload directory (path: "+Photobox.upload_directory+"). Consequently the local storage is unavailable.");
 				}
-
+			}  else {
+				fs.closeSync(fd);
 			}
 		});
 		this.app.use("/"+Photobox.serving_upload_dir, express.static(Photobox.upload_directory));

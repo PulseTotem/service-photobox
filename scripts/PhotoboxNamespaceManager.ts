@@ -36,7 +36,7 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 	public createTag(tag : string, cloudStorage : boolean) : PhotoboxAlbum {
 		if (PhotoboxNamespaceManager._albums[tag] == undefined) {
 			Logger.debug("Create the PhotoboxAlbum for tag: "+tag);
-			PhotoboxNamespaceManager._albums[tag] = new PhotoboxAlbum(tag, cloudStorage, Photobox.host);
+			PhotoboxNamespaceManager._albums[tag] = new PhotoboxAlbum(tag, cloudStorage);
 		}
 		if (!cloudStorage) {
 			var uploadDir = PhotoboxUtils.getDirectoryFromTag(tag);
@@ -48,7 +48,8 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 					} catch (e) {
 						Logger.error("This service is unable to create the tagged directory (path: "+uploadDir+"). Consequently the local storage is unavailable.");
 					}
-
+				} else {
+					fs.closeSync(fd);
 				}
 			});
 		}

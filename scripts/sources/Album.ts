@@ -27,10 +27,9 @@ class Album extends SourceItf {
 
 		if (pictures.length > 0) {
 			pictures.forEach( function (pic: Picture) {
-				pic.setDurationToDisplay(self.getParams().InfoDuration);
+				pic.setDurationToDisplay(parseInt(self.getParams().InfoDuration));
 				list.addPicture(pic);
 			});
-
 			this.getSourceNamespaceManager().sendNewInfoToClient(list);
 		}
 	}

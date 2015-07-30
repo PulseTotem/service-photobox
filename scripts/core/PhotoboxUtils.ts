@@ -2,6 +2,8 @@
  * @author Simon Urli <simon@the6thscreen.fr>
  */
 
+var moment = require('moment');
+
 class PhotoboxUtils {
 	public static TIMEOUT_DURATION = 30;
 
@@ -32,8 +34,7 @@ class PhotoboxUtils {
 	}
 
 	public static createImageName() : string {
-		var now = new Date();
-		var stringDate = now.getDate().toString()+now.getTime().toString();
+		var stringDate = moment().format();
 
 		return stringDate;
 	}

@@ -122,7 +122,7 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 	private endSession(message : any) {
 		var cmd:Cmd = new Cmd(message._id);
 
-		cmd.setDurationToDisplay(1);
+		cmd.setDurationToDisplay(0);
 		cmd.setCmd("validatedPicture");
 		cmd.setPriority(InfoPriority.HIGH);
 

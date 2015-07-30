@@ -234,7 +234,7 @@ class PhotoboxSession {
 		Logger.debug("Start session : "+this._id);
 		var self = this;
 		if (this._step != null) {
-			res.status(500).send("Illegal action for the session state ! (state = "+this._step+")");
+			res.status(500).send("Illegal action for the session state ! (state = "+PhotoboxSessionStep[this._step]+")");
 		} else {
 			// TODO : It should not be a broadcast !
 			var ack = this._server.broadcastExternalMessage("startSession", this);
@@ -259,7 +259,7 @@ class PhotoboxSession {
 		Logger.debug("Counter for session : "+this._id);
 		var self = this;
 		if (this._step != PhotoboxSessionStep.START) {
-			res.status(500).send("Illegal action for the session state ! (state = "+this._step+")");
+			res.status(500).send("Illegal action for the session state ! (state = "+PhotoboxSessionStep[this._step]+")");
 		} else {
 			clearTimeout(this._timeout);
 
@@ -280,7 +280,7 @@ class PhotoboxSession {
 	public post(imageData : any, res : any) {
 		Logger.debug("Post picture on session : "+this._id);
 		if (this._step != PhotoboxSessionStep.COUNTER) {
-			res.status(500).send("Illegal action for the session state ! (state = "+this._step+")");
+			res.status(500).send("Illegal action for the session state ! (state = "+PhotoboxSessionStep[this._step]+")");
 		} else {
 			clearTimeout(this._timeout);
 
@@ -434,8 +434,9 @@ class PhotoboxSession {
 		Logger.debug("Validate picture for session : "+this._id);
 
 		if (this._step != PhotoboxSessionStep.PENDINGVALIDATION) {
-			res.status(500).send("Illegal action for the session state ! (state = "+this._step+")");
+			res.status(500).send("Illegal action for the session state ! (state = "+PhotoboxSessionStep[this._step]+")");
 		} else {
+			clearTimeout(this._timeout);
 			this._server.broadcastExternalMessage("newPicture", {tag: this.getTag(), pics: this.getPicturesURL()});
 			this._server.broadcastExternalMessage("endSession", this);
 
@@ -448,8 +449,9 @@ class PhotoboxSession {
 		Logger.debug("Unvalidate picture for session : "+this._id);
 
 		if (this._step != PhotoboxSessionStep.PENDINGVALIDATION) {
-			res.status(500).send("Illegal action for the session state ! (state = "+this._step+")");
+			res.status(500).send("Illegal action for the session state ! (state = "+PhotoboxSessionStep[this._step]+")");
 		} else {
+			clearTimeout(this._timeout);
 			this.deletePictures();
 			this._server.broadcastExternalMessage("endSession", this);
 

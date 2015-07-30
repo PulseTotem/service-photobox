@@ -80,6 +80,7 @@ class PhotoboxRouter extends RouterItf {
 		this.router.post('/unvalidate/:sessionid', function(req : any, res : any) { self.unvalidate(req, res); });
 
 		this.router.get('/pictures/:sessionid', function(req : any, res : any) { self.getPictures(req, res); });
+		this.router.get('/state/:sessionid', function(req : any, res : any) { self.getStateSession(req, res); });
 	}
 
 	/**
@@ -183,6 +184,23 @@ class PhotoboxRouter extends RouterItf {
 			} else {
 				res.status(200).json(urls);
 			}
+		} else {
+			res.status(404).send("Session cannot be found.");
+		}
+	}
+
+	getStateSession(req : any, res : any) {
+		var sessionid = req.params.sessionid;
+		var session : PhotoboxSession = this.retrieveSession(sessionid);
+
+		if (session != null) {
+			var sessionState : string;
+			if (session.getStep() == null) {
+				sessionState = "null";
+			} else {
+				sessionState = PhotoboxSessionStep[session.getStep()];
+			}
+			res.status(200).json({state: sessionState});
 		} else {
 			res.status(404).send("Session cannot be found.");
 		}

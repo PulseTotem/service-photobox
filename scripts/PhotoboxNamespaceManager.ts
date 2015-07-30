@@ -36,7 +36,7 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 	public createTag(tag : string, cloudStorage : boolean) : PhotoboxAlbum {
 		if (PhotoboxNamespaceManager._albums[tag] == undefined) {
 			Logger.debug("Create the PhotoboxAlbum for tag: "+tag);
-			PhotoboxNamespaceManager._albums[tag] = new PhotoboxAlbum(tag, cloudStorage, Photobox.host);
+			PhotoboxNamespaceManager._albums[tag] = new PhotoboxAlbum(tag, cloudStorage);
 		}
 		if (!cloudStorage) {
 			var uploadDir = PhotoboxUtils.getDirectoryFromTag(tag);
@@ -48,7 +48,8 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 					} catch (e) {
 						Logger.error("This service is unable to create the tagged directory (path: "+uploadDir+"). Consequently the local storage is unavailable.");
 					}
-
+				} else {
+					fs.closeSync(fd);
 				}
 			});
 		}
@@ -56,11 +57,12 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 	}
 
 	/**
-	 * Method called when external message come (from API Endpoints for example).
+	 * Method called when external message comes from PhotoboxRouter.
+	 *
 	 *
 	 * @method onExternalMessage
 	 * @param {string} from - Source description of message
-	 * @param {any} message - Received message
+	 * @param {any} message - The received message is a PhotoboxSession here.
 	 */
 	onExternalMessage(from : string, message : any) {
 		if (this._params != null) {
@@ -86,7 +88,7 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 
 	private startSession(message : any) {
 		var cmdList:CmdList = new CmdList(uuid.v1());
-		var cmd:Cmd = new Cmd(message.params.sessionid);
+		var cmd:Cmd = new Cmd(message._id);
 		cmd.setCmd("startSession");
 		cmd.setPriority(InfoPriority.HIGH);
 		cmd.setDurationToDisplay(30000);
@@ -96,7 +98,7 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 	}
 
 	private startCounter(message : any) {
-		var cmd:Cmd = new Cmd(message.params.sessionid);
+		var cmd:Cmd = new Cmd(message._id);
 		
 		cmd.setDurationToDisplay(30000);
 		cmd.setPriority(InfoPriority.HIGH);
@@ -119,9 +121,9 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 	}
 
 	private endSession(message : any) {
-		var cmd:Cmd = new Cmd(message.params.sessionid);
+		var cmd:Cmd = new Cmd(message._id);
 
-		cmd.setDurationToDisplay(1);
+		cmd.setDurationToDisplay(0);
 		cmd.setCmd("validatedPicture");
 		cmd.setPriority(InfoPriority.HIGH);
 

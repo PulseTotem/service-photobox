@@ -51,32 +51,16 @@ class PhotoboxRouter extends RouterItf {
 	}
 
 	/**
-	 * Delete a session from the list of sessions given the sessionId
+	 * Delete all session whom step is END
 	 *
-	 * @method deleteSession
-	 * @param sessionId The id of the session to remove
-	 * @returns {boolean} true if the session has been deleted, false if no session has been found
+	 * @method purgeSession
 	 * @private
 	 */
-	private deleteSession(sessionId : string) : boolean {
+	private purgeSession() {
 		var self = this;
-		var findSession = function () {
-			for (var i = 0; i < self._sessions.length; i++) {
-				if (self._sessions[i].getId() === sessionId) {
-					return i;
-				}
-			}
-			return -1;
-		};
-
-		var index = findSession();
-
-		if (index != -1) {
-			this._sessions.splice(index, 1);
-			return true;
-		} else {
-			return false;
-		}
+		this._sessions = this._sessions.filter(function (session : PhotoboxSession) {
+			return session.getStep() != PhotoboxSessionStep.END;
+		});
 	}
 
 	/**
@@ -93,10 +77,10 @@ class PhotoboxRouter extends RouterItf {
 		this.router.post('/post/:sessionid/:cloudStorage/:tag', function(req : any, res : any) { self.post(req, res); });
 
 		this.router.post('/validate/:sessionid', function(req : any, res : any) { self.validate(req, res); });
-		this.router.post('/retry/:sessionid', function(req : any, res : any) { self.retry(req, res); });
 		this.router.post('/unvalidate/:sessionid', function(req : any, res : any) { self.unvalidate(req, res); });
 
 		this.router.get('/pictures/:sessionid', function(req : any, res : any) { self.getPictures(req, res); });
+		this.router.get('/state/:sessionid', function(req : any, res : any) { self.getStateSession(req, res); });
 	}
 
 	/**
@@ -116,13 +100,10 @@ class PhotoboxRouter extends RouterItf {
 			res.status(500).send("Please send a valid and unique sessionid");
 		} else {
 			Logger.debug("Create session with id: "+sessionid);
-			var session = new PhotoboxSession(sessionid);
+			var session = new PhotoboxSession(sessionid, this.server);
 			this._sessions.push(session);
 
-			// TODO : It should not be a broadcast !
-			this.server.broadcastExternalMessage("startSession", req);
-
-			res.end();
+			session.start(res);
 		}
 	}
 
@@ -140,10 +121,7 @@ class PhotoboxRouter extends RouterItf {
 		if (session == null) {
 			res.status(404).send("Session cannot be found.");
 		} else {
-			// TODO : It's not a broadcast !
-			this.server.broadcastExternalMessage("counter", req);
-
-			res.end();
+			session.counter(res);
 		}
 	}
 
@@ -158,119 +136,24 @@ class PhotoboxRouter extends RouterItf {
 		var cloudstorage = JSON.parse(req.params.cloudStorage);
 		var tag = req.params.tag;
 		var session : PhotoboxSession = this.retrieveSession(sessionid);
-		session.setTag(tag);
 
 		if (session == null) {
 			res.status(404).send("Session cannot be found.");
 		} else {
 			session.setCloudStorage(cloudstorage);
-			if (cloudstorage) {
-				this.postCloud(req, res, session);
-			} else {
-				this.postLocal(req, res, session);
-			}
+			session.setTag(tag);
+			session.post(req.files.webcam, res);
 		}
-	}
-
-	private postLocal(req : any, res : any, session : PhotoboxSession) {
-		Logger.debug("Upload a picture locally");
-		var self = this;
-		var host = "http://"+Photobox.host+"/"+Photobox.serving_upload_dir+"/";
-		var tag = session.getTag();
-
-		fs.readFile(req.files.webcam.path, function (err, data) {
-			var extension = PhotoboxUtils.getFileExtension(req.files.webcam.name);
-			var imageName = PhotoboxUtils.createImageName(tag);
-
-			/// If there's an error
-			if(!imageName){
-				Logger.error("Error when uploading picture. Path : "+req.files.webcam.path);
-				res.status(500).json({ error: 'Error when uploading picture' });
-			} else {
-				var newPath = Photobox.upload_directory+"/"+imageName+"."+extension[1];
-				fs.writeFile(newPath, data, function (err) {
-
-					if (err) {
-						Logger.error("Error when writing file : "+JSON.stringify(err));
-						res.status(500).json({ error: 'Error when writing file'});
-					} else {
-						session.addPictureURL(host+imageName+"."+extension[1]);
-
-						lwip.open(newPath, function (errOpen, image) {
-							if (errOpen) {
-								Logger.error("Error when opening file with lwip");
-								res.status(500).json({ error: 'Error when writing file'});
-							} else {
-								image.resize(PhotoboxUtils.MIDDLE_SIZE.width, PhotoboxUtils.MIDDLE_SIZE.height, function (errscale, imageScale) {
-									var newName = Photobox.upload_directory+"/"+imageName + PhotoboxUtils.MIDDLE_SIZE.identifier+"."+extension[1];
-									imageScale.writeFile(newName, function (errWrite) {
-										if (errWrite) {
-											Logger.error("Error when resizing image in middle size");
-											res.status(500).json({ error: 'Error when writing file'});
-										} else {
-											session.addPictureURL(host+imageName + PhotoboxUtils.MIDDLE_SIZE.identifier+"."+extension[1]);
-
-											image.resize(PhotoboxUtils.SMALL_SIZE.width, PhotoboxUtils.SMALL_SIZE.height, function (errscale, imageScale) {
-												var newName = Photobox.upload_directory+"/"+imageName + PhotoboxUtils.SMALL_SIZE.identifier+"."+extension[1];
-												imageScale.writeFile(newName, function (errWrite) {
-													if (errWrite) {
-														Logger.error("Error when resizing image in small size");
-														res.status(500).json({ error: 'Error when writing file'});
-													} else {
-														session.addPictureURL(host+imageName + PhotoboxUtils.SMALL_SIZE.identifier+"."+extension[1]);
-														Logger.debug("All images saved : "+JSON.stringify(session.getPicturesURL()));
-														res.status(200).json({message: "Upload ok", files: session.getPicturesURL()});
-													}
-												})
-											});
-										}
-									})
-								});
-							}
-						});
-
-					}
-				});
-			}
-		});
-	}
-
-	private postCloud(req : any, res : any, session : PhotoboxSession) {
-		Logger.debug("Upload a picture to cloudinary");
-		cloudinary.config({
-			cloud_name: 'pulsetotem',
-			api_key: '961435335945823',
-			api_secret: 'fBnekdGtXb8TOZs43dxIECvCX5c'
-		});
-
-		cloudinary.uploader.upload(req.files.webcam.path, function(result) {
-			session.addPictureURL(result.url);
-
-			var img_640 = cloudinary.url(result.public_id, { width: 640, height: 360, crop: 'scale' } );
-			session.addPictureURL(img_640);
-
-			var img_320 = cloudinary.url(result.public_id, { width: 320, height: 180, crop: 'scale' } );
-			session.addPictureURL(img_320);
-
-			Logger.debug("Upload the following images : "+JSON.stringify(session.getPicturesURL()));
-			res.status(200).json({message: "Upload ok", files: session.getPicturesURL()});
-		}, {
-			tags: ['photobox', session.getTag()]
-		});
 	}
 
 
 	validate(req : any, res : any) {
-
 		var sessionid = req.params.sessionid;
 		var session : PhotoboxSession = this.retrieveSession(sessionid);
 
 		if (session != null) {
-			this.server.broadcastExternalMessage("newPicture", {tag: session.getTag(), pics: session.getPicturesURL()});
-			this.server.broadcastExternalMessage("endSession", req);
-			this.deleteSession(sessionid);
-
-			res.end();
+			session.validate(res);
+			this.purgeSession();
 		} else {
 			res.status(404).send("Session cannot be found.");
 		}
@@ -282,27 +165,12 @@ class PhotoboxRouter extends RouterItf {
 		var session : PhotoboxSession = this.retrieveSession(sessionid);
 
 		if (session != null) {
-			session.deletePictures(req.headers.host);
-			this.deleteSession(sessionid);
-			this.server.broadcastExternalMessage("endSession", req);
-			res.end();
+			session.unvalidate(res);
+			this.purgeSession();
 		} else {
 			res.status(404).send("Session cannot be found.");
 		}
 
-	}
-
-	retry(req : any, res : any) {
-		var sessionid = req.params.sessionid;
-		var session : PhotoboxSession = this.retrieveSession(sessionid);
-
-		if (session != null) {
-			session.deletePictures(req.headers.host);
-			this.server.broadcastExternalMessage("counter", req);
-			res.end();
-		} else {
-			res.status(404).send("Session cannot be found.");
-		}
 	}
 
 	getPictures(req : any, res : any) {
@@ -316,6 +184,23 @@ class PhotoboxRouter extends RouterItf {
 			} else {
 				res.status(200).json(urls);
 			}
+		} else {
+			res.status(404).send("Session cannot be found.");
+		}
+	}
+
+	getStateSession(req : any, res : any) {
+		var sessionid = req.params.sessionid;
+		var session : PhotoboxSession = this.retrieveSession(sessionid);
+
+		if (session != null) {
+			var sessionState : string;
+			if (session.getStep() == null) {
+				sessionState = "null";
+			} else {
+				sessionState = PhotoboxSessionStep[session.getStep()];
+			}
+			res.status(200).json({state: sessionState});
 		} else {
 			res.status(404).send("Session cannot be found.");
 		}

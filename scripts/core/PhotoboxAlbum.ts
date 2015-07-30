@@ -2,31 +2,27 @@
  * @author Simon Urli <simon@the6thscreen.fr>
  */
 
-/// <reference path="../t6s-core/core-backend/t6s-core/core/scripts/infotype/Picture.ts" />
+/// <reference path="../../t6s-core/core-backend/t6s-core/core/scripts/infotype/Picture.ts" />
 
 class PhotoboxAlbum {
 
 	private _tag : string;
 	private _pictures : Array<Picture>;
 
-	constructor(tag : string, cloudStorage : boolean, host: string) {
+	constructor(tag : string, cloudStorage : boolean) {
 		this._tag = tag;
 		this._pictures = new Array<Picture>();
 
 		if (cloudStorage) {
 			this.retrievePicsFromCloud();
 		} else {
-			this.retrievePicsFromLocal(host);
+			this.retrievePicsFromLocal();
 		}
 	}
 
 	private retrievePicsFromCloud() {
 		var self = this;
-		cloudinary.config({
-			cloud_name: 'pulsetotem',
-			api_key: '961435335945823',
-			api_secret: 'fBnekdGtXb8TOZs43dxIECvCX5c'
-		});
+		PhotoboxUtils.configCloudinary();
 
 		cloudinary.api.resources_by_tag(this._tag, function(result){
 			result.resources.forEach(function(element) {
@@ -43,7 +39,7 @@ class PhotoboxAlbum {
 		});
 	}
 
-	private retrievePicsFromLocal(host: string) {
+	private retrievePicsFromLocal() {
 		var self = this;
 		fs.readdir(PhotoboxUtils.getDirectoryFromTag(this._tag), function (err, files) {
 			if (err) {
@@ -53,7 +49,7 @@ class PhotoboxAlbum {
 					if (file.indexOf(PhotoboxUtils.MIDDLE_SIZE.identifier) == -1 && file.indexOf(PhotoboxUtils.SMALL_SIZE.identifier) == -1) {
 						var urls : Array<string> = new Array<string>();
 						var fileext = PhotoboxUtils.getFileExtension(file);
-						var basename = "http://"+host+"/"+Photobox.serving_upload_dir+"/"+self._tag+"/"+file.substr(0, file.length - fileext[1].length - 1);
+						var basename = PhotoboxUtils.getBaseURL(self._tag)+file.substr(0, file.length - fileext[1].length - 1);
 
 						urls.push(basename+"."+fileext[1]);
 

@@ -22,8 +22,8 @@ class Subscribe extends SourceItf {
 	public run() {
 		var arraylastPic = this._album.getLastPictures(1);
 
-		var cmd : Cmd = new Cmd("WaitMessage");
-		cmd.setDurationToDisplay(this.getParams().InfoDuration);
+		var cmd : Cmd = new Cmd(uuid.v1());
+		cmd.setDurationToDisplay(parseInt(this.getParams().InfoDuration));
 		cmd.setCmd("Wait");
 		var args : Array<string> = new Array<string>();
 		args.push(this.getParams().URL);

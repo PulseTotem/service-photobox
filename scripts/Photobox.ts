@@ -7,7 +7,7 @@
 
 /// <reference path="./PhotoboxNamespaceManager.ts" />
 /// <reference path="./PhotoboxRouter.ts" />
-/// <reference path="./PhotoboxUtils.ts" />
+/// <reference path="./core/PhotoboxUtils.ts" />
 
 
 /**
@@ -31,10 +31,15 @@ class Photobox extends SourceServer {
 	constructor(listeningPort : number, arguments : Array<string>) {
 		super(listeningPort, arguments);
 
-		Photobox.host = process.env.PHOTOBOX_HOST;
 
-		if (process.env.PHOTOBOX_UPLOAD_DIR == "undefined") {
-			Photobox.upload_directory = "/var/photobox/uploads";
+		if (process.env.PHOTOBOX_HOST == undefined) {
+			Photobox.host = "localhost:6012";
+		} else {
+			Photobox.host = process.env.PHOTOBOX_HOST;
+		}
+
+		if (process.env.PHOTOBOX_UPLOAD_DIR == undefined) {
+			Photobox.upload_directory = "/tmp/uploads";
 		} else {
 			Photobox.upload_directory = process.env.PHOTOBOX_UPLOAD_DIR;
 		}
@@ -65,7 +70,8 @@ class Photobox extends SourceServer {
 				} catch (e) {
 					Logger.error("This service is unable to create the upload directory (path: "+Photobox.upload_directory+"). Consequently the local storage is unavailable.");
 				}
-
+			}  else {
+				fs.closeSync(fd);
 			}
 		});
 		this.app.use("/"+Photobox.serving_upload_dir, express.static(Photobox.upload_directory));

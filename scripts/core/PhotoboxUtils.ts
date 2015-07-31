@@ -3,6 +3,7 @@
  */
 
 var moment = require('moment');
+var request = require('request');
 
 class PhotoboxUtils {
 	public static TIMEOUT_DURATION = 30;
@@ -65,6 +66,16 @@ class PhotoboxUtils {
 			cloud_name: 'pulsetotem',
 			api_key: '961435335945823',
 			api_secret: 'fBnekdGtXb8TOZs43dxIECvCX5c'
+		});
+	}
+
+	public static downloadFile(url, localpath, callbackSuccess, callbackError) {
+		request.head(url, function(err, res, body){
+			if (err) {
+				callbackError(err);
+			} else {
+				request(url).pipe(fs.createWriteStream(localpath)).on('close', callbackSuccess);
+			}
 		});
 	}
 }

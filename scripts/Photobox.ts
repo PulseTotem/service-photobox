@@ -9,6 +9,7 @@
 /// <reference path="./PhotoboxRouter.ts" />
 /// <reference path="./core/PhotoboxUtils.ts" />
 
+var fs : any = require('fs');
 
 /**
  * Represents the The 6th Screen Photobox Service.

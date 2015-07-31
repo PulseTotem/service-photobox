@@ -2,8 +2,12 @@
  * @author Simon Urli <simon@the6thscreen.fr>
  */
 
+/// <reference path="../Photobox.ts" />
+
 var moment = require('moment');
 var request = require('request');
+var fs : any = require('fs');
+var cloudinary : any = require('cloudinary');
 
 class PhotoboxUtils {
 	public static TIMEOUT_DURATION = 30;

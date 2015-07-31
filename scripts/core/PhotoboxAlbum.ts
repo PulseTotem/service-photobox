@@ -2,7 +2,10 @@
  * @author Simon Urli <simon@the6thscreen.fr>
  */
 
+/// <reference path="../../t6s-core/core-backend/scripts/Logger.ts" />
 /// <reference path="../../t6s-core/core-backend/t6s-core/core/scripts/infotype/Picture.ts" />
+/// <reference path="./PhotoboxUtils.ts" />
+
 
 class PhotoboxAlbum {
 

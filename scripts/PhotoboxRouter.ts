@@ -4,8 +4,8 @@
 
 /// <reference path="../t6s-core/core-backend/scripts/server/RouterItf.ts" />
 /// <reference path="../t6s-core/core-backend/scripts/Logger.ts" />
-
-
+/// <reference path="./core/PhotoboxSessionStep.ts" />
+/// <reference path="./core/PhotoboxSession.ts" />
 /**
  * NotifierRouter class.
  *

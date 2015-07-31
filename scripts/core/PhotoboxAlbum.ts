@@ -23,6 +23,14 @@ class PhotoboxAlbum {
 		}
 	}
 
+	public getTag() {
+		return this._tag;
+	}
+
+	public getPictures() {
+		return this._pictures;
+	}
+
 	private retrievePicsFromCloud() {
 		var self = this;
 		PhotoboxUtils.configCloudinary();

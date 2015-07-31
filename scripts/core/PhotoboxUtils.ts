@@ -6,7 +6,6 @@
 
 var moment = require('moment');
 var request = require('request');
-var fs : any = require('fs');
 var cloudinary : any = require('cloudinary');
 
 class PhotoboxUtils {
@@ -27,10 +26,19 @@ class PhotoboxUtils {
 	public static getFileExtension(filename : string) : Array<string> {
 		var res = [];
 		var indexLastSlash = filename.lastIndexOf('/');
-		var indexLastDot = filename.lastIndexOf('.');
 
-		res.push(filename.substring(indexLastSlash+1, indexLastDot));
-		res.push(filename.substring(indexLastDot+1, filename.length));
+
+		var file = filename.substring(indexLastSlash+1);
+		var indexLastDot = file.lastIndexOf('.');
+
+		if (indexLastDot != -1) {
+			res.push(file.substring(0, indexLastDot));
+			res.push(file.substring(indexLastDot+1, file.length));
+		} else {
+			res.push(file);
+			res.push("");
+		}
+
 		return res;
 	}
 

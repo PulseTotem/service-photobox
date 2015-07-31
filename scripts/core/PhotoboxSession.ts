@@ -359,7 +359,7 @@ class PhotoboxSession {
 											fs.unlinkSync(uploadDir+newPathes[0]);
 											self._timeout = setTimeout(function() { self.reachedTimeout(); }, 10000);
 										} else {
-											image.paste(0, (image.width()-img_watermark.width()), img_watermark, function (errPaste, imgWatermarked) {
+											image.paste(0, (image.height()-img_watermark.height()), img_watermark, function (errPaste, imgWatermarked) {
 												if (errPaste) {
 													Logger.error("Error when pasting file with lwip"+JSON.stringify(errPaste));
 													res.status(500).json({ error: 'Error when writing file'});

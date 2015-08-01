@@ -197,7 +197,7 @@ module.exports = function (grunt) {
             build: ['build/'],
             heroku: ['heroku/'],
             doc: ['doc'],
-            test: ['build/tests/Test.js']
+            test: ['build/tests/', 'build/coverage/']
         }
 // ---------------------------------------------
     });

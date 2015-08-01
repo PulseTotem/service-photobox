@@ -14,6 +14,9 @@ var sinon : SinonStatic = require("sinon");
 var mockfs = require("mock-fs");
 
 describe('PhotoboxAlbum', function() {
+	afterEach(function() {
+		mockfs.restore();
+	});
 	describe('#constructor', function () {
 		it('should initialize variable and launch local picture retrieve if cloudStorage is false', function () {
 			var mockPhotobox = sinon.mock(PhotoboxAlbum.prototype);
@@ -69,8 +72,6 @@ describe('PhotoboxAlbum', function() {
 
 	describe('#retrievePicsFromLocal', function () {
 		it('should retrieve pictures from directory', function (done) {
-
-			Logger.setLevel(LoggerLevel.Debug);
 			var mockUtils = sinon.mock(PhotoboxUtils);
 			mockUtils.expects('getDirectoryFromTag').once().returns('/tmp/upload/test');
 			mockUtils.expects('getBaseURL').thrice().returns('http://localhost/upload/test/');
@@ -110,6 +111,7 @@ describe('PhotoboxAlbum', function() {
 				mockPhotobox.verify();
 				assert.deepEqual(allUrls, [urlsFirst, urlsSecond, urlsThird], "All urls should be present");
 				monstub.restore();
+				mockfs.restore();
 				done();
 			};
 
@@ -130,7 +132,6 @@ describe('PhotoboxAlbum', function() {
 
 		it('should retrieve pictures from directory ignoring medium and small files', function (done) {
 
-			Logger.setLevel(LoggerLevel.Debug);
 			var mockUtils = sinon.mock(PhotoboxUtils);
 			mockUtils.expects('getDirectoryFromTag').once().returns('/tmp/upload/test');
 			mockUtils.expects('getBaseURL').once().returns('http://localhost/upload/test/');
@@ -159,6 +160,7 @@ describe('PhotoboxAlbum', function() {
 				mockPhotobox.verify();
 				assert.deepEqual(allUrls, [urlsFirst], "All urls should be present");
 				monstub.restore();
+				mockfs.restore();
 				done();
 			};
 
@@ -297,3 +299,4 @@ describe('PhotoboxAlbum', function() {
 		});
 	});
 });
+mockfs.restore();

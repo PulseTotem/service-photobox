@@ -13,6 +13,7 @@ class Album extends SourceItf {
 		Logger.debug("Retrieve albums with params:");
 		Logger.debug(this.getParams());
 
+		this.checkParams(["Limit", "InfoDuration", "CloudStorage", "Tag"]);
 		var cloudStorage : boolean = JSON.parse(this.getParams().CloudStorage);
 		this._album = photoboxNamespaceManager.createTag(this.getParams().Tag, cloudStorage);
 		this.run();

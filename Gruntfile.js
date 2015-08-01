@@ -156,7 +156,8 @@ module.exports = function (grunt) {
                 options: {
                     reporter: 'spec',
                     colors: true,
-                    require: 'coverage/blanket'
+                    require: 'coverage/blanket',
+                    captureFile: 'build/tests/result.txt'
                 },
                 src: ['build/tests/Test.js']
             },
@@ -167,7 +168,15 @@ module.exports = function (grunt) {
                     quiet: true,
                     // specify a destination file to capture the mocha
                     // output (the quiet option does not suppress this)
-                    captureFile: 'coverage.html'
+                    captureFile: 'build/tests/coverage.html'
+                },
+                src: ['build/tests/Test.js']
+            },
+            jenkins: {
+                options: {
+                    reporter: 'mocha-jenkins-reporter',
+                    quiet: false,
+                    captureFile: 'build/tests/tap.txt'
                 },
                 src: ['build/tests/Test.js']
             }
@@ -207,13 +216,22 @@ module.exports = function (grunt) {
 
     grunt.registerTask('doc', ['clean:doc', 'yuidoc']);
 
-    grunt.registerTask('test', function() {
+    grunt.registerTask('initTest', function() {
         grunt.task.run(['clean:package', 'clean:test']);
 
-        grunt.task.run(['update_json:packageBuild', 'copy:buildPackageBak', 'copy:buildPackageReplace', 'npm-install', 'copy:buildPackageReinit', 'typescript:test', 'mochaTest:test']);
+        grunt.task.run(['update_json:packageBuild', 'copy:buildPackageBak', 'copy:buildPackageReplace', 'npm-install', 'copy:buildPackageReinit', 'typescript:test']);
     });
 
-    grunt.registerTask('coverage', ['test', 'mochaTest:coverage']);
+    grunt.registerTask('jenkins', function() {
+        grunt.task.run(['clean:package', 'clean:test']);
+
+        grunt.task.run(['update_json:packageBuild', 'copy:buildPackageBak', 'copy:buildPackageReplace', 'npm-install', 'copy:buildPackageReinit', 'typescript:test','mochaTest:jenkins', 'clean:package']);
+    });
+
+
+    grunt.registerTask('test', ['initTest', 'mochaTest:test', 'clean:package']);
+    grunt.registerTask('coverage', ['initTest', 'mochaTest:test','mochaTest:coverage', 'clean:package']);
+    grunt.registerTask('oldJenkins', ['initTest', 'mochaTest:jenkins', 'clean:package']);
 
 }
 

@@ -5,6 +5,11 @@
 /// <reference path="./PhotoboxUtils.ts" />
 /// <reference path="./PhotoboxSessionStep.ts" />
 
+
+var fs : any = require('fs');
+var lwip : any = require('lwip');
+var cloudinary : any = require('cloudinary');
+
 /**
  * Represents a Session for Photobox usage.
  *
@@ -336,64 +341,103 @@ class PhotoboxSession {
 							// the image is opened with lwip
 							} else {
 
-								// TODO : create the watermark
+								var watermark : string = "http://www.the6thscreen.fr/assets/img/photobox/watermark_fetedelascience.png";
+								var local_watermark : string = "/tmp/watermark.png";
 
-								// resize the picture to medium picture
-								image.resize(PhotoboxUtils.MIDDLE_SIZE.width, PhotoboxUtils.MIDDLE_SIZE.height, function (errscale, imageScale) {
+								var fail = function (error) {
+									Logger.error("Error when retrieving the logo picture for watermark. Error: "+JSON.stringify(error));
+									res.status(500).json({ error: 'Error when writing file'});
+									fs.unlinkSync(uploadDir+newPathes[0]);
+									self._timeout = setTimeout(function() { self.reachedTimeout(); }, 10000);
+								};
 
-									if (errscale) {
-										Logger.error("Error when scaling original file with lwip"+JSON.stringify(errscale));
-										res.status(500).json({ error: 'Error when writing file'});
-										fs.unlinkSync(uploadDir+newPathes[0]);
-										self._timeout = setTimeout(function() { self.reachedTimeout(); }, 10000);
-									} else {
-										imageScale.writeFile(uploadDir+newPathes[1], function (errWrite) {
+								var successDownloadLogo = function () {
+									lwip.open(local_watermark, function (errOpen, img_watermark) {
+										if (errOpen) {
+											Logger.error("Error when opening file with lwip"+JSON.stringify(errOpen));
+											res.status(500).json({ error: 'Error when writing file'});
+											fs.unlinkSync(uploadDir+newPathes[0]);
+											self._timeout = setTimeout(function() { self.reachedTimeout(); }, 10000);
+										} else {
+											image.paste(0, (image.height()-img_watermark.height()), img_watermark, function (errPaste, imgWatermarked) {
+												if (errPaste) {
+													Logger.error("Error when pasting file with lwip"+JSON.stringify(errPaste));
+													res.status(500).json({ error: 'Error when writing file'});
+													fs.unlinkSync(uploadDir+newPathes[0]);
+													self._timeout = setTimeout(function() { self.reachedTimeout(); }, 10000);
+												} else {
+													imgWatermarked.writeFile(uploadDir+newPathes[0], function (errWriteW) {
+														if (errWriteW) {
+															Logger.error("Error when pasting file with lwip"+JSON.stringify(errPaste));
+															res.status(500).json({ error: 'Error when writing file'});
+															fs.unlinkSync(uploadDir+newPathes[0]);
+															self._timeout = setTimeout(function() { self.reachedTimeout(); }, 10000);
+														} else {
+															// resize the picture to medium picture
+															imgWatermarked.resize(PhotoboxUtils.MIDDLE_SIZE.width, PhotoboxUtils.MIDDLE_SIZE.height, function (errscale, imageScale) {
 
-											if (errWrite) {
-												Logger.error("Error when writing the first scaling file with lwip"+JSON.stringify(errOpen));
-												res.status(500).json({ error: 'Error when writing file'});
-												fs.unlinkSync(uploadDir+newPathes[0]);
-												self._timeout = setTimeout(function() { self.reachedTimeout(); }, 10000);
-											} else {
-												image.resize(PhotoboxUtils.SMALL_SIZE.width, PhotoboxUtils.SMALL_SIZE.height, function (errscale2, imageScale2) {
+																if (errscale) {
+																	Logger.error("Error when scaling original file with lwip"+JSON.stringify(errscale));
+																	res.status(500).json({ error: 'Error when writing file'});
+																	fs.unlinkSync(uploadDir+newPathes[0]);
+																	self._timeout = setTimeout(function() { self.reachedTimeout(); }, 10000);
+																} else {
+																	imageScale.writeFile(uploadDir+newPathes[1], function (errWrite) {
 
-													if (errscale2) {
-														Logger.error("Error when scaling original file with lwip a second time "+JSON.stringify(errscale2));
-														res.status(500).json({ error: 'Error when writing file'});
-														fs.unlinkSync(uploadDir+newPathes[0]);
-														fs.unlinkSync(uploadDir+newPathes[1]);
-														self._timeout = setTimeout(function() { self.reachedTimeout(); }, 10000);
-													} else {
-														imageScale2.writeFile(uploadDir+newPathes[2], function (errWrite) {
-															if (errWrite) {
-																Logger.error("Error when resizing image in small size "+JSON.stringify(errWrite));
-																res.status(500).json({ error: 'Error when writing file'});
-																fs.unlinkSync(uploadDir+newPathes[0]);
-																fs.unlinkSync(uploadDir+newPathes[1]);
-																self._timeout = setTimeout(function() { self.reachedTimeout(); }, 10000);
-															} else {
-																self.addPictureURL(PhotoboxUtils.getBaseURL(self.getTag())+newPathes[0]);
-																self._localPictures.push(uploadDir+newPathes[0]);
+																		if (errWrite) {
+																			Logger.error("Error when writing the first scaling file with lwip"+JSON.stringify(errOpen));
+																			res.status(500).json({ error: 'Error when writing file'});
+																			fs.unlinkSync(uploadDir+newPathes[0]);
+																			self._timeout = setTimeout(function() { self.reachedTimeout(); }, 10000);
+																		} else {
+																			imgWatermarked.resize(PhotoboxUtils.SMALL_SIZE.width, PhotoboxUtils.SMALL_SIZE.height, function (errscale2, imageScale2) {
 
-																self.addPictureURL(PhotoboxUtils.getBaseURL(self.getTag())+newPathes[1]);
-																self._localPictures.push(uploadDir+newPathes[1]);
+																				if (errscale2) {
+																					Logger.error("Error when scaling original file with lwip a second time "+JSON.stringify(errscale2));
+																					res.status(500).json({ error: 'Error when writing file'});
+																					fs.unlinkSync(uploadDir+newPathes[0]);
+																					fs.unlinkSync(uploadDir+newPathes[1]);
+																					self._timeout = setTimeout(function() { self.reachedTimeout(); }, 10000);
+																				} else {
+																					imageScale2.writeFile(uploadDir+newPathes[2], function (errWrite) {
+																						if (errWrite) {
+																							Logger.error("Error when resizing image in small size "+JSON.stringify(errWrite));
+																							res.status(500).json({ error: 'Error when writing file'});
+																							fs.unlinkSync(uploadDir+newPathes[0]);
+																							fs.unlinkSync(uploadDir+newPathes[1]);
+																							self._timeout = setTimeout(function() { self.reachedTimeout(); }, 10000);
+																						} else {
+																							self.addPictureURL(PhotoboxUtils.getBaseURL(self.getTag())+newPathes[0]);
+																							self._localPictures.push(uploadDir+newPathes[0]);
 
-																self.addPictureURL(PhotoboxUtils.getBaseURL(self.getTag())+newPathes[2]);
-																self._localPictures.push(uploadDir+newPathes[2]);
+																							self.addPictureURL(PhotoboxUtils.getBaseURL(self.getTag())+newPathes[1]);
+																							self._localPictures.push(uploadDir+newPathes[1]);
 
-																self._step = PhotoboxSessionStep.PENDINGVALIDATION;
-																self._timeout = setTimeout(function() { self.reachedTimeout(); }, PhotoboxUtils.TIMEOUT_DURATION*1000);
+																							self.addPictureURL(PhotoboxUtils.getBaseURL(self.getTag())+newPathes[2]);
+																							self._localPictures.push(uploadDir+newPathes[2]);
 
-																Logger.debug("All images saved : "+JSON.stringify(self.getPicturesURL()));
-																res.status(200).json({message: "Upload ok", files: self.getPicturesURL()});
-															}
-														});
-													}
-												});
-											}
-										});
-									}
-								});
+																							self._step = PhotoboxSessionStep.PENDINGVALIDATION;
+																							self._timeout = setTimeout(function() { self.reachedTimeout(); }, PhotoboxUtils.TIMEOUT_DURATION*1000);
+
+																							Logger.debug("All images saved : "+JSON.stringify(self.getPicturesURL()));
+																							res.status(200).json({message: "Upload ok", files: self.getPicturesURL()});
+																						}
+																					});
+																				}
+																			});
+																		}
+																	});
+																}
+															});
+														}
+													})
+												}
+											})
+										}
+									});
+								};
+
+								PhotoboxUtils.downloadFile(watermark,local_watermark, successDownloadLogo, fail);
 							}
 						});
 					}

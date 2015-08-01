@@ -8,6 +8,8 @@
 /// <reference path="../t6s-core/core-backend/t6s-core/core/scripts/infotype/Cmd.ts" />
 /// <reference path="../t6s-core/core-backend/scripts/Logger.ts" />
 /// <reference path="../t6s-core/core-backend/t6s-core/core/scripts/infotype/priorities/InfoPriority.ts" />
+/// <reference path="./sources/Album.ts" />
+/// <reference path="./sources/Subscribe.ts" />
 
 class PhotoboxNamespaceManager extends SourceNamespaceManager {
 

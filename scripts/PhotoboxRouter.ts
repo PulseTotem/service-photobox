@@ -4,11 +4,8 @@
 
 /// <reference path="../t6s-core/core-backend/scripts/server/RouterItf.ts" />
 /// <reference path="../t6s-core/core-backend/scripts/Logger.ts" />
-
-var fs : any = require('fs');
-var lwip : any = require('lwip');
-var cloudinary : any = require('cloudinary');
-
+/// <reference path="./core/PhotoboxSessionStep.ts" />
+/// <reference path="./core/PhotoboxSession.ts" />
 /**
  * NotifierRouter class.
  *

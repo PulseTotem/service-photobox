@@ -2,7 +2,11 @@
  * @author Simon Urli <simon@the6thscreen.fr>
  */
 
+/// <reference path="../Photobox.ts" />
+
 var moment = require('moment');
+var request = require('request');
+var cloudinary : any = require('cloudinary');
 
 class PhotoboxUtils {
 	public static TIMEOUT_DURATION = 30;
@@ -22,10 +26,19 @@ class PhotoboxUtils {
 	public static getFileExtension(filename : string) : Array<string> {
 		var res = [];
 		var indexLastSlash = filename.lastIndexOf('/');
-		var indexLastDot = filename.lastIndexOf('.');
 
-		res.push(filename.substring(indexLastSlash+1, indexLastDot));
-		res.push(filename.substring(indexLastDot+1, filename.length));
+
+		var file = filename.substring(indexLastSlash+1);
+		var indexLastDot = file.lastIndexOf('.');
+
+		if (indexLastDot != -1) {
+			res.push(file.substring(0, indexLastDot));
+			res.push(file.substring(indexLastDot+1, file.length));
+		} else {
+			res.push(file);
+			res.push("");
+		}
+
 		return res;
 	}
 
@@ -65,6 +78,16 @@ class PhotoboxUtils {
 			cloud_name: 'pulsetotem',
 			api_key: '961435335945823',
 			api_secret: 'fBnekdGtXb8TOZs43dxIECvCX5c'
+		});
+	}
+
+	public static downloadFile(url, localpath, callbackSuccess, callbackError) {
+		request.head(url, function(err, res, body){
+			if (err) {
+				callbackError(err);
+			} else {
+				request(url).pipe(fs.createWriteStream(localpath)).on('close', callbackSuccess);
+			}
 		});
 	}
 }

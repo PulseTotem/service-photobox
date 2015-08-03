@@ -3,7 +3,6 @@
  */
 
 /// <reference path="../../libsdef/mocha.d.ts" />
-/// <reference path="../../libsdef/nock.d.ts" />
 /// <reference path="../../libsdef/sinon.d.ts" />
 
 /// <reference path="../../scripts/core/PhotoboxUtils.ts" />

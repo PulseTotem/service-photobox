@@ -32,7 +32,6 @@ class Photobox extends SourceServer {
 	constructor(listeningPort : number, arguments : Array<string>) {
 		super(listeningPort, arguments);
 
-
 		if (process.env.PHOTOBOX_HOST == undefined) {
 			Photobox.host = "localhost:6012";
 		} else {

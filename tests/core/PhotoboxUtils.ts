@@ -11,14 +11,6 @@
 var assert = require("assert");
 
 describe('PhotoboxUtils', function() {
-	var photoboxServer;
-	beforeEach(function() {
-		photoboxServer = sinon.mock(Photobox.prototype);
-		photoboxServer.expects("run").atMost(1);
-	});
-	afterEach(function() {
-		photoboxServer.verify();
-	});
 	describe('#getExtension', function () {
 		it('should split properly a file into filename and extension', function () {
 			var filename = 'toto.png';

@@ -20,6 +20,7 @@ cd $2
 absolutePathCore=`pwd`
 cd $currentDir
 
+export NODE_ENV="test"
 npm install
 echo '{ "coreBackendRepoPath" : "'$absolutePathBackend'", "coreRepoPath": "'$absolutePathCore'" }' > core-repos-config.json
 grunt initJenkins

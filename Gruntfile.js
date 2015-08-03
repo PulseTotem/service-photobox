@@ -169,7 +169,7 @@ module.exports = function (grunt) {
             jenkins: {
                 options: {
                     reporter: 'mocha-jenkins-reporter',
-                    quiet: true,
+                    quiet: false,
                     reporterOptions: {
                         "junit_report_name": "Tests",
                         "junit_report_path": "build/tests/report.xml",

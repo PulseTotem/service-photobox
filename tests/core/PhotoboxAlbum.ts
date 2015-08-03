@@ -3,13 +3,11 @@
  */
 
 /// <reference path="../../libsdef/mocha.d.ts" />
-/// <reference path="../../libsdef/nock.d.ts" />
 /// <reference path="../../libsdef/sinon.d.ts" />
 
 /// <reference path="../../scripts/core/PhotoboxAlbum.ts" />
 
 var assert = require("assert");
-var nock = require("nock");
 var sinon : SinonStatic = require("sinon");
 var mockfs = require("mock-fs");
 

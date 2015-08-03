@@ -14,6 +14,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-yuidoc');
     grunt.loadNpmTasks('grunt-contrib-symlink');
     grunt.loadNpmTasks('grunt-mocha-istanbul');
+    grunt.loadNpmTasks('grunt-env');
 
     // tasks
     grunt.initConfig({
@@ -23,6 +24,16 @@ module.exports = function (grunt) {
 // ---------------------------------------------
 //                               configure tasks
 // ---------------------------------------------
+
+        env : {
+            test : {
+                NODE_ENV : 'test'
+            },
+            build : {
+                NODE_ENV : 'production'
+            }
+        },
+
         symlink: {
             // Enable overwrite to delete symlinks before recreating them
             options: {
@@ -215,7 +226,7 @@ module.exports = function (grunt) {
     grunt.registerTask('build', function () {
         grunt.task.run(['clean:package', 'clean:build']);
 
-        grunt.task.run(['update_json:packageBuild', 'copy:buildPackageBak', 'copy:buildPackageReplace', 'npm-install', 'copy:buildPackageReinit', 'typescript:build', 'clean:package']);
+        grunt.task.run(['env:build','update_json:packageBuild', 'copy:buildPackageBak', 'copy:buildPackageReplace', 'npm-install', 'copy:buildPackageReinit', 'typescript:build', 'clean:package']);
     });
 
     grunt.registerTask('heroku', function () {
@@ -231,7 +242,7 @@ module.exports = function (grunt) {
     grunt.registerTask('initTest', function() {
         grunt.task.run(['clean:build']);
 
-        grunt.task.run(['update_json:packageBuild', 'copy:buildPackageBak', 'copy:buildPackageReplace', 'npm-install', 'copy:buildPackageReinit', 'typescript:build', 'typescript:test']);
+        grunt.task.run(['env:test','update_json:packageBuild', 'copy:buildPackageBak', 'copy:buildPackageReplace', 'npm-install', 'copy:buildPackageReinit', 'typescript:build', 'typescript:test']);
     });
 
     grunt.registerTask('coverage', ['initTest', 'mocha_istanbul:coverage']);

@@ -26,14 +26,19 @@ module.exports = function (grunt) {
         symlink: {
             // Enable overwrite to delete symlinks before recreating them
             options: {
-                overwrite: false
+                overwrite: true
             },
             // The "build/target.txt" symlink will be created and linked to
             // "source/target.txt". It should appear like this in a file listing:
             // build/target.txt -> ../source/target.txt
+
             coreBackend: {
                 src: '<%= coreReposConfig.coreBackendRepoPath %>',
                 dest: 't6s-core/core-backend'
+            },
+            core: {
+                src: '<%= coreReposConfig.coreRepoPath %>',
+                dest: 't6s-core/core-backend/t6s-core/core'
             }
         },
 
@@ -50,7 +55,7 @@ module.exports = function (grunt) {
                 ]
             },
             packageHeroku: {
-              src: ['t6s-core/core-backend/package.json','package-heroku.json'],
+              src: ['t6s-core/core-backend/package.json','package.json'],
               dest: 'heroku/package.json',
               fields: [
                 'name',
@@ -182,7 +187,6 @@ module.exports = function (grunt) {
                     mask: '*.js',
                     root: 'build/tests/',
                     reportFormats: ['cobertura', 'html'],
-                    quiet: true,
                     coverageFolder: 'build/coverage'
                 }
             },
@@ -204,7 +208,9 @@ module.exports = function (grunt) {
 
     grunt.registerTask('default', ['build']);
 
-    grunt.registerTask('init', ['symlink']);
+    grunt.registerTask('init', ['symlink:coreBackend']);
+
+    grunt.registerTask('initJenkins', ['init','symlink:core']);
 
     grunt.registerTask('build', function () {
         grunt.task.run(['clean:package', 'clean:build']);
@@ -223,9 +229,9 @@ module.exports = function (grunt) {
     grunt.registerTask('doc', ['clean:doc', 'yuidoc']);
 
     grunt.registerTask('initTest', function() {
-        grunt.task.run(['clean:package', 'clean:test']);
+        grunt.task.run(['clean:build']);
 
-        grunt.task.run(['update_json:packageBuild', 'copy:buildPackageBak', 'copy:buildPackageReplace', 'npm-install', 'copy:buildPackageReinit', 'typescript:test']);
+        grunt.task.run(['update_json:packageBuild', 'copy:buildPackageBak', 'copy:buildPackageReplace', 'npm-install', 'copy:buildPackageReinit', 'typescript:build', 'typescript:test']);
     });
 
     grunt.registerTask('coverage', ['initTest', 'mocha_istanbul:coverage']);

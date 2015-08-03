@@ -11,6 +11,9 @@
 var assert = require("assert");
 
 describe('PhotoboxUtils', function() {
+	beforeEach(function() {
+		sinon.createStubInstance(Photobox);
+	});
 	describe('#getExtension', function () {
 		it('should split properly a file into filename and extension', function () {
 			var filename = 'toto.png';

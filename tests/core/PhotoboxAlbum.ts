@@ -13,7 +13,10 @@ var nock = require("nock");
 var sinon : SinonStatic = require("sinon");
 var mockfs = require("mock-fs");
 
-describe.skip('PhotoboxAlbum', function() {
+describe('PhotoboxAlbum', function() {
+	beforeEach(function() {
+		sinon.createStubInstance(Photobox);
+	});
 	afterEach(function() {
 		mockfs.restore();
 	});

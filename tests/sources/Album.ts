@@ -12,6 +12,9 @@ var assert = require("assert");
 var sinon : SinonStatic = require("sinon");
 
 describe('Album', function() {
+	beforeEach(function() {
+		sinon.createStubInstance(Photobox);
+	});
 	describe('#constructor', function () {
 		it('should launch the createTag with the proper parameters', function () {
 			var mockAlbum = sinon.mock(Album.prototype);

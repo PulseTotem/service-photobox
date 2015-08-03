@@ -14,10 +14,13 @@ var sinon : SinonStatic = require("sinon");
 var mockfs = require("mock-fs");
 
 describe('PhotoboxAlbum', function() {
+	var photoboxServer;
 	beforeEach(function() {
-		sinon.createStubInstance(Photobox);
+		photoboxServer = sinon.mock(Photobox.prototype);
+		photoboxServer.expects("run").atMost(1);
 	});
 	afterEach(function() {
+		photoboxServer.verify();
 		mockfs.restore();
 	});
 	describe('#constructor', function () {

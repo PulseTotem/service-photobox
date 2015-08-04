@@ -29,10 +29,10 @@ describe('Album', function() {
 			var mockAlbum = sinon.mock(Album.prototype);
 			mockAlbum.expects('run').never();
 
-			var params = { Tag: 'toto', Limit: '10', InfoDuration: 15 };
+			var params = { Tag: 'toto', Limit: '10', InfoDuration: "15" };
 
 			var stubNSManager : any = sinon.createStubInstance(PhotoboxNamespaceManager);
-			assert.throws(function() {new Album(params, stubNSManager);}, "The error is not thrown");
+			new Album(params, stubNSManager);
 			mockAlbum.verify();
 		});
 	});

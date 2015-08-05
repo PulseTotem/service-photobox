@@ -47,7 +47,7 @@ class PhotoboxUtils {
 	}
 
 	public static createImageName() : string {
-		var stringDate = moment().format();
+		var stringDate = moment().format("YYYYMMDDhhmmss");
 
 		return stringDate;
 	}

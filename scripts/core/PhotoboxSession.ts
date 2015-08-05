@@ -246,7 +246,7 @@ class PhotoboxSession {
 	}
 
 	private deleteSessionInCloudConnecte() {
-		var domain = "https://www.mobilemasterkey.com";
+		var domain = "https://platform.cloud-connecte.com";
 		var endpoint = "/api/sessions/close/"+this._id+".json";
 		var queryParam = {"apiKey":"SdayAPIKey"};
 

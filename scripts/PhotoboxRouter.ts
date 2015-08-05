@@ -70,6 +70,7 @@ class PhotoboxRouter extends RouterItf {
 
 		// define the '/' route
 		this.router.post('/start/:sessionid', function(req : any, res : any) { self.startSession(req, res); });
+		this.router.post('/start/:sessionid/:useCloudConnecte', function(req : any, res : any) { self.startSession(req, res); });
 		this.router.post('/counter/:sessionid', function(req : any, res : any) { self.counter(req, res); });
 		this.router.post('/post/:sessionid/:cloudStorage/:tag', function(req : any, res : any) { self.post(req, res); });
 
@@ -93,11 +94,17 @@ class PhotoboxRouter extends RouterItf {
 		var sessionid = req.params.sessionid;
 		var session = this.retrieveSession(sessionid);
 
+		var useCloudConnecte : boolean = true;
+
+		if (req.params.useCloudConnecte != undefined) {
+			useCloudConnecte = JSON.parse(req.params.useCloudConnecte);
+		}
+
 		if (!sessionid || session != null) {
 			res.status(500).send("Please send a valid and unique sessionid");
 		} else {
 			Logger.debug("Create session with id: "+sessionid);
-			var session = new PhotoboxSession(sessionid, this.server);
+			var session = new PhotoboxSession(sessionid, this.server, useCloudConnecte);
 			this._sessions.push(session);
 
 			session.start(res);

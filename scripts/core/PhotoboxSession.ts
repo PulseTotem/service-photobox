@@ -9,6 +9,7 @@
 var fs : any = require('fs');
 var lwip : any = require('lwip');
 var cloudinary : any = require('cloudinary');
+var request : any = require('request');
 
 /**
  * Represents a Session for Photobox usage.
@@ -84,13 +85,19 @@ class PhotoboxSession {
 	 */
 	private _server : Server;
 
-	constructor(id : string, server : Server) {
+	/**
+	 * Define if we use the API from CloudConnecte
+	 */
+	private _useCloudConnecteAPI : boolean;
+
+	constructor(id : string, server : Server, cloudConnecteAPI : boolean = true) {
 		this._id = id;
 		this._server = server;
 		this._cloudStorage = false;
 		this._pictureUrls = new Array<string>();
 		this._localPictures = new Array<string>();
 		this._timeout = null;
+		this._useCloudConnecteAPI = cloudConnecteAPI;
 	}
 
 
@@ -227,6 +234,26 @@ class PhotoboxSession {
 			this.deletePictures();
 		}
 		this._server.broadcastExternalMessage("endSession", this);
+
+		if (this._useCloudConnecteAPI) {
+			this.deleteSessionInCloudConnecte();
+		}
+	}
+
+	private deleteSessionInCloudConnecte() {
+		var domain = "https://www.mobilemasterkey.com";
+		var endpoint = "/api/sessions/close/"+this._id+".json";
+		var queryParam = {"apiKey":"SdayAPIKey"};
+
+		request.post(domain+endpoint, {qs: queryParam}).on('error', function (err) {
+			Logger.error("Error when deleting the session "+this._id+" in cloudConnecte :"+err);
+		}).on('response', function (response) {
+			if (response.statusCode == 200) {
+				Logger.debug("Properly delete the session "+this._id+" in cloudConnecte :"+response.body);
+			} else {
+				Logger.error("Error when deleting the session "+this._id+" in cloudConnecte. StatusCode : "+response.statusCode+" | Response : "+response.body);
+			}
+		});
 	}
 
 	/**

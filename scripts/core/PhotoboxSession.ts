@@ -229,10 +229,15 @@ class PhotoboxSession {
 	 */
 	private reachedTimeout() {
 		Logger.debug("Reached timeout for session "+this._id);
-		this._step = PhotoboxSessionStep.END;
+		this.closeSession();
 		if (this._pictureUrls.length > 0) {
 			this.deletePictures();
 		}
+
+	}
+
+	private closeSession() {
+		this._step = PhotoboxSessionStep.END;
 		this._server.broadcastExternalMessage("endSession", this);
 
 		if (this._useCloudConnecteAPI) {
@@ -509,10 +514,9 @@ class PhotoboxSession {
 		} else {
 			clearTimeout(this._timeout);
 			this._server.broadcastExternalMessage("newPicture", {tag: this.getTag(), pics: this.getPicturesURL()});
-			this._server.broadcastExternalMessage("endSession", this);
+			this.closeSession();
 
 			res.end();
-			this._step = PhotoboxSessionStep.END;
 		}
 	}
 
@@ -524,10 +528,9 @@ class PhotoboxSession {
 		} else {
 			clearTimeout(this._timeout);
 			this.deletePictures();
-			this._server.broadcastExternalMessage("endSession", this);
+			this.closeSession();
 
 			res.end();
-			this._step = PhotoboxSessionStep.END;
 		}
 	}
 }

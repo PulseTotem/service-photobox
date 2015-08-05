@@ -248,7 +248,7 @@ class PhotoboxSession {
 	private deleteSessionInCloudConnecte() {
 		var domain = "https://platform.cloud-connecte.com";
 		var endpoint = "/api/sessions/close/"+this._id+".json";
-		var queryParam = {"apiKey":"SdayAPIKey"};
+		var queryParam = {"apikey":"SdayAPIKey"};
 
 		request.post(domain+endpoint, {qs: queryParam}).on('error', function (err) {
 			Logger.error("Error when deleting the session "+this._id+" in cloudConnecte :"+err);

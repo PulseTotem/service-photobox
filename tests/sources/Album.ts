@@ -16,7 +16,7 @@ describe('Album', function() {
 			var mockAlbum = sinon.mock(Album.prototype);
 			mockAlbum.expects('run').once();
 
-			var params = { CloudStorage: 'false', Tag: 'toto', Limit: '10', InfoDuration: 15};
+			var params = { CloudStorage: 'false', Tag: 'toto', Limit: '10', InfoDuration: '15'};
 
 			var stubNSManager : any = sinon.createStubInstance(PhotoboxNamespaceManager);
 			var album = new Album(params, stubNSManager);
@@ -25,7 +25,7 @@ describe('Album', function() {
 			mockAlbum.verify();
 		});
 
-		it('should throw an error if a parameter is missing', function () {
+		it('should not launch run if the parameter CloudStorage is missing', function () {
 			var mockAlbum = sinon.mock(Album.prototype);
 			mockAlbum.expects('run').never();
 
@@ -35,11 +35,44 @@ describe('Album', function() {
 			new Album(params, stubNSManager);
 			mockAlbum.verify();
 		});
+
+		it('should not launch run if the parameter Tag is missing', function () {
+			var mockAlbum = sinon.mock(Album.prototype);
+			mockAlbum.expects('run').never();
+
+			var params = { CloudStorage: 'false', Limit: '10', InfoDuration: '15'};
+
+			var stubNSManager : any = sinon.createStubInstance(PhotoboxNamespaceManager);
+			new Album(params, stubNSManager);
+			mockAlbum.verify();
+		});
+
+		it('should not launch run if the parameter Limit is missing', function () {
+			var mockAlbum = sinon.mock(Album.prototype);
+			mockAlbum.expects('run').never();
+
+			var params = { CloudStorage: 'false', Tag: 'toto', InfoDuration: '15'};
+
+			var stubNSManager : any = sinon.createStubInstance(PhotoboxNamespaceManager);
+			new Album(params, stubNSManager);
+			mockAlbum.verify();
+		});
+
+		it('should not launch run if the parameter InfoDuration is missing', function () {
+			var mockAlbum = sinon.mock(Album.prototype);
+			mockAlbum.expects('run').never();
+
+			var params = { CloudStorage: 'false', Tag: 'toto', Limit: '10'};
+
+			var stubNSManager : any = sinon.createStubInstance(PhotoboxNamespaceManager);
+			new Album(params, stubNSManager);
+			mockAlbum.verify();
+		});
 	});
 
 	describe('#run', function () {
 		it('should create the proper photo album given params and obtained pictures', function () {
-			var params = { CloudStorage: 'false', Tag: 'toto', Limit: '1', InfoDuration: 15};
+			var params = { CloudStorage: 'false', Tag: 'toto', Limit: '1', InfoDuration: '15'};
 
 			var stubNSManager : any = sinon.createStubInstance(PhotoboxNamespaceManager);
 			var mockalbum = sinon.mock(PhotoboxAlbum.prototype);

@@ -64,9 +64,10 @@ class Photobox extends SourceServer {
 
 		fs.open(Photobox.upload_directory, 'r', function (err, fd) {
 			if (err) {
-				Logger.debug("The directory "+Photobox.upload_directory+" is not accessible. The following error has been encountered: "+err);
+				Logger.debug("The directory "+Photobox.upload_directory+" is not accessible. The following error has been encountered: "+err+".\nPhotobox is now trying to create it.");
 				try {
 					fs.mkdirSync(Photobox.upload_directory);
+					Logger.debug("Creation of "+Photobox.upload_directory+" successful!");
 				} catch (e) {
 					Logger.error("This service is unable to create the upload directory (path: "+Photobox.upload_directory+"). Consequently the local storage is unavailable.");
 				}

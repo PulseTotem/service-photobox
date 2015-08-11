@@ -13,7 +13,7 @@ class Subscribe extends SourceItf {
 		Logger.debug("Retrieve subscribe with params:");
 		Logger.debug(this.getParams());
 
-		if (this.checkParams(["InfoDuration","Tag","CloudStorage","URL","WatermarkURL"])) {
+		if (this.checkParams(["InfoDuration","Tag","CloudStorage","URL","WatermarkURL","CounterDuration","Limit"])) {
 			photoboxNamespaceManager.setParams(params);
 			var cloudStorage : boolean = JSON.parse(this.getParams().CloudStorage);
 			this._album = photoboxNamespaceManager.createTag(this.getParams().Tag, cloudStorage);

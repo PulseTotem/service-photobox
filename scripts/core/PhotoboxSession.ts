@@ -90,6 +90,11 @@ class PhotoboxSession {
 	 */
 	private _useCloudConnecteAPI : boolean;
 
+	/**
+	 * URL of the watermark to use when posting a picture
+	 */
+	private _watermarkURL : string;
+
 	constructor(id : string, server : Server, cloudConnecteAPI : boolean = true) {
 		this._id = id;
 		this._server = server;
@@ -165,6 +170,14 @@ class PhotoboxSession {
 
 	public getStep() {
 		return this._step;
+	}
+
+	/**
+	 * Set the watermark URL to use when posting picture
+	 * @param wurl URL of the watermark
+	 */
+	public setWatermarkURL(wurl : string) {
+		this._watermarkURL = wurl;
 	}
 
 	/**
@@ -373,7 +386,6 @@ class PhotoboxSession {
 							// the image is opened with lwip
 							} else {
 
-								var watermark : string = "http://www.the6thscreen.fr/assets/img/photobox/watermark_fetedelascience.png";
 								var local_watermark : string = "/tmp/watermark.png";
 
 								var fail = function (error) {
@@ -469,7 +481,7 @@ class PhotoboxSession {
 									});
 								};
 
-								PhotoboxUtils.downloadFile(watermark,local_watermark, successDownloadLogo, fail);
+								PhotoboxUtils.downloadFile(self._watermarkURL,local_watermark, successDownloadLogo, fail);
 							}
 						});
 					}

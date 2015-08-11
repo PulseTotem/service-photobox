@@ -72,7 +72,7 @@ class PhotoboxRouter extends RouterItf {
 		this.router.post('/start/:sessionid', function(req : any, res : any) { self.startSession(req, res); });
 		this.router.post('/start/:sessionid/:useCloudConnecte', function(req : any, res : any) { self.startSession(req, res); });
 		this.router.post('/counter/:sessionid', function(req : any, res : any) { self.counter(req, res); });
-		this.router.post('/post/:sessionid/:cloudStorage/:tag', function(req : any, res : any) { self.post(req, res); });
+		this.router.post('/post/:sessionid/:cloudStorage/:tag/:watermark', function(req : any, res : any) { self.post(req, res); });
 
 		this.router.post('/validate/:sessionid', function(req : any, res : any) { self.validate(req, res); });
 		this.router.post('/unvalidate/:sessionid', function(req : any, res : any) { self.unvalidate(req, res); });
@@ -139,6 +139,7 @@ class PhotoboxRouter extends RouterItf {
 		var sessionid = req.params.sessionid;
 		var cloudstorage = JSON.parse(req.params.cloudStorage);
 		var tag = req.params.tag;
+		var watermarkURL = decodeURIComponent(req.params.watermark);
 		var session : PhotoboxSession = this.retrieveSession(sessionid);
 
 		if (session == null) {
@@ -146,6 +147,7 @@ class PhotoboxRouter extends RouterItf {
 		} else {
 			session.setCloudStorage(cloudstorage);
 			session.setTag(tag);
+			session.setWatermarkURL(watermarkURL);
 			session.post(req.files.webcam, res);
 		}
 	}

@@ -26,7 +26,7 @@ describe('Subscribe', function() {
 			var mockSubscribe = sandbox.mock(Subscribe.prototype);
 			mockSubscribe.expects('run').once();
 
-			var params = { CloudStorage: 'false', Tag: 'toto', Limit: '10', InfoDuration: '15', URL: 'http://toto', WatermarkURL: 'http://tata', CounterDuration: '5'};
+			var params = { CloudStorage: 'false', Tag: 'toto', Limit: '10', InfoDuration: '15', URL: 'http://toto', WatermarkURL: 'http://tata', AppliURL: 'http://tutu', CounterDuration: '5'};
 
 			var stubNSManager : any = sinon.createStubInstance(PhotoboxNamespaceManager);
 			var album = new Subscribe(params, stubNSManager);
@@ -39,7 +39,7 @@ describe('Subscribe', function() {
 			var mockSubscribe = sandbox.mock(Subscribe.prototype);
 			mockSubscribe.expects('run').never();
 
-			var params = { Tag: 'toto', Limit: '10', InfoDuration: '15', URL: 'http://toto', WatermarkURL: 'http://tata', CounterDuration: '5'};
+			var params = { Tag: 'toto', Limit: '10', InfoDuration: '15', URL: 'http://toto', AppliURL: 'http://tutu', WatermarkURL: 'http://tata', CounterDuration: '5'};
 
 			var stubNSManager : any = sinon.createStubInstance(PhotoboxNamespaceManager);
 			new Subscribe(params, stubNSManager);
@@ -50,7 +50,7 @@ describe('Subscribe', function() {
 			var mockSubscribe = sandbox.mock(Subscribe.prototype);
 			mockSubscribe.expects('run').never();
 
-			var params = { CloudStorage: 'false', Limit: '10', InfoDuration: '15', URL: 'http://toto', WatermarkURL: 'http://tata', CounterDuration: '5'};
+			var params = { CloudStorage: 'false', Limit: '10', InfoDuration: '15', URL: 'http://toto', AppliURL: 'http://tutu', WatermarkURL: 'http://tata', CounterDuration: '5'};
 
 
 			var stubNSManager : any = sinon.createStubInstance(PhotoboxNamespaceManager);
@@ -62,7 +62,7 @@ describe('Subscribe', function() {
 			var mockSubscribe = sandbox.mock(Subscribe.prototype);
 			mockSubscribe.expects('run').never();
 
-			var params = { CloudStorage: 'false', Tag: 'toto', InfoDuration: '15', URL: 'http://toto', WatermarkURL: 'http://tata', CounterDuration: '5'};
+			var params = { CloudStorage: 'false', Tag: 'toto', InfoDuration: '15', URL: 'http://toto', AppliURL: 'http://tutu', WatermarkURL: 'http://tata', CounterDuration: '5'};
 
 			var stubNSManager : any = sinon.createStubInstance(PhotoboxNamespaceManager);
 			new Subscribe(params, stubNSManager);
@@ -73,7 +73,7 @@ describe('Subscribe', function() {
 			var mockSubscribe = sandbox.mock(Subscribe.prototype);
 			mockSubscribe.expects('run').never();
 
-			var params = { CloudStorage: 'false', Tag: 'toto', Limit: '10', URL: 'http://toto', WatermarkURL: 'http://tata', CounterDuration: '5'};
+			var params = { CloudStorage: 'false', Tag: 'toto', Limit: '10', URL: 'http://toto', AppliURL: 'http://tutu', WatermarkURL: 'http://tata', CounterDuration: '5'};
 
 			var stubNSManager : any = sinon.createStubInstance(PhotoboxNamespaceManager);
 			new Subscribe(params, stubNSManager);
@@ -84,7 +84,7 @@ describe('Subscribe', function() {
 			var mockSubscribe = sandbox.mock(Subscribe.prototype);
 			mockSubscribe.expects('run').never();
 
-			var params = { CloudStorage: 'false', Tag: 'toto', Limit: '10', InfoDuration: '15', WatermarkURL: 'http://tata', CounterDuration: '5'};
+			var params = { CloudStorage: 'false', Tag: 'toto', Limit: '10', InfoDuration: '15', AppliURL: 'http://tutu', WatermarkURL: 'http://tata', CounterDuration: '5'};
 
 			var stubNSManager : any = sinon.createStubInstance(PhotoboxNamespaceManager);
 			new Subscribe(params, stubNSManager);
@@ -95,7 +95,7 @@ describe('Subscribe', function() {
 			var mockSubscribe = sandbox.mock(Subscribe.prototype);
 			mockSubscribe.expects('run').never();
 
-			var params = { CloudStorage: 'false', Tag: 'toto', Limit: '10', InfoDuration: '15', URL: 'http://toto', CounterDuration: '5'};
+			var params = { CloudStorage: 'false', Tag: 'toto', Limit: '10', InfoDuration: '15', URL: 'http://toto', AppliURL: 'http://tutu', CounterDuration: '5'};
 
 			var stubNSManager : any = sinon.createStubInstance(PhotoboxNamespaceManager);
 			new Subscribe(params, stubNSManager);
@@ -106,7 +106,18 @@ describe('Subscribe', function() {
 			var mockSubscribe = sandbox.mock(Subscribe.prototype);
 			mockSubscribe.expects('run').never();
 
-			var params = { CloudStorage: 'false', Tag: 'toto', Limit: '10', InfoDuration: '15', URL: 'http://toto', WatermarkURL: 'http://toto'};
+			var params = { CloudStorage: 'false', Tag: 'toto', Limit: '10', InfoDuration: '15', URL: 'http://toto', AppliURL: 'http://tutu', WatermarkURL: 'http://toto'};
+
+			var stubNSManager : any = sinon.createStubInstance(PhotoboxNamespaceManager);
+			new Subscribe(params, stubNSManager);
+			mockSubscribe.verify();
+		});
+
+		it('should not launch run if the parameter AppliURL is missing', function () {
+			var mockSubscribe = sandbox.mock(Subscribe.prototype);
+			mockSubscribe.expects('run').never();
+
+			var params = { CloudStorage: 'false', Tag: 'toto', Limit: '10', InfoDuration: '15', URL: 'http://toto', WatermarkURL: 'http://tata', CounterDuration: '5'};
 
 			var stubNSManager : any = sinon.createStubInstance(PhotoboxNamespaceManager);
 			new Subscribe(params, stubNSManager);

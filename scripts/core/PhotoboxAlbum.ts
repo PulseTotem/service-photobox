@@ -61,13 +61,13 @@ class PhotoboxAlbum {
 	}
 
 	private readBlacklistFile() {
+		var content = "";
 		try {
-			var content = fs.readFileSync(PhotoboxUtils.getDirectoryFromTag(this._tag)+PhotoboxUtils.BLACKLIST_FILE);
+			content = fs.readFileSync(PhotoboxUtils.getDirectoryFromTag(this._tag)+PhotoboxUtils.BLACKLIST_FILE, {"encoding":"utf8"});
 			this._blacklistedPictures = content.split("\n");
 		} catch (err) {
-			Logger.debug("Unable to read blacklist file (location: "+PhotoboxUtils.getDirectoryFromTag(this._tag)+PhotoboxUtils.BLACKLIST_FILE+"). Perhaps it does not exist yet.");
+			Logger.debug("Unable to read blacklist file (location: "+PhotoboxUtils.getDirectoryFromTag(this._tag)+PhotoboxUtils.BLACKLIST_FILE+"). Perhaps it does not exist yet. Error: "+JSON.stringify(err));
 		}
-
 	}
 
 	private retrievePicsFromCloud() {
@@ -155,7 +155,7 @@ class PhotoboxAlbum {
 	}
 
 	public deletePicture(photoID : string) {
-
+		Logger.debug("Call deletePicture for photoID: "+photoID);
 		var index = -1;
 		for (var i = 0; i < this._pictures.length; i++) {
 			var pic : Picture = this._pictures[i];
@@ -166,6 +166,7 @@ class PhotoboxAlbum {
 		}
 
 		if (index != -1) {
+			Logger.debug("Blacklist the following picture: "+photoID);
 			var content = photoID+"\n";
 			fs.appendFileSync(PhotoboxUtils.getDirectoryFromTag(this._tag)+PhotoboxUtils.BLACKLIST_FILE, content);
 			this._blacklistedPictures.push(photoID);

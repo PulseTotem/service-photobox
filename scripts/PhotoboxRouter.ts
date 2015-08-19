@@ -6,6 +6,7 @@
 /// <reference path="../t6s-core/core-backend/scripts/Logger.ts" />
 /// <reference path="./core/PhotoboxSessionStep.ts" />
 /// <reference path="./core/PhotoboxSession.ts" />
+
 /**
  * NotifierRouter class.
  *
@@ -68,6 +69,14 @@ class PhotoboxRouter extends RouterItf {
 	buildRouter() {
 		var self = this;
 
+		this.router.use(function(req, res, next) {
+			res.header("Access-Control-Allow-Origin", "*");
+			res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+			res.header("Access-Control-Allow-Methods", "HEAD, POST, GET, PUT, DELETE");
+			next();
+		});
+
+
 		// define the '/' route
 		this.router.post('/start/:sessionid', function(req : any, res : any) { self.startSession(req, res); });
 		this.router.post('/start/:sessionid/:useCloudConnecte', function(req : any, res : any) { self.startSession(req, res); });
@@ -83,7 +92,7 @@ class PhotoboxRouter extends RouterItf {
 		this.router.post('/scan/:tag', function(req : any, res : any) { self.scanDirectory(req, res); });
 		this.router.get('/allpics/:tag', function(req : any, res : any) { self.getAllPicturesFromTag(req, res); });
 		this.router.delete('/picture/:tag/:photoID', function(req : any, res : any) { self.deletePicture(req, res); });
-		this.router.delete('/lastsession', function(req : any, res : any) { self.killLastSession(req, res); });
+		this.router.delete('/lastsession',function(req : any, res : any) { self.killLastSession(req, res); });
 
 	}
 

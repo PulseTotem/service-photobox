@@ -76,16 +76,22 @@ describe('PhotoboxAlbum', function() {
 
 	describe('#retrievePicsFromLocal', function () {
 		it('should retrieve pictures from directory', function (done) {
-
+			Logger.setLevel(LoggerLevel.Debug);
 			var mockUtils = sandbox.mock(PhotoboxUtils);
-			mockUtils.expects('getDirectoryFromTag').twice().returns('/tmp/upload/test');
-			mockUtils.expects('getBaseURL').thrice().returns('http://localhost/upload/test/');
+			mockUtils.expects('getDirectoryFromTag').atLeast(2).returns('/tmp/upload/test');
+			mockUtils.expects('getBaseURL').atLeast(2).returns('http://localhost/upload/test/');
 
 			mockfs({
 				"/tmp/upload/test": {
+					'blacklist.txt': new Buffer('toto\ntutu'),
 					'first.png': new Buffer([8, 6, 7, 5, 3, 0, 9]),
+					'first_small.png': new Buffer([8, 6, 7, 5, 3, 0, 9]),
+					'first_medium.png': new Buffer([8, 6, 7, 5, 3, 0, 9]),
 					'second.png': new Buffer([8, 6, 7, 5, 3, 0, 9]),
-					'third.png': new Buffer([8, 6, 7, 5, 3, 0, 9])
+					'second_small.png': new Buffer([8, 6, 7, 5, 3, 0, 9]),
+					'third.png': new Buffer([8, 6, 7, 5, 3, 0, 9]),
+					'third_small.png': new Buffer([8, 6, 7, 5, 3, 0, 9]),
+					'third_medium.png': new Buffer([8, 6, 7, 5, 3, 0, 9])
 				}
 			});
 
@@ -93,11 +99,6 @@ describe('PhotoboxAlbum', function() {
 			urlsFirst.push("http://localhost/upload/test/first.png");
 			urlsFirst.push("http://localhost/upload/test/first"+PhotoboxUtils.MIDDLE_SIZE.identifier+".png");
 			urlsFirst.push("http://localhost/upload/test/first"+PhotoboxUtils.SMALL_SIZE.identifier+".png");
-
-			var urlsSecond = new Array<string>();
-			urlsSecond.push("http://localhost/upload/test/second.png");
-			urlsSecond.push("http://localhost/upload/test/second"+PhotoboxUtils.MIDDLE_SIZE.identifier+".png");
-			urlsSecond.push("http://localhost/upload/test/second"+PhotoboxUtils.SMALL_SIZE.identifier+".png");
 
 			var urlsThird = new Array<string>();
 			urlsThird.push("http://localhost/upload/test/third.png");
@@ -114,7 +115,7 @@ describe('PhotoboxAlbum', function() {
 			var findetest = function () {
 				mockUtils.verify();
 				mockPhotobox.verify();
-				assert.deepEqual(allUrls, [urlsFirst, urlsSecond, urlsThird], "All urls should be present");
+				assert.deepEqual(allUrls, [urlsFirst, urlsThird], "All urls should be present");
 				monstub.restore();
 				mockfs.restore();
 				done();
@@ -124,7 +125,7 @@ describe('PhotoboxAlbum', function() {
 			var funcAddPicture = function (urls) {
 				allUrls.push(urls);
 				counter++;
-				if (counter == 3) {
+				if (counter == 2) {
 					findetest();
 				}
 			};
@@ -138,12 +139,15 @@ describe('PhotoboxAlbum', function() {
 		it('should retrieve pictures from directory ignoring medium and small files', function (done) {
 
 			var mockUtils = sandbox.mock(PhotoboxUtils);
-			mockUtils.expects('getDirectoryFromTag').twice().returns('/tmp/upload/test');
-			mockUtils.expects('getBaseURL').once().returns('http://localhost/upload/test/');
+			mockUtils.expects('getDirectoryFromTag').atLeast(2).returns('/tmp/upload/test');
+			mockUtils.expects('getBaseURL').atLeast(2).returns('http://localhost/upload/test/');
 
 			mockfs({
 				"/tmp/upload/test": {
+					'blacklist.txt': new Buffer('toto\ntutu'),
 					'first.png': new Buffer([8, 6, 7, 5, 3, 0, 9]),
+					'first_small.png': new Buffer([8, 6, 7, 5, 3, 0, 9]),
+					'first_medium.png': new Buffer([8, 6, 7, 5, 3, 0, 9]),
 					'toto_small.png': new Buffer([8, 6, 7, 5, 3, 0, 9]),
 					'titi_medium.png': new Buffer([8, 6, 7, 5, 3, 0, 9])
 				}

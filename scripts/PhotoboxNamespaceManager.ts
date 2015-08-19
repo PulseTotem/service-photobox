@@ -35,7 +35,7 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 		this._params = params;
 	}
 
-	public createTag(tag : string, cloudStorage : boolean) : PhotoboxAlbum {
+	public static createTag(tag : string, cloudStorage : boolean) : PhotoboxAlbum {
 		if (PhotoboxNamespaceManager._albums[tag] == undefined) {
 			Logger.debug("Create the PhotoboxAlbum for tag: "+tag);
 			PhotoboxNamespaceManager._albums[tag] = new PhotoboxAlbum(tag, cloudStorage);

@@ -12,12 +12,18 @@ var sinon : SinonStatic = require("sinon");
 var mockfs = require("mock-fs");
 
 describe('PhotoboxAlbum', function() {
-	afterEach(function() {
+	var sandbox;
+	beforeEach(function () {
+		sandbox = sinon.sandbox.create();
+	});
+
+	afterEach(function () {
+		sandbox.restore();
 		mockfs.restore();
 	});
 	describe('#constructor', function () {
 		it('should initialize variable and launch local picture retrieve if cloudStorage is false', function () {
-			var mockPhotobox = sinon.mock(PhotoboxAlbum.prototype);
+			var mockPhotobox = sandbox.mock(PhotoboxAlbum.prototype);
 			mockPhotobox.expects('retrievePicsFromLocal').once();
 			mockPhotobox.expects('retrievePicsFromCloud').never();
 
@@ -33,7 +39,7 @@ describe('PhotoboxAlbum', function() {
 		});
 
 		it('should initialize variable and launch local picture retrieve if cloudStorage is true', function () {
-			var mockPhotobox = sinon.mock(PhotoboxAlbum.prototype);
+			var mockPhotobox = sandbox.mock(PhotoboxAlbum.prototype);
 			mockPhotobox.expects('retrievePicsFromLocal').never();
 			mockPhotobox.expects('retrievePicsFromCloud').once();
 
@@ -51,13 +57,13 @@ describe('PhotoboxAlbum', function() {
 
 	describe('#retrievePicsFromCloud', function () {
 		it('should launch cloudinaryConfig and retrieve pictures from cloudinary API', function () {
-			var mockPhotobox = sinon.mock(PhotoboxAlbum.prototype);
+			var mockPhotobox = sandbox.mock(PhotoboxAlbum.prototype);
 			mockPhotobox.expects('retrievePicsFromLocal').never();
 
-			var mockUtils = sinon.mock(PhotoboxUtils);
+			var mockUtils = sandbox.mock(PhotoboxUtils);
 			mockUtils.expects('configCloudinary').once();
 
-			var mockCloudinary = sinon.mock(cloudinary.api);
+			var mockCloudinary = sandbox.mock(cloudinary.api);
 			mockCloudinary.expects('resources_by_tag').once();
 
 			new PhotoboxAlbum("test", true);
@@ -69,8 +75,12 @@ describe('PhotoboxAlbum', function() {
 	});
 
 	describe('#retrievePicsFromLocal', function () {
+		Logger.setLevel(LoggerLevel.Debug);
+		Logger.debug("Start test to retrieve pictures from directory ");
+
 		it('should retrieve pictures from directory', function (done) {
-			var mockUtils = sinon.mock(PhotoboxUtils);
+
+			var mockUtils = sandbox.mock(PhotoboxUtils);
 			mockUtils.expects('getDirectoryFromTag').once().returns('/tmp/upload/test');
 			mockUtils.expects('getBaseURL').thrice().returns('http://localhost/upload/test/');
 
@@ -97,7 +107,7 @@ describe('PhotoboxAlbum', function() {
 			urlsThird.push("http://localhost/upload/test/third"+PhotoboxUtils.MIDDLE_SIZE.identifier+".png");
 			urlsThird.push("http://localhost/upload/test/third"+PhotoboxUtils.SMALL_SIZE.identifier+".png");
 
-			var mockPhotobox = sinon.mock(PhotoboxAlbum.prototype);
+			var mockPhotobox = sandbox.mock(PhotoboxAlbum.prototype);
 			mockPhotobox.expects('retrievePicsFromCloud').never();
 
 			var allUrls = [];
@@ -122,7 +132,7 @@ describe('PhotoboxAlbum', function() {
 				}
 			};
 
-			monstub = sinon.stub(PhotoboxAlbum.prototype, 'addPicture', funcAddPicture);
+			monstub = sandbox.stub(PhotoboxAlbum.prototype, 'addPicture', funcAddPicture);
 
 			new PhotoboxAlbum("test", false);
 
@@ -130,7 +140,7 @@ describe('PhotoboxAlbum', function() {
 
 		it('should retrieve pictures from directory ignoring medium and small files', function (done) {
 
-			var mockUtils = sinon.mock(PhotoboxUtils);
+			var mockUtils = sandbox.mock(PhotoboxUtils);
 			mockUtils.expects('getDirectoryFromTag').once().returns('/tmp/upload/test');
 			mockUtils.expects('getBaseURL').once().returns('http://localhost/upload/test/');
 
@@ -147,7 +157,7 @@ describe('PhotoboxAlbum', function() {
 			urlsFirst.push("http://localhost/upload/test/first"+PhotoboxUtils.MIDDLE_SIZE.identifier+".png");
 			urlsFirst.push("http://localhost/upload/test/first"+PhotoboxUtils.SMALL_SIZE.identifier+".png");
 
-			var mockPhotobox = sinon.mock(PhotoboxAlbum.prototype);
+			var mockPhotobox = sandbox.mock(PhotoboxAlbum.prototype);
 			mockPhotobox.expects('retrievePicsFromCloud').never();
 
 			var allUrls = [];
@@ -171,7 +181,7 @@ describe('PhotoboxAlbum', function() {
 				}
 			};
 
-			monstub = sinon.stub(PhotoboxAlbum.prototype, 'addPicture', funcAddPicture);
+			monstub = sandbox.stub(PhotoboxAlbum.prototype, 'addPicture', funcAddPicture);
 
 			new PhotoboxAlbum("test", false);
 
@@ -180,7 +190,7 @@ describe('PhotoboxAlbum', function() {
 
 	describe('#addPicture', function () {
 		it('should create a proper Picture given a URL and tag', function() {
-			var mockPhotobox = sinon.mock(PhotoboxAlbum.prototype);
+			var mockPhotobox = sandbox.mock(PhotoboxAlbum.prototype);
 			mockPhotobox.expects('retrievePicsFromLocal').once();
 			mockPhotobox.expects('retrievePicsFromCloud').never();
 
@@ -219,7 +229,7 @@ describe('PhotoboxAlbum', function() {
 
 	describe('#getLastPictures', function () {
 		it('should return an empty list if there is no picture', function () {
-			var mockPhotobox = sinon.mock(PhotoboxAlbum.prototype);
+			var mockPhotobox = sandbox.mock(PhotoboxAlbum.prototype);
 			mockPhotobox.expects('retrievePicsFromLocal').once();
 			mockPhotobox.expects('retrievePicsFromCloud').never();
 
@@ -232,7 +242,7 @@ describe('PhotoboxAlbum', function() {
 		});
 
 		it('should return the last two pictures with a limit 2', function () {
-			var mockPhotobox = sinon.mock(PhotoboxAlbum.prototype);
+			var mockPhotobox = sandbox.mock(PhotoboxAlbum.prototype);
 			mockPhotobox.expects('retrievePicsFromLocal').once();
 			mockPhotobox.expects('retrievePicsFromCloud').never();
 

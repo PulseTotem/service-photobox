@@ -6,10 +6,27 @@
 /// <reference path="../../t6s-core/core-backend/t6s-core/core/scripts/infotype/Picture.ts" />
 /// <reference path="./PhotoboxUtils.ts" />
 
-
+/**
+ * Represent an album corresponding to a tag in Photobox.
+ */
 class PhotoboxAlbum {
 
+	/**
+	 * The tag of the album
+	 *
+	 * @property _tag
+	 * @type {string}
+	 * @private
+	 */
 	private _tag : string;
+
+	/**
+	 * The list of pictures of the album
+	 *
+	 * @property _pictures
+	 * @type {Array<Picture>}
+	 * @private
+	 */
 	private _pictures : Array<Picture>;
 
 	constructor(tag : string, cloudStorage : boolean) {
@@ -50,12 +67,15 @@ class PhotoboxAlbum {
 		});
 	}
 
-	private retrievePicsFromLocal() {
+	public retrievePicsFromLocal() {
+
+		this._pictures = new Array<Picture>();
 		var self = this;
 		fs.readdir(PhotoboxUtils.getDirectoryFromTag(this._tag), function (err, files) {
 			if (err) {
 				Logger.error("Error when reading the directory. "+err);
 			} else {
+				Logger.debug("Start scanning directory : "+PhotoboxUtils.getDirectoryFromTag(this._tag));
 				files.forEach(function (file) {
 					if (file.indexOf(PhotoboxUtils.MIDDLE_SIZE.identifier) == -1 && file.indexOf(PhotoboxUtils.SMALL_SIZE.identifier) == -1) {
 						var urls : Array<string> = new Array<string>();

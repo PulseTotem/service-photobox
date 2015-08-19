@@ -75,7 +75,7 @@ class PhotoboxAlbum {
 			if (err) {
 				Logger.error("Error when reading the directory. "+err);
 			} else {
-				Logger.debug("Start scanning directory : "+PhotoboxUtils.getDirectoryFromTag(this._tag));
+				Logger.debug("Start scanning directory : "+PhotoboxUtils.getDirectoryFromTag(self._tag));
 				files.forEach(function (file) {
 					if (file.indexOf(PhotoboxUtils.MIDDLE_SIZE.identifier) == -1 && file.indexOf(PhotoboxUtils.SMALL_SIZE.identifier) == -1) {
 						var urls : Array<string> = new Array<string>();

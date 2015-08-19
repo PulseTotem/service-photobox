@@ -75,13 +75,10 @@ describe('PhotoboxAlbum', function() {
 	});
 
 	describe('#retrievePicsFromLocal', function () {
-		Logger.setLevel(LoggerLevel.Debug);
-		Logger.debug("Start test to retrieve pictures from directory ");
-
 		it('should retrieve pictures from directory', function (done) {
 
 			var mockUtils = sandbox.mock(PhotoboxUtils);
-			mockUtils.expects('getDirectoryFromTag').once().returns('/tmp/upload/test');
+			mockUtils.expects('getDirectoryFromTag').twice().returns('/tmp/upload/test');
 			mockUtils.expects('getBaseURL').thrice().returns('http://localhost/upload/test/');
 
 			mockfs({
@@ -141,7 +138,7 @@ describe('PhotoboxAlbum', function() {
 		it('should retrieve pictures from directory ignoring medium and small files', function (done) {
 
 			var mockUtils = sandbox.mock(PhotoboxUtils);
-			mockUtils.expects('getDirectoryFromTag').once().returns('/tmp/upload/test');
+			mockUtils.expects('getDirectoryFromTag').twice().returns('/tmp/upload/test');
 			mockUtils.expects('getBaseURL').once().returns('http://localhost/upload/test/');
 
 			mockfs({

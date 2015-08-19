@@ -172,14 +172,15 @@ module.exports = function (grunt) {
 //                                 test tasks
 // ---------------------------------------------
         mochaTest: {
-            test: {
+            /*test: {
                 options: {
                     reporter: 'spec',
+                    quiet: false,
                     colors: true,
                     captureFile: 'build/tests/result.txt'
                 },
                 src: ['build/tests/Test.js']
-            },
+            },*/
             jenkins: {
                 options: {
                     reporter: 'mocha-jenkins-reporter',
@@ -249,7 +250,7 @@ module.exports = function (grunt) {
     });
 
     grunt.registerTask('coverage', ['initTest', 'mocha_istanbul:coverage']);
-    grunt.registerTask('test', ['initTest', 'mochaTest:test']);
+    grunt.registerTask('test', ['initTest', 'mochaTest:jenkins']);
 
     grunt.registerTask('jenkins', ['initTest', 'mochaTest:jenkins', 'mocha_istanbul:coverage', 'clean:package']);
 

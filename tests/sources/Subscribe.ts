@@ -28,10 +28,11 @@ describe('Subscribe', function() {
 
 			var params = { CloudStorage: 'false', Tag: 'toto', Limit: '10', InfoDuration: '15', URL: 'http://toto', WatermarkURL: 'http://tata', AppliURL: 'http://tutu', CounterDuration: '5'};
 
-			var stubNSManager : any = sinon.createStubInstance(PhotoboxNamespaceManager);
-			var album = new Subscribe(params, stubNSManager);
+			var stubNSManager : any = sandbox.stub(PhotoboxNamespaceManager, "createTag");
+			var stubNSManager2 : any = sinon.createStubInstance(PhotoboxNamespaceManager);
+			var album = new Subscribe(params, stubNSManager2);
 
-			assert.ok(stubNSManager.createTag.calledWithExactly('toto', false));
+			assert.ok(stubNSManager.calledWithExactly('toto', false));
 			mockSubscribe.verify();
 		});
 

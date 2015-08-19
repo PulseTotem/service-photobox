@@ -295,7 +295,7 @@ class PhotoboxSession {
 				this._timeout = setTimeout(function() { self.reachedTimeout(); }, PhotoboxUtils.TIMEOUT_DURATION*1000);
 			} else {
 				res.status(500).send("No client is currently connected.");
-				this._step = PhotoboxSessionStep.END;
+				this.closeSession();
 			}
 		}
 	}
@@ -321,8 +321,7 @@ class PhotoboxSession {
 				this._timeout = setTimeout(function() { self.reachedTimeout(); }, PhotoboxUtils.TIMEOUT_DURATION*1000);
 			} else {
 				res.status(500).send("No client is currently connected.");
-				this._server.broadcastExternalMessage("endSession", this);
-				this._step = PhotoboxSessionStep.END;
+				this.closeSession();
 			}
 		}
 	}

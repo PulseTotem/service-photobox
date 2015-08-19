@@ -104,8 +104,9 @@ class PhotoboxAlbum {
 						var basename = PhotoboxUtils.getBaseURL(self._tag)+file.substr(0, file.length - fileext[1].length - 1);
 
 						var fileId = fileext[0];
-						var completeMediumPath = PhotoboxUtils.getDirectoryFromTag(self._tag)+fileId+PhotoboxUtils.MIDDLE_SIZE.identifier+"."+fileext[1];
-						var completeSmallPath = PhotoboxUtils.getDirectoryFromTag(self._tag)+fileId+PhotoboxUtils.SMALL_SIZE.identifier+"."+fileext[1];
+						var completeMediumPath = fileId+PhotoboxUtils.MIDDLE_SIZE.identifier+"."+fileext[1];
+						var completeSmallPath = fileId+PhotoboxUtils.SMALL_SIZE.identifier+"."+fileext[1];
+
 						if (self._blacklistedPictures.indexOf(fileId) == -1 && files.indexOf(completeMediumPath) != -1 && files.indexOf(completeSmallPath) != -1) {
 							urls.push(basename+"."+fileext[1]);
 
@@ -166,7 +167,7 @@ class PhotoboxAlbum {
 
 		if (index != -1) {
 			var content = photoID+"\n";
-			fs.appendFileSync(PhotoboxUtils.getDirectoryFromTag(this._tag), content);
+			fs.appendFileSync(PhotoboxUtils.getDirectoryFromTag(this._tag)+PhotoboxUtils.BLACKLIST_FILE, content);
 			this._blacklistedPictures.push(photoID);
 
 			this._pictures.splice(index, 1);

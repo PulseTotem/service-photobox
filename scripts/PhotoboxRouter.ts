@@ -83,6 +83,8 @@ class PhotoboxRouter extends RouterItf {
 		this.router.post('/scan/:tag', function(req : any, res : any) { self.scanDirectory(req, res); });
 		this.router.get('/allpics/:tag', function(req : any, res : any) { self.getAllPicturesFromTag(req, res); });
 		this.router.delete('/picture/:tag/:photoID', function(req : any, res : any) { self.deletePicture(req, res); });
+		this.router.delete('/lastsession', function(req : any, res : any) { self.killLastSession(req, res); });
+
 	}
 
 	/**
@@ -237,6 +239,15 @@ class PhotoboxRouter extends RouterItf {
 		var album : PhotoboxAlbum = PhotoboxNamespaceManager.createTag(tag, false);
 		album.deletePicture(photo_id);
 
+		res.end();
+	}
+
+	killLastSession(req : any, res : any) {
+		var index = this._sessions.length-1;
+		var session : PhotoboxSession = this._sessions[index];
+		session.killSession();
+
+		this._sessions.splice(index, 1);
 		res.end();
 	}
 }

@@ -252,6 +252,18 @@ class PhotoboxSession {
 
 	//////// METHODS TO MANIPULATE THE SESSION
 
+	public killSession() {
+		Logger.debug("Kill the following session :"+this._id);
+
+		if (this._timeout) {
+			clearTimeout(this._timeout);
+		}
+		this.closeSession();
+		if (this._pictureUrls.length > 0) {
+			this.deletePictures();
+		}
+	}
+
 	/**
 	 * Method to call when the timeout is reached in any step.
 	 */
@@ -277,14 +289,14 @@ class PhotoboxSession {
 		var domain = "https://platform.cloud-connecte.com";
 		var endpoint = "/api/sessions/close/"+this._id+".json";
 		var queryParam = {"apikey":"SdayAPIKey"};
-
+		var self = this;
 		request.post(domain+endpoint, {qs: queryParam}).on('error', function (err) {
-			Logger.error("Error when deleting the session "+this._id+" in cloudConnecte :"+err);
+			Logger.error("Error when deleting the session "+this._id+" in cloudConnecte :"+JSON.stringify(err));
 		}).on('response', function (response) {
 			if (response.statusCode == 200) {
-				Logger.debug("Properly delete the session "+this._id+" in cloudConnecte :"+response.body);
+				Logger.debug("Properly delete the session "+self._id+" in cloudConnecte :"+response.body);
 			} else {
-				Logger.error("Error when deleting the session "+this._id+" in cloudConnecte. StatusCode : "+response.statusCode+" | Response : "+response.body);
+				Logger.error("Error when deleting the session "+self._id+" in cloudConnecte. StatusCode : "+response.statusCode+" | Response : "+response.body);
 			}
 		});
 	}

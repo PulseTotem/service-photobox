@@ -29,9 +29,21 @@ class PhotoboxAlbum {
 	 */
 	private _pictures : Array<Picture>;
 
+	/**
+	 * The list of blacklisted pictures: those pictures won't be retrieved to be displayed.
+	 *
+	 * @property _blacklistedPictures
+	 * @type {Array<string>}
+	 * @private
+	 */
+	private _blacklistedPictures : Array<string>;
+
 	constructor(tag : string, cloudStorage : boolean) {
 		this._tag = tag;
 		this._pictures = new Array<Picture>();
+		this._blacklistedPictures = new Array<string>();
+
+		this.readBlacklistFile();
 
 		if (cloudStorage) {
 			this.retrievePicsFromCloud();
@@ -46,6 +58,16 @@ class PhotoboxAlbum {
 
 	public getPictures() {
 		return this._pictures;
+	}
+
+	private readBlacklistFile() {
+		try {
+			var content = fs.readFileSync(PhotoboxUtils.getDirectoryFromTag(this._tag)+PhotoboxUtils.BLACKLIST_FILE);
+			this._blacklistedPictures = content.split("\n");
+		} catch (err) {
+			Logger.debug("Unable to read blacklist file (location: "+PhotoboxUtils.getDirectoryFromTag(this._tag)+PhotoboxUtils.BLACKLIST_FILE+"). Perhaps it does not exist yet.");
+		}
+
 	}
 
 	private retrievePicsFromCloud() {
@@ -68,7 +90,6 @@ class PhotoboxAlbum {
 	}
 
 	public retrievePicsFromLocal() {
-
 		this._pictures = new Array<Picture>();
 		var self = this;
 		fs.readdir(PhotoboxUtils.getDirectoryFromTag(this._tag), function (err, files) {
@@ -82,12 +103,19 @@ class PhotoboxAlbum {
 						var fileext = PhotoboxUtils.getFileExtension(file);
 						var basename = PhotoboxUtils.getBaseURL(self._tag)+file.substr(0, file.length - fileext[1].length - 1);
 
-						urls.push(basename+"."+fileext[1]);
+						var fileId = fileext[0];
+						var completeMediumPath = PhotoboxUtils.getDirectoryFromTag(self._tag)+fileId+PhotoboxUtils.MIDDLE_SIZE.identifier+"."+fileext[1];
+						var completeSmallPath = PhotoboxUtils.getDirectoryFromTag(self._tag)+fileId+PhotoboxUtils.SMALL_SIZE.identifier+"."+fileext[1];
+						if (self._blacklistedPictures.indexOf(fileId) == -1 && files.indexOf(completeMediumPath) != -1 && files.indexOf(completeSmallPath) != -1) {
+							urls.push(basename+"."+fileext[1]);
 
-						urls.push(basename+PhotoboxUtils.MIDDLE_SIZE.identifier+"."+fileext[1]);
-						urls.push(basename+PhotoboxUtils.SMALL_SIZE.identifier+"."+fileext[1]);
+							urls.push(basename+PhotoboxUtils.MIDDLE_SIZE.identifier+"."+fileext[1]);
+							urls.push(basename+PhotoboxUtils.SMALL_SIZE.identifier+"."+fileext[1]);
 
-						self.addPicture(urls);
+							self.addPicture(urls);
+						} else {
+							Logger.debug("Following file is blacklisted or does not match picture pattern: "+file);
+						}
 					}
 				});
 			}
@@ -123,6 +151,27 @@ class PhotoboxAlbum {
 		pic.setSmall(picUrlSmall);
 
 		this._pictures.push(pic);
+	}
+
+	public deletePicture(photoID : string) {
+
+		var index = -1;
+		for (var i = 0; i < this._pictures.length; i++) {
+			var pic : Picture = this._pictures[i];
+
+			if (PhotoboxUtils.getFileExtension(pic.getId())[0] == photoID) {
+				index = i;
+			}
+		}
+
+		if (index != -1) {
+			var content = photoID+"\n";
+			fs.appendFileSync(PhotoboxUtils.getDirectoryFromTag(this._tag), content);
+			this._blacklistedPictures.push(photoID);
+
+			this._pictures.splice(index, 1);
+
+		}
 	}
 
 	public getLastPictures(limit : number): Array<Picture> {

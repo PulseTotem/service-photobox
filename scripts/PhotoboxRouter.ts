@@ -81,6 +81,8 @@ class PhotoboxRouter extends RouterItf {
 		this.router.get('/state/:sessionid', function(req : any, res : any) { self.getStateSession(req, res); });
 
 		this.router.post('/scan/:tag', function(req : any, res : any) { self.scanDirectory(req, res); });
+		this.router.get('/allpics/:tag', function(req : any, res : any) { self.getAllPicturesFromTag(req, res); });
+		this.router.delete('/picture/:tag/:photoID', function(req : any, res : any) { self.deletePicture(req, res); });
 	}
 
 	/**
@@ -222,4 +224,19 @@ class PhotoboxRouter extends RouterItf {
 		res.end();
 	}
 
+	getAllPicturesFromTag(req : any, res : any) {
+		var tag = req.params.tag;
+		var album : PhotoboxAlbum = PhotoboxNamespaceManager.createTag(tag, false);
+		res.json(album.getPictures());
+	}
+
+	deletePicture(req : any, res : any) {
+		var tag = req.params.tag;
+		var photo_id = req.params.photoID;
+
+		var album : PhotoboxAlbum = PhotoboxNamespaceManager.createTag(tag, false);
+		album.deletePicture(photo_id);
+
+		res.end();
+	}
 }

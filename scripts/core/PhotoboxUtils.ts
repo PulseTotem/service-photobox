@@ -10,6 +10,7 @@ var cloudinary : any = require('cloudinary');
 
 class PhotoboxUtils {
 	public static TIMEOUT_DURATION = 30;
+	public static BLACKLIST_FILE = "blacklist.txt";
 
 	public static MIDDLE_SIZE = {
 		identifier: "_medium",

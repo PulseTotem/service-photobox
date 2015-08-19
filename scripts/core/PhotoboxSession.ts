@@ -95,6 +95,11 @@ class PhotoboxSession {
 	 */
 	private _watermarkURL : string;
 
+	/**
+	 * Duration of the counter to take the picture
+	 */
+	private _counterDuration : number;
+
 	constructor(id : string, server : Server, cloudConnecteAPI : boolean = true) {
 		this._id = id;
 		this._server = server;
@@ -103,6 +108,8 @@ class PhotoboxSession {
 		this._localPictures = new Array<string>();
 		this._timeout = null;
 		this._useCloudConnecteAPI = cloudConnecteAPI;
+		this._counterDuration = 0;
+		this._watermarkURL = "";
 	}
 
 
@@ -178,6 +185,14 @@ class PhotoboxSession {
 	 */
 	public setWatermarkURL(wurl : string) {
 		this._watermarkURL = wurl;
+	}
+
+	/**
+	 * Set the counterDuration using to set the timeout when posting picture (see http://jira.the6thscreen.fr/browse/SERVICES-99)
+	 * @param duration
+	 */
+	public setCounterDuration(duration : number) {
+		this._counterDuration = duration;
 	}
 
 	/**
@@ -318,7 +333,7 @@ class PhotoboxSession {
 			if (ack) {
 				res.end();
 				this._step = PhotoboxSessionStep.COUNTER;
-				this._timeout = setTimeout(function() { self.reachedTimeout(); }, PhotoboxUtils.TIMEOUT_DURATION*1000);
+				this._timeout = setTimeout(function() { self.reachedTimeout(); }, (this._counterDuration+PhotoboxUtils.TIMEOUT_DURATION)*1000);
 			} else {
 				res.status(500).send("No client is currently connected.");
 				this.closeSession();

@@ -47,6 +47,7 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 					Logger.debug("The directory "+uploadDir+" is not accessible. The following error has been encountered: "+err+".\nPhotobox is now trying to create it.");
 					try {
 						fs.mkdirSync(uploadDir);
+						fs.writeFileSync(uploadDir+"index.html","");
 						Logger.debug("Creation of the directory "+uploadDir+" successful!");
 					} catch (e) {
 						Logger.error("This service is unable to create the tagged directory (path: "+uploadDir+"). Consequently the local storage is unavailable.");

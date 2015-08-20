@@ -60,6 +60,10 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 		return PhotoboxNamespaceManager._albums[tag];
 	}
 
+	public static getTags() : Array<string> {
+		return Object.keys(PhotoboxNamespaceManager._albums);
+	}
+
 	/**
 	 * Method called when external message comes from PhotoboxRouter.
 	 *

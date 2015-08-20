@@ -77,23 +77,44 @@ class PhotoboxRouter extends RouterItf {
 		});
 
 
-		// define the '/' route
+		/* Routes to take a picture
+
+		 POST /start/:sessionId : start a session (a parameter useCloudConnecte can be used to specify is the CloudConnecte API is used)
+		 POST /counter/:sessionId : triggers the counter of an existing session
+		 POST /post/... : post the picture taken by the webcam
+		 POST /validate/:sessionId : validate a picture and destroy the session
+		 POST /unvalidate/:sessionId : unvalidate a picture, destroy it and destroy the session
+		 */
 		this.router.post('/start/:sessionid', function(req : any, res : any) { self.startSession(req, res); });
 		this.router.post('/start/:sessionid/:useCloudConnecte', function(req : any, res : any) { self.startSession(req, res); });
 		this.router.post('/counter/:sessionid', function(req : any, res : any) { self.counter(req, res); });
 		this.router.post('/post/:sessionid/:cloudStorage/:tag/:watermark', function(req : any, res : any) { self.post(req, res); });
-
 		this.router.post('/validate/:sessionid', function(req : any, res : any) { self.validate(req, res); });
 		this.router.post('/unvalidate/:sessionid', function(req : any, res : any) { self.unvalidate(req, res); });
 
+		/**
+		 * Utility routes when taking the picture
+		 *
+		 * GET /pictures/:sessionId : get the list of pictures for a session
+		 * GET /state/:sessionId : return the status of a session
+		 */
 		this.router.get('/pictures/:sessionid', function(req : any, res : any) { self.getPictures(req, res); });
 		this.router.get('/state/:sessionid', function(req : any, res : any) { self.getStateSession(req, res); });
 
+		/**
+		 * Admin routes to manage the service
+		 *
+		 * POST /scan/:tag : Launch a scan of the local directory for the specified tag
+		 * GET /allpics/:tag Return all the pictures of the album of the tag
+		 * DELETE /picture/:tag/:photoID : blacklist a picture
+		 * DELETE /lastsession : kill the last session
+		 * GET /tags : Return all tags
+		 */
 		this.router.post('/scan/:tag', function(req : any, res : any) { self.scanDirectory(req, res); });
 		this.router.get('/allpics/:tag', function(req : any, res : any) { self.getAllPicturesFromTag(req, res); });
 		this.router.delete('/picture/:tag/:photoID', function(req : any, res : any) { self.deletePicture(req, res); });
 		this.router.delete('/lastsession',function(req : any, res : any) { self.killLastSession(req, res); });
-
+		this.router.get('/tags', function(req : any, res : any) { self.getAllTags(req, res); });
 	}
 
 	/**
@@ -252,11 +273,16 @@ class PhotoboxRouter extends RouterItf {
 	}
 
 	killLastSession(req : any, res : any) {
+		this.purgeSession();
 		var index = this._sessions.length-1;
 		var session : PhotoboxSession = this._sessions[index];
 		session.killSession();
 
 		this._sessions.splice(index, 1);
 		res.end();
+	}
+
+	getAllTags(req : any, res : any) {
+		res.json(PhotoboxNamespaceManager.getTags());
 	}
 }

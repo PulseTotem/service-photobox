@@ -365,7 +365,7 @@ class PhotoboxSession {
 			res.status(500).send("Illegal action for the session state ! (state = "+PhotoboxSessionStep[this._step]+")");
 		} else {
 			clearTimeout(this._timeout);
-
+			this._step = PhotoboxSessionStep.POSTING;
 			if (this.getCloudStorage()) {
 				this.postCloud(imageData, res);
 			} else {

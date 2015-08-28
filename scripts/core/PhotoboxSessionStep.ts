@@ -5,6 +5,7 @@
 enum PhotoboxSessionStep {
 	START,
 	COUNTER,
+	POSTING,
 	PENDINGVALIDATION,
 	END
 }

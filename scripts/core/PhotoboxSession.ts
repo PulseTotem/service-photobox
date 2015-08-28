@@ -319,6 +319,9 @@ class PhotoboxSession {
 			if (ack) {
 				res.end();
 				this._step = PhotoboxSessionStep.START;
+				if (this._timeout) {
+					clearTimeout(this._timeout);
+				}
 				this._timeout = setTimeout(function() { self.reachedTimeout(); }, PhotoboxUtils.TIMEOUT_DURATION*1000);
 			} else {
 				res.status(500).send("No client is currently connected.");
@@ -345,6 +348,9 @@ class PhotoboxSession {
 			if (ack) {
 				res.end();
 				this._step = PhotoboxSessionStep.COUNTER;
+				if (this._timeout) {
+					clearTimeout(this._timeout);
+				}
 				this._timeout = setTimeout(function() { self.reachedTimeout(); }, (this._counterDuration+PhotoboxUtils.TIMEOUT_DURATION)*1000);
 			} else {
 				res.status(500).send("No client is currently connected.");
@@ -487,6 +493,9 @@ class PhotoboxSession {
 																							self._localPictures.push(uploadDir+newPathes[2]);
 
 																							self._step = PhotoboxSessionStep.PENDINGVALIDATION;
+																							if (self._timeout) {
+																								clearTimeout(self._timeout);
+																							}
 																							self._timeout = setTimeout(function() { self.reachedTimeout(); }, PhotoboxUtils.TIMEOUT_DURATION*1000);
 
 																							Logger.debug("All images saved : "+JSON.stringify(self.getPicturesURL()));

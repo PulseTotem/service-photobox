@@ -28,6 +28,7 @@ class Album extends SourceItf {
 		var list : PictureAlbum = new PictureAlbum(uuid.v1());
 
 		if (pictures.length > 0) {
+			list.setDurationToDisplay(pictures.length*parseInt(self.getParams().InfoDuration));
 			pictures.forEach( function (pic: Picture) {
 				pic.setDurationToDisplay(parseInt(self.getParams().InfoDuration));
 				list.addPicture(pic);

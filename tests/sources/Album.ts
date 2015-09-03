@@ -99,6 +99,7 @@ describe('Album', function() {
 			mockuuid.expects("v1").once().returns("uuid");
 
 			var expected : PictureAlbum = new PictureAlbum("uuid");
+			expected.setDurationToDisplay(15);
 			var pic : Picture = photoAlbum.getLastPictures(1)[0];
 			pic.setDurationToDisplay(15);
 			expected.addPicture(pic);

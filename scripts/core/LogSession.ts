@@ -14,7 +14,7 @@ class LogSession {
 
 	constructor(id : string) {
 		this._id = id;
-		this._date = moment.format();
+		this._date = moment().format();
 		this._statut = "START";
 	}
 

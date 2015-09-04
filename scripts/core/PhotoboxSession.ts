@@ -4,6 +4,7 @@
 
 /// <reference path="./PhotoboxUtils.ts" />
 /// <reference path="./PhotoboxSessionStep.ts" />
+/// <reference path="./LogSession.ts" />
 
 
 var fs : any = require('fs');
@@ -100,6 +101,11 @@ class PhotoboxSession {
 	 */
 	private _counterDuration : number;
 
+	/**
+	 * Allow to keep an update statut for LogSession information
+	 */
+	private _logSession : LogSession;
+
 	constructor(id : string, server : Server, cloudConnecteAPI : boolean = true) {
 		this._id = id;
 		this._server = server;
@@ -110,6 +116,7 @@ class PhotoboxSession {
 		this._useCloudConnecteAPI = cloudConnecteAPI;
 		this._counterDuration = 0;
 		this._watermarkURL = "";
+		this._logSession = new LogSession(id);
 	}
 
 
@@ -195,6 +202,10 @@ class PhotoboxSession {
 		this._counterDuration = duration;
 	}
 
+	public getLogSession() : LogSession {
+		return this._logSession;
+	}
+
 	/**
 	 * Delete pictures stored locally. This method needs the hostname in order to treat picture URLs.
 	 *
@@ -254,7 +265,7 @@ class PhotoboxSession {
 
 	public killSession() {
 		Logger.debug("Kill the following session :"+this._id);
-
+		this._logSession.setStatut("KILLED");
 		if (this._timeout) {
 			clearTimeout(this._timeout);
 		}
@@ -269,6 +280,7 @@ class PhotoboxSession {
 	 */
 	private reachedTimeout() {
 		Logger.debug("Reached timeout for session "+this._id);
+		this._logSession.setStatut("TIMEOUT");
 		this.closeSession();
 		if (this._pictureUrls.length > 0) {
 			this.deletePictures();
@@ -279,7 +291,7 @@ class PhotoboxSession {
 	private closeSession() {
 		this._step = PhotoboxSessionStep.END;
 		this._server.broadcastExternalMessage("endSession", this);
-
+		this.flushSession();
 		if (this._useCloudConnecteAPI) {
 			this.deleteSessionInCloudConnecte();
 		}
@@ -346,6 +358,7 @@ class PhotoboxSession {
 			var ack = this._server.broadcastExternalMessage("counter", this);
 
 			if (ack) {
+				this._logSession.setStatut("COUNTER");
 				res.end();
 				this._step = PhotoboxSessionStep.COUNTER;
 				if (this._timeout) {
@@ -365,6 +378,7 @@ class PhotoboxSession {
 			res.status(500).send("Illegal action for the session state ! (state = "+PhotoboxSessionStep[this._step]+")");
 		} else {
 			clearTimeout(this._timeout);
+			this._logSession.setStatut("POSTING");
 			this._step = PhotoboxSessionStep.POSTING;
 			if (this.getCloudStorage()) {
 				this.postCloud(imageData, res);
@@ -493,6 +507,7 @@ class PhotoboxSession {
 																							self._localPictures.push(uploadDir+newPathes[2]);
 
 																							self._step = PhotoboxSessionStep.PENDINGVALIDATION;
+																							self._logSession.setStatut("PENDINGVALIDATION");
 																							if (self._timeout) {
 																								clearTimeout(self._timeout);
 																							}
@@ -560,6 +575,7 @@ class PhotoboxSession {
 			res.status(500).send("Illegal action for the session state ! (state = "+PhotoboxSessionStep[this._step]+")");
 		} else {
 			clearTimeout(this._timeout);
+			this._logSession.setStatut("VALIDATE");
 			this._server.broadcastExternalMessage("newPicture", {tag: this.getTag(), pics: this.getPicturesURL()});
 			this.closeSession();
 
@@ -574,10 +590,19 @@ class PhotoboxSession {
 			res.status(500).send("Illegal action for the session state ! (state = "+PhotoboxSessionStep[this._step]+")");
 		} else {
 			clearTimeout(this._timeout);
+			this._logSession.setStatut("UNVALIDATE");
 			this.deletePictures();
 			this.closeSession();
 
 			res.end();
 		}
+	}
+
+	private flushSession() {
+		var sessionFile = Photobox.upload_directory+"/sessions.log";
+
+		var session = this._logSession;
+		var content = session.getDate()+"\t"+session.getId()+"\t"+session.getStatut()+"\n";
+		fs.appendFileSync(sessionFile, content);
 	}
 }

@@ -115,6 +115,7 @@ class PhotoboxRouter extends RouterItf {
 		this.router.delete('/picture/:tag/:photoID', function(req : any, res : any) { self.deletePicture(req, res); });
 		this.router.delete('/lastsession',function(req : any, res : any) { self.killLastSession(req, res); });
 		this.router.get('/tags', function(req : any, res : any) { self.getAllTags(req, res); });
+		this.router.get('/sessions', function(req : any, res : any) { self.getCurrentSessions(req, res); });
 	}
 
 	/**
@@ -195,6 +196,8 @@ class PhotoboxRouter extends RouterItf {
 
 		if (session != null) {
 			session.validate(res);
+
+			var stringDate = moment().format();
 			this.purgeSession();
 		} else {
 			res.status(404).send("Session cannot be found.");
@@ -208,6 +211,7 @@ class PhotoboxRouter extends RouterItf {
 
 		if (session != null) {
 			session.unvalidate(res);
+			var stringDate = moment().format();
 			this.purgeSession();
 		} else {
 			res.status(404).send("Session cannot be found.");
@@ -284,5 +288,15 @@ class PhotoboxRouter extends RouterItf {
 
 	getAllTags(req : any, res : any) {
 		res.json(PhotoboxNamespaceManager.getTags());
+	}
+
+	getCurrentSessions(req : any, res : any) {
+		var allSession : Array<LogSession> = new Array<LogSession>();
+
+		for (var i in this._sessions) {
+			allSession.push(this._sessions[i].getLogSession());
+		}
+
+		res.json(allSession);
 	}
 }

@@ -132,15 +132,26 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 	}
 
 	private endSession(message : any) {
+		var time = parseInt(this._params.InfoDuration);
+
 		var cmd:Cmd = new Cmd(message._id);
 
-		cmd.setDurationToDisplay(this._params.InfoDuration);
+		cmd.setDurationToDisplay(time);
 		cmd.setCmd("validatedPicture");
 		cmd.setPriority(InfoPriority.HIGH);
 
 		var cmdList : CmdList = new CmdList(uuid.v1());
 		cmdList.addCmd(cmd);
 
+		var self = this;
+		var timeoutFunc = function () {
+			cmd.setDurationToDisplay(0);
+
+			self.sendNewInfoToClient(cmdList);
+		};
+
 		this.sendNewInfoToClient(cmdList);
+
+		setTimeout(timeoutFunc, time * 1000);
 	}
 }

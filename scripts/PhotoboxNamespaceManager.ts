@@ -98,7 +98,7 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 		var cmdList:CmdList = new CmdList(uuid.v1());
 		var cmd:Cmd = new Cmd(message._id);
 		var session : PhotoboxSession = message;
-		session.setCounterDuration(this._params.CounterDuration);
+		session.setCounterDuration(parseInt(this._params.CounterDuration));
 
 		cmd.setCmd("startSession");
 		cmd.setPriority(InfoPriority.HIGH);

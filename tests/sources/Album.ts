@@ -25,24 +25,13 @@ describe('Album', function() {
 			var mockAlbum = sandbox.mock(Album.prototype);
 			mockAlbum.expects('run').once();
 
-			var params = { CloudStorage: 'false', Tag: 'toto', Limit: '10', InfoDuration: '15'};
+			var params = { Tag: 'toto', Limit: '10', InfoDuration: '15'};
 
 			var stubNSManager : any = sandbox.stub(PhotoboxNamespaceManager, "createTag");
 			var stubNSManager2 : any = sinon.createStubInstance(PhotoboxNamespaceManager);
 			var album = new Album(params, stubNSManager2);
 
-			assert.ok(stubNSManager.calledWithExactly('toto', false));
-			mockAlbum.verify();
-		});
-
-		it('should not launch run if the parameter CloudStorage is missing', function () {
-			var mockAlbum = sandbox.mock(Album.prototype);
-			mockAlbum.expects('run').never();
-
-			var params = { Tag: 'toto', Limit: '10', InfoDuration: "15" };
-
-			var stubNSManager : any = sinon.createStubInstance(PhotoboxNamespaceManager);
-			new Album(params, stubNSManager);
+			assert.ok(stubNSManager.calledWithExactly('toto'));
 			mockAlbum.verify();
 		});
 
@@ -50,7 +39,7 @@ describe('Album', function() {
 			var mockAlbum = sandbox.mock(Album.prototype);
 			mockAlbum.expects('run').never();
 
-			var params = { CloudStorage: 'false', Limit: '10', InfoDuration: '15'};
+			var params = { Limit: '10', InfoDuration: '15'};
 
 			var stubNSManager : any = sinon.createStubInstance(PhotoboxNamespaceManager);
 			new Album(params, stubNSManager);
@@ -61,7 +50,7 @@ describe('Album', function() {
 			var mockAlbum = sandbox.mock(Album.prototype);
 			mockAlbum.expects('run').never();
 
-			var params = { CloudStorage: 'false', Tag: 'toto', InfoDuration: '15'};
+			var params = { Tag: 'toto', InfoDuration: '15'};
 
 			var stubNSManager : any = sinon.createStubInstance(PhotoboxNamespaceManager);
 			new Album(params, stubNSManager);
@@ -72,7 +61,7 @@ describe('Album', function() {
 			var mockAlbum = sandbox.mock(Album.prototype);
 			mockAlbum.expects('run').never();
 
-			var params = { CloudStorage: 'false', Tag: 'toto', Limit: '10'};
+			var params = { Tag: 'toto', Limit: '10'};
 
 			var stubNSManager : any = sinon.createStubInstance(PhotoboxNamespaceManager);
 			new Album(params, stubNSManager);
@@ -82,18 +71,18 @@ describe('Album', function() {
 
 	describe('#run', function () {
 		it('should create the proper photo album given params and obtained pictures', function () {
-			var params = { CloudStorage: 'false', Tag: 'toto', Limit: '1', InfoDuration: '15'};
+			var params = { Tag: 'toto', Limit: '1', InfoDuration: '15'};
 
 			var stubNSManager : any = sinon.createStubInstance(PhotoboxNamespaceManager);
 			var mockalbum = sandbox.mock(PhotoboxAlbum.prototype);
 			mockalbum.expects("retrievePicsFromLocal").once();
 
-			var photoAlbum : PhotoboxAlbum = new PhotoboxAlbum("toto", false);
+			var photoAlbum : PhotoboxAlbum = new PhotoboxAlbum("toto");
 			photoAlbum.addPicture(["toto1.png","toto2.png","toto3.png"]);
 			photoAlbum.addPicture(["tata.png","tatab.png","tatac.png"]);
 
 			var stubPhotoboxNS = sandbox.stub(PhotoboxNamespaceManager,"createTag");
-			stubPhotoboxNS.withArgs('toto', false).returns(photoAlbum);
+			stubPhotoboxNS.withArgs('toto').returns(photoAlbum);
 
 			var mockuuid = sandbox.mock(uuid);
 			mockuuid.expects("v1").once().returns("uuid");

@@ -38,18 +38,13 @@ class PhotoboxAlbum {
 	 */
 	private _blacklistedPictures : Array<string>;
 
-	constructor(tag : string, cloudStorage : boolean) {
+	constructor(tag : string) {
 		this._tag = tag;
 		this._pictures = new Array<Picture>();
 		this._blacklistedPictures = new Array<string>();
 
 		this.readBlacklistFile();
-
-		if (cloudStorage) {
-			this.retrievePicsFromCloud();
-		} else {
-			this.retrievePicsFromLocal();
-		}
+		this.retrievePicsFromLocal();
 	}
 
 	public getTag() {
@@ -68,25 +63,6 @@ class PhotoboxAlbum {
 		} catch (err) {
 			Logger.debug("Unable to read blacklist file (location: "+PhotoboxUtils.getDirectoryFromTag(this._tag)+PhotoboxUtils.BLACKLIST_FILE+"). Perhaps it does not exist yet. Error: "+JSON.stringify(err));
 		}
-	}
-
-	private retrievePicsFromCloud() {
-		var self = this;
-		PhotoboxUtils.configCloudinary();
-
-		cloudinary.api.resources_by_tag(this._tag, function(result){
-			result.resources.forEach(function(element) {
-				var urls : Array<string> = new Array<string>();
-				urls.push(element.url);
-
-				var img_medium = cloudinary.url(element.public_id, { width: PhotoboxUtils.MIDDLE_SIZE.width, height: PhotoboxUtils.MIDDLE_SIZE.height, crop: 'scale' } );
-				urls.push(img_medium);
-
-				var img_small = cloudinary.url(element.public_id, { width: PhotoboxUtils.SMALL_SIZE.width, height: PhotoboxUtils.SMALL_SIZE.height, crop: 'scale' } );
-				urls.push(img_small);
-				self.addPicture(urls);
-			});
-		});
 	}
 
 	public retrievePicsFromLocal() {

@@ -35,28 +35,26 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 		this._params = params;
 	}
 
-	public static createTag(tag : string, cloudStorage : boolean) : PhotoboxAlbum {
+	public static createTag(tag : string) : PhotoboxAlbum {
 		if (PhotoboxNamespaceManager._albums[tag] == undefined) {
 			Logger.debug("Create the PhotoboxAlbum for tag: "+tag);
-			PhotoboxNamespaceManager._albums[tag] = new PhotoboxAlbum(tag, cloudStorage);
+			PhotoboxNamespaceManager._albums[tag] = new PhotoboxAlbum(tag);
 		}
-		if (!cloudStorage) {
-			var uploadDir = PhotoboxUtils.getDirectoryFromTag(tag);
-			fs.open(uploadDir, 'r', function (err, fd) {
-				if (err) {
-					Logger.debug("The directory "+uploadDir+" is not accessible. The following error has been encountered: "+err+".\nPhotobox is now trying to create it.");
-					try {
-						fs.mkdirSync(uploadDir);
-						fs.writeFileSync(uploadDir+"index.html","");
-						Logger.debug("Creation of the directory "+uploadDir+" successful!");
-					} catch (e) {
-						Logger.error("This service is unable to create the tagged directory (path: "+uploadDir+"). Consequently the local storage is unavailable.");
-					}
-				} else {
-					fs.closeSync(fd);
+		var uploadDir = PhotoboxUtils.getDirectoryFromTag(tag);
+		fs.open(uploadDir, 'r', function (err, fd) {
+			if (err) {
+				Logger.debug("The directory "+uploadDir+" is not accessible. The following error has been encountered: "+err+".\nPhotobox is now trying to create it.");
+				try {
+					fs.mkdirSync(uploadDir);
+					fs.writeFileSync(uploadDir+"index.html","");
+					Logger.debug("Creation of the directory "+uploadDir+" successful!");
+				} catch (e) {
+					Logger.error("This service is unable to create the tagged directory (path: "+uploadDir+"). Consequently the local storage is unavailable.");
 				}
-			});
-		}
+			} else {
+				fs.closeSync(fd);
+			}
+		});
 		return PhotoboxNamespaceManager._albums[tag];
 	}
 
@@ -118,8 +116,7 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 		var args : Array<string> = new Array();
 		args.push(this._params.CounterDuration);
 
-		var cloudStorage = JSON.parse(this._params.CloudStorage);
-		var postUrl = "http://"+Photobox.host+"/rest/post/"+cmd.getId().toString()+"/"+cloudStorage.toString()+"/"+this._params.Tag+"/"+encodeURIComponent(this._params.WatermarkURL);
+		var postUrl = "http://"+Photobox.host+"/rest/post/"+cmd.getId().toString()+"/"+this._params.Tag+"/"+encodeURIComponent(this._params.WatermarkURL);
 		Logger.debug("PostURL: "+postUrl);
 		args.push(postUrl);
 		cmd.setArgs(args);

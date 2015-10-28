@@ -86,9 +86,8 @@ class PhotoboxRouter extends RouterItf {
 		 POST /unvalidate/:sessionId : unvalidate a picture, destroy it and destroy the session
 		 */
 		this.router.post('/start/:sessionid', function(req : any, res : any) { self.startSession(req, res); });
-		this.router.post('/start/:sessionid/:useCloudConnecte', function(req : any, res : any) { self.startSession(req, res); });
 		this.router.post('/counter/:sessionid', function(req : any, res : any) { self.counter(req, res); });
-		this.router.post('/post/:sessionid/:cloudStorage/:tag/:watermark', function(req : any, res : any) { self.post(req, res); });
+		this.router.post('/post/:sessionid/:tag/:watermark', function(req : any, res : any) { self.post(req, res); });
 		this.router.post('/validate/:sessionid', function(req : any, res : any) { self.validate(req, res); });
 		this.router.post('/unvalidate/:sessionid', function(req : any, res : any) { self.unvalidate(req, res); });
 
@@ -131,17 +130,11 @@ class PhotoboxRouter extends RouterItf {
 		var sessionid = req.params.sessionid;
 		var session = this.retrieveSession(sessionid);
 
-		var useCloudConnecte : boolean = true;
-
-		if (req.params.useCloudConnecte != undefined) {
-			useCloudConnecte = JSON.parse(req.params.useCloudConnecte);
-		}
-
 		if (!sessionid || session != null) {
 			res.status(500).send("Please send a valid and unique sessionid");
 		} else {
 			Logger.debug("Create session with id: "+sessionid);
-			var session = new PhotoboxSession(sessionid, this.server, useCloudConnecte);
+			var session = new PhotoboxSession(sessionid, this.server);
 			this._sessions.push(session);
 
 			session.start(res);
@@ -174,7 +167,6 @@ class PhotoboxRouter extends RouterItf {
 	 */
 	post(req : any, res : any) {
 		var sessionid = req.params.sessionid;
-		var cloudstorage = JSON.parse(req.params.cloudStorage);
 		var tag = req.params.tag;
 		var watermarkURL = decodeURIComponent(req.params.watermark);
 		var session : PhotoboxSession = this.retrieveSession(sessionid);
@@ -182,7 +174,6 @@ class PhotoboxRouter extends RouterItf {
 		if (session == null) {
 			res.status(404).send("Session cannot be found.");
 		} else {
-			session.setCloudStorage(cloudstorage);
 			session.setTag(tag);
 			session.setWatermarkURL(watermarkURL);
 			session.post(req.files.webcam, res);
@@ -255,14 +246,14 @@ class PhotoboxRouter extends RouterItf {
 	scanDirectory(req : any, res : any) {
 		var tag = req.params.tag;
 
-		var album : PhotoboxAlbum = PhotoboxNamespaceManager.createTag(tag, false);
+		var album : PhotoboxAlbum = PhotoboxNamespaceManager.createTag(tag);
 		album.retrievePicsFromLocal();
 		res.end();
 	}
 
 	getAllPicturesFromTag(req : any, res : any) {
 		var tag = req.params.tag;
-		var album : PhotoboxAlbum = PhotoboxNamespaceManager.createTag(tag, false);
+		var album : PhotoboxAlbum = PhotoboxNamespaceManager.createTag(tag);
 		res.json(album.getPictures());
 	}
 
@@ -270,7 +261,7 @@ class PhotoboxRouter extends RouterItf {
 		var tag = req.params.tag;
 		var photo_id = req.params.photoID;
 
-		var album : PhotoboxAlbum = PhotoboxNamespaceManager.createTag(tag, false);
+		var album : PhotoboxAlbum = PhotoboxNamespaceManager.createTag(tag);
 		album.deletePicture(photo_id);
 
 		res.end();

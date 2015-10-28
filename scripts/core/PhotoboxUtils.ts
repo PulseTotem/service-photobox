@@ -6,7 +6,6 @@
 
 var moment = require('moment');
 var request = require('request');
-var cloudinary : any = require('cloudinary');
 
 class PhotoboxUtils {
 	public static TIMEOUT_DURATION = 30;
@@ -72,14 +71,6 @@ class PhotoboxUtils {
 		result.push(basename+PhotoboxUtils.SMALL_SIZE.identifier+"."+extension[1]);
 
 		return result;
-	}
-
-	public static configCloudinary() {
-		cloudinary.config({
-			cloud_name: 'pulsetotem',
-			api_key: '961435335945823',
-			api_secret: 'fBnekdGtXb8TOZs43dxIECvCX5c'
-		});
 	}
 
 	public static downloadFile(url, localpath, callbackSuccess, callbackError) {

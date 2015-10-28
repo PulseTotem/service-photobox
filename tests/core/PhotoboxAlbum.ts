@@ -22,14 +22,13 @@ describe('PhotoboxAlbum', function() {
 		mockfs.restore();
 	});
 	describe('#constructor', function () {
-		it('should initialize variable and launch local picture retrieve if cloudStorage is false', function () {
+		it('should initialize variable and launch local picture retrieve', function () {
 			var mockPhotobox = sandbox.mock(PhotoboxAlbum.prototype);
 			mockPhotobox.expects('retrievePicsFromLocal').once();
-			mockPhotobox.expects('retrievePicsFromCloud').never();
 
 			var albumTag = "toto";
 
-			var photoboxTest = new PhotoboxAlbum(albumTag, false);
+			var photoboxTest = new PhotoboxAlbum(albumTag);
 			mockPhotobox.verify();
 
 			assert.equal(photoboxTest.getTag(), albumTag, "The album tag is not set properly.");
@@ -37,41 +36,6 @@ describe('PhotoboxAlbum', function() {
 			var obtained = photoboxTest.getPictures();
 			assert.deepEqual(photoboxTest.getPictures(), new Array<Picture>(), "The picture array is not properly set : "+JSON.stringify(obtained)+" | "+JSON.stringify(new Array<Picture>()));
 		});
-
-		it('should initialize variable and launch local picture retrieve if cloudStorage is true', function () {
-			var mockPhotobox = sandbox.mock(PhotoboxAlbum.prototype);
-			mockPhotobox.expects('retrievePicsFromLocal').never();
-			mockPhotobox.expects('retrievePicsFromCloud').once();
-
-			var albumTag = "blop";
-
-			var photoboxTest = new PhotoboxAlbum(albumTag, true);
-			mockPhotobox.verify();
-
-			assert.equal(photoboxTest.getTag(), albumTag, "The album tag is not set properly.");
-
-			var obtained = photoboxTest.getPictures();
-			assert.deepEqual(photoboxTest.getPictures(), new Array<Picture>(), "The picture array is not properly set : "+JSON.stringify(obtained)+" | "+JSON.stringify(new Array<Picture>()));
-		});
-	});
-
-	describe('#retrievePicsFromCloud', function () {
-		it('should launch cloudinaryConfig and retrieve pictures from cloudinary API', function () {
-			var mockPhotobox = sandbox.mock(PhotoboxAlbum.prototype);
-			mockPhotobox.expects('retrievePicsFromLocal').never();
-
-			var mockUtils = sandbox.mock(PhotoboxUtils);
-			mockUtils.expects('configCloudinary').once();
-
-			var mockCloudinary = sandbox.mock(cloudinary.api);
-			mockCloudinary.expects('resources_by_tag').once();
-
-			new PhotoboxAlbum("test", true);
-
-			mockPhotobox.verify();
-			mockUtils.verify();
-			mockCloudinary.verify();
-		})
 	});
 
 	describe('#retrievePicsFromLocal', function () {
@@ -105,16 +69,12 @@ describe('PhotoboxAlbum', function() {
 			urlsThird.push("http://localhost/upload/test/third"+PhotoboxUtils.MIDDLE_SIZE.identifier+".png");
 			urlsThird.push("http://localhost/upload/test/third"+PhotoboxUtils.SMALL_SIZE.identifier+".png");
 
-			var mockPhotobox = sandbox.mock(PhotoboxAlbum.prototype);
-			mockPhotobox.expects('retrievePicsFromCloud').never();
-
 			var allUrls = [];
 
 			var monstub;
 
 			var findetest = function () {
 				mockUtils.verify();
-				mockPhotobox.verify();
 				assert.deepEqual(allUrls, [urlsFirst, urlsThird], "All urls should be present");
 				monstub.restore();
 				mockfs.restore();
@@ -132,7 +92,7 @@ describe('PhotoboxAlbum', function() {
 
 			monstub = sandbox.stub(PhotoboxAlbum.prototype, 'addPicture', funcAddPicture);
 
-			new PhotoboxAlbum("test", false);
+			new PhotoboxAlbum("test");
 
 		});
 
@@ -158,15 +118,11 @@ describe('PhotoboxAlbum', function() {
 			urlsFirst.push("http://localhost/upload/test/first"+PhotoboxUtils.MIDDLE_SIZE.identifier+".png");
 			urlsFirst.push("http://localhost/upload/test/first"+PhotoboxUtils.SMALL_SIZE.identifier+".png");
 
-			var mockPhotobox = sandbox.mock(PhotoboxAlbum.prototype);
-			mockPhotobox.expects('retrievePicsFromCloud').never();
-
 			var allUrls = [];
 
 			var monstub;
 			var findetest = function () {
 				mockUtils.verify();
-				mockPhotobox.verify();
 				assert.deepEqual(allUrls, [urlsFirst], "All urls should be present");
 				monstub.restore();
 				mockfs.restore();
@@ -184,7 +140,7 @@ describe('PhotoboxAlbum', function() {
 
 			monstub = sandbox.stub(PhotoboxAlbum.prototype, 'addPicture', funcAddPicture);
 
-			new PhotoboxAlbum("test", false);
+			new PhotoboxAlbum("test");
 
 		});
 	});
@@ -193,11 +149,10 @@ describe('PhotoboxAlbum', function() {
 		it('should create a proper Picture given a URL and tag', function() {
 			var mockPhotobox = sandbox.mock(PhotoboxAlbum.prototype);
 			mockPhotobox.expects('retrievePicsFromLocal').once();
-			mockPhotobox.expects('retrievePicsFromCloud').never();
 
 			var albumTag = "blop";
 
-			var photoboxTest = new PhotoboxAlbum(albumTag, false);
+			var photoboxTest = new PhotoboxAlbum(albumTag);
 			mockPhotobox.verify();
 
 			var urls = ["toto1.png", "toto2.png", "toto3.png"];
@@ -232,11 +187,10 @@ describe('PhotoboxAlbum', function() {
 		it('should return an empty list if there is no picture', function () {
 			var mockPhotobox = sandbox.mock(PhotoboxAlbum.prototype);
 			mockPhotobox.expects('retrievePicsFromLocal').once();
-			mockPhotobox.expects('retrievePicsFromCloud').never();
 
 			var albumTag = "blop";
 
-			var photoboxTest = new PhotoboxAlbum(albumTag, false);
+			var photoboxTest = new PhotoboxAlbum(albumTag);
 			mockPhotobox.verify();
 
 			assert.deepEqual(photoboxTest.getLastPictures(10), []);
@@ -245,11 +199,10 @@ describe('PhotoboxAlbum', function() {
 		it('should return the last two pictures with a limit 2', function () {
 			var mockPhotobox = sandbox.mock(PhotoboxAlbum.prototype);
 			mockPhotobox.expects('retrievePicsFromLocal').once();
-			mockPhotobox.expects('retrievePicsFromCloud').never();
 
 			var albumTag = "blop";
 
-			var photoboxTest = new PhotoboxAlbum(albumTag, false);
+			var photoboxTest = new PhotoboxAlbum(albumTag);
 			mockPhotobox.verify();
 
 			var urls = ["toto1.png", "toto2.png", "toto3.png"];

@@ -9,7 +9,6 @@
 
 var fs : any = require('fs');
 var lwip : any = require('lwip');
-var cloudinary : any = require('cloudinary');
 var request : any = require('request');
 
 /**
@@ -27,15 +26,6 @@ class PhotoboxSession {
 	 * @private
 	 */
 	private _id : string;
-
-	/**
-	 * Define if the storage is in cloud or local
-	 *
-	 * @property _cloudStorage
-	 * @type {boolean}
-	 * @private
-	 */
-	private _cloudStorage : boolean;
 
 	/**
 	 * The list of 3 pictures URL taken : the first one is the original, the second one is a medium size and the last one is the small size.
@@ -87,11 +77,6 @@ class PhotoboxSession {
 	private _server : Server;
 
 	/**
-	 * Define if we use the API from CloudConnecte
-	 */
-	private _useCloudConnecteAPI : boolean;
-
-	/**
 	 * URL of the watermark to use when posting a picture
 	 */
 	private _watermarkURL : string;
@@ -106,14 +91,12 @@ class PhotoboxSession {
 	 */
 	private _logSession : LogSession;
 
-	constructor(id : string, server : Server, cloudConnecteAPI : boolean = true) {
+	constructor(id : string, server : Server) {
 		this._id = id;
 		this._server = server;
-		this._cloudStorage = false;
 		this._pictureUrls = new Array<string>();
 		this._localPictures = new Array<string>();
 		this._timeout = null;
-		this._useCloudConnecteAPI = cloudConnecteAPI;
 		this._counterDuration = 0;
 		this._watermarkURL = "";
 		this._logSession = new LogSession(id);
@@ -131,28 +114,11 @@ class PhotoboxSession {
 	}
 
 	/**
-	 * @method getCloudStorage
-	 * @returns {boolean}
-	 */
-	public getCloudStorage() {
-		return this._cloudStorage;
-	}
-
-	/**
 	 * @method getPicturesURL
 	 * @returns {Array<string>} Return the URLs of the pictures
 	 */
 	public getPicturesURL() {
 		return this._pictureUrls;
-	}
-
-	/**
-	 * Define CloudStorage value.
-	 * @method setCloudStorage
-	 * @param cloudStorage
-	 */
-	public setCloudStorage(cloudStorage : boolean) {
-		this._cloudStorage = cloudStorage;
 	}
 
 	/**
@@ -229,20 +195,6 @@ class PhotoboxSession {
 	}
 
 	/**
-	 * Delete pictures stored on cloudinary.
-	 *
-	 * @method deleteCloud
-	 * @private
-	 */
-	private deleteCloud() {
-		var firstFile = this._pictureUrls[0];
-		var arrayExtension = PhotoboxUtils.getFileExtension(firstFile);
-		var public_id = arrayExtension[0];
-		cloudinary.api.delete_resources([public_id], function(result){});
-		this._pictureUrls = new Array<string>();
-	}
-
-	/**
 	 * Delete pictures previously taken.
 	 *
 	 * @param hostname
@@ -251,11 +203,7 @@ class PhotoboxSession {
 	public deletePictures() {
 		Logger.debug("Delete pictures in session "+this._id);
 		if (this._pictureUrls.length > 0) {
-			if (this._cloudStorage) {
-				this.deleteCloud();
-			} else {
 				this.deleteLocal();
-			}
 		} else {
 			Logger.error("Unable to delete pictures in session "+this.getId()+" as the array is empty.");
 		}
@@ -285,32 +233,12 @@ class PhotoboxSession {
 		if (this._pictureUrls.length > 0) {
 			this.deletePictures();
 		}
-
 	}
 
 	private closeSession() {
 		this._step = PhotoboxSessionStep.END;
 		this._server.broadcastExternalMessage("endSession", this);
 		this.flushSession();
-		if (this._useCloudConnecteAPI) {
-			this.deleteSessionInCloudConnecte();
-		}
-	}
-
-	private deleteSessionInCloudConnecte() {
-		var domain = "https://platform.cloud-connecte.com";
-		var endpoint = "/api/sessions/close/"+this._id+".json";
-		var queryParam = {"apikey":"SdayAPIKey"};
-		var self = this;
-		request.post(domain+endpoint, {qs: queryParam}).on('error', function (err) {
-			Logger.error("Error when deleting the session "+this._id+" in cloudConnecte :"+JSON.stringify(err));
-		}).on('response', function (response) {
-			if (response.statusCode == 200) {
-				Logger.debug("Properly delete the session "+self._id+" in cloudConnecte :"+response.body);
-			} else {
-				Logger.error("Error when deleting the session "+self._id+" in cloudConnecte. StatusCode : "+response.statusCode+" | Response : "+response.body);
-			}
-		});
 	}
 
 	/**
@@ -380,11 +308,7 @@ class PhotoboxSession {
 			clearTimeout(this._timeout);
 			this._logSession.setStatut("POSTING");
 			this._step = PhotoboxSessionStep.POSTING;
-			if (this.getCloudStorage()) {
-				this.postCloud(imageData, res);
-			} else {
-				this.postLocal(imageData, res);
-			}
+			this.postLocal(imageData, res);
 		}
 	}
 
@@ -537,34 +461,6 @@ class PhotoboxSession {
 					}
 				});
 			}
-		});
-	}
-
-	private postCloud(imageData : any, res : any) {
-		Logger.debug("Upload a picture to cloudinary");
-		var self = this;
-		PhotoboxUtils.configCloudinary();
-		cloudinary.uploader.upload(imageData.path, function(result) {
-			if (result.url != "undefined") {
-				self.addPictureURL(result.url);
-
-				var img_640 = cloudinary.url(result.public_id, { width: PhotoboxUtils.MIDDLE_SIZE.width, height: PhotoboxUtils.MIDDLE_SIZE.height, crop: 'scale' } );
-				self.addPictureURL(img_640);
-
-				var img_320 = cloudinary.url(result.public_id, { width: PhotoboxUtils.SMALL_SIZE.width, height: PhotoboxUtils.SMALL_SIZE.height, crop: 'scale' } );
-				self.addPictureURL(img_320);
-
-				self._step = PhotoboxSessionStep.PENDINGVALIDATION;
-				self._timeout = setTimeout(function() { self.reachedTimeout(); }, PhotoboxUtils.TIMEOUT_DURATION*1000);
-
-				Logger.debug("Upload the following images : "+JSON.stringify(self.getPicturesURL()));
-				res.status(200).json({message: "Upload ok", files: self.getPicturesURL()});
-			} else {
-				Logger.error("Error when uploading picture via cloudinary: "+JSON.stringify(result));
-				res.status(500).json({error: 'Error when uploading on cloudinary.'});
-			}
-		}, {
-			tags: ['photobox', self.getTag()]
 		});
 	}
 

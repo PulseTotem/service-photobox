@@ -14,15 +14,7 @@
  * @extends NamespaceManager
  * @implements SessionNamespaceManagerItf
  */
-class PhotoboxClientNamespaceManager extends NamespaceManager implements SessionNamespaceManagerItf {
-
-	/**
-	 * Call NamespaceManager.
-	 *
-	 * @property _callNamespaceManager
-	 * @type GuestBookNamespaceManager
-	 */
-	private _callNamespaceManager:PhotoboxNamespaceManager;
+class PhotoboxClientNamespaceManager extends ClientNamespaceManager {
 
 	/**
 	 * Constructor.
@@ -33,83 +25,20 @@ class PhotoboxClientNamespaceManager extends NamespaceManager implements Session
 	constructor(socket:any) {
 		super(socket);
 
-		this._callNamespaceManager = null;
-
-		this.addListenerToSocket('TakeControl', function (callSocketId:any, self:PhotoboxClientNamespaceManager) {
-			self.takeControl(callSocketId);
-		});
+		var self = this;
 
 		this.addListenerToSocket('StartCounter', function (callSocketId:any, self:PhotoboxClientNamespaceManager) {
 			self.startCounter(callSocketId);
 		});
 	}
 
-	/**
-	 * Search for callSocket and init a Session to take control on screen.
-	 *
-	 * @method takeControl
-	 * @param {Object} callSocketId - A JSON object with callSocket's Id.
-	 */
-	takeControl(callSocketId:any) {
-		var self = this;
-
-		var callNamespaceManager = self.server().retrieveNamespaceManagerFromSocketId(callSocketId.callSocketId);
-
-		if (callNamespaceManager == null) {
-			self.socket.emit("ControlSession", self.formatResponse(false, "NamespaceManager corresponding to callSocketid '" + callSocketId.callSocketId + "' doesn't exist."));
-		} else {
-			self._callNamespaceManager = callNamespaceManager;
-
-			var newSession:Session = callNamespaceManager.newSession(self);
-
-			self.socket.emit("ControlSession", self.formatResponse(true, newSession));
-		}
-	}
-
 	startCounter(callSocketId : any) {
-		var self = this;
-
-		if (self._callNamespaceManager != null) {
-			self._callNamespaceManager.startCounter();
-		}
+		this.getCallNamespaceManager().startCounter();
 	}
 
-	/**
-	 * Lock the control of the Screen for the Session in param.
-	 *
-	 * @method lockControl
-	 * @param {Session} session - Session which takes the control of the Screen.
-	 */
-	lockControl(session : Session) {
-		var self = this;
+	postPicture(picture : any) {
 
-		self.socket.emit("LockedControl", self.formatResponse(true, session));
-	}
-
-	/**
-	 * Unlock the control of the Screen for the Session in param.
-	 *
-	 * @method unlockControl
-	 * @param {Session} session - Session which takes the control of the Screen.
-	 */
-	unlockControl(session : Session) {
-		var self = this;
-
-		self.socket.emit("UnlockedControl", self.formatResponse(true, session));
-	}
-
-	/**
-	 * Method called when socket is disconnected.
-	 *
-	 * @method onClientDisconnection
-	 */
-	onClientDisconnection() {
-		var self = this;
-
-		this.onDisconnection();
-
-		if(self._callNamespaceManager != null) {
-			self._callNamespaceManager.getSessionManager().finishActiveSession();
-		}
+		var tag = this.getCallNamespaceManager().getParams().Tag;
+		var watermarkURL = this.getCallNamespaceManager().getParams().WatermarkURL;
 	}
 }

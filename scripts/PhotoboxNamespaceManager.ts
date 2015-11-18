@@ -25,9 +25,11 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 	 */
 	constructor(socket : any) {
 		super(socket);
+		var self = this;
 		this.addListenerToSocket('Subscribe', function (params, photoboxNamespaceManager) { new Subscribe(params, photoboxNamespaceManager); });
 		this.addListenerToSocket('Album', function (params, photoboxNamespaceManager) { new Album(params, photoboxNamespaceManager); });
 
+		this.socket.on('postPicture', self.postPicture);
 		this._params = null;
 	}
 
@@ -75,36 +77,6 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 	}
 
 	/**
-	 * Method called when external message comes from PhotoboxRouter.
-	 *
-	 *
-	 * @method onExternalMessage
-	 * @param {string} from - Source description of message
-	 * @param {any} message - The received message is a PhotoboxSession here.
-	 */
-	public onExternalMessage(from : string, message : any) {
-		if (this._params != null) {
-			if (from == "startSession") {
-				this.startSession(message);
-			} else if (from == "counter") {
-				this.startCounter(message);
-			} else if (from == "endSession") {
-				this.endSession(message);
-			} else if (from == "newPicture") {
-				this.pushPicture(message);
-			}
-		}
-	}
-
-	private pushPicture(message : any) {
-		var tag : string = message.tag;
-		var picture : Array<string> = message.pics;
-
-		var album : PhotoboxAlbum = PhotoboxNamespaceManager._albums[tag];
-		album.addPicture(picture);
-	}
-
-	/**
 	 * Lock the control of the Screen for the Session in param.
 	 *
 	 * @method lockControl
@@ -122,26 +94,44 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 		this.sendNewInfoToClient(cmdList);
 	}
 
-	private startCounter(message : any) {
-		var cmd:Cmd = new Cmd(message._id);
-		
-		cmd.setDurationToDisplay(30000);
-		cmd.setPriority(InfoPriority.HIGH);
-		cmd.setCmd("counter");
+	public startCounter() {
+		var self = this;
+		var activeSession : Session = self.getSessionManager().getActiveSession();
 
-		var args : Array<string> = new Array();
-		args.push(this._params.CounterDuration);
+		if (activeSession != null) {
+			var cmd:Cmd = new Cmd(activeSession.id());
 
-		var postUrl = "http://"+Photobox.host+"/rest/post/"+cmd.getId().toString()+"/"+this._params.Tag+"/"+encodeURIComponent(this._params.WatermarkURL);
-		Logger.debug("PostURL: "+postUrl);
-		args.push(postUrl);
-		cmd.setArgs(args);
+			cmd.setDurationToDisplay(30000);
+			cmd.setPriority(InfoPriority.HIGH);
+			cmd.setCmd("counter");
+
+			var args : Array<string> = new Array();
+			args.push(this._params.CounterDuration);
+
+			var postUrl = "http://"+Photobox.host+"/rest/post/"+cmd.getId().toString()+"/"+this._params.Tag+"/"+encodeURIComponent(this._params.WatermarkURL);
+			Logger.debug("PostURL: "+postUrl);
+			args.push(postUrl);
+			cmd.setArgs(args);
 
 
-		var cmdList : CmdList = new CmdList(uuid.v1());
-		cmdList.addCmd(cmd);
+			var cmdList : CmdList = new CmdList(uuid.v1());
+			cmdList.addCmd(cmd);
 
-		this.sendNewInfoToClient(cmdList);
+			this.sendNewInfoToClient(cmdList);
+		}
+	}
+
+	public postPicture(image : any) {
+
+	}
+
+
+	private pushPicture(message : any) {
+		var tag : string = message.tag;
+		var picture : Array<string> = message.pics;
+
+		var album : PhotoboxAlbum = PhotoboxNamespaceManager._albums[tag];
+		album.addPicture(picture);
 	}
 
 	private endSession(message : any) {

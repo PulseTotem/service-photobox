@@ -39,6 +39,9 @@ class PhotoboxClientNamespaceManager extends NamespaceManager implements Session
 			self.takeControl(callSocketId);
 		});
 
+		this.addListenerToSocket('StartCounter', function (callSocketId:any, self:PhotoboxClientNamespaceManager) {
+			self.startCounter(callSocketId);
+		});
 	}
 
 	/**
@@ -60,6 +63,14 @@ class PhotoboxClientNamespaceManager extends NamespaceManager implements Session
 			var newSession:Session = callNamespaceManager.newSession(self);
 
 			self.socket.emit("ControlSession", self.formatResponse(true, newSession));
+		}
+	}
+
+	startCounter(callSocketId : any) {
+		var self = this;
+
+		if (self._callNamespaceManager != null) {
+			self._callNamespaceManager.startCounter();
 		}
 	}
 

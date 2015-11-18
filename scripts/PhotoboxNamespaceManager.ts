@@ -11,7 +11,7 @@
 /// <reference path="./sources/Album.ts" />
 /// <reference path="./sources/Subscribe.ts" />
 
-class PhotoboxNamespaceManager extends SourceNamespaceManager {
+class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 
 	private static _albums : any = {};
 	private _params : any;
@@ -63,6 +63,18 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 	}
 
 	/**
+	 * Method called when socket is disconnected.
+	 *
+	 * @method onClientDisconnection
+	 */
+	public onClientDisconnection() {
+		super.onClientDisconnection();
+		var self = this;
+
+		self.getSessionManager().finishActiveSession();
+	}
+
+	/**
 	 * Method called when external message comes from PhotoboxRouter.
 	 *
 	 *
@@ -70,7 +82,7 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 	 * @param {string} from - Source description of message
 	 * @param {any} message - The received message is a PhotoboxSession here.
 	 */
-	onExternalMessage(from : string, message : any) {
+	public onExternalMessage(from : string, message : any) {
 		if (this._params != null) {
 			if (from == "startSession") {
 				this.startSession(message);
@@ -92,11 +104,15 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 		album.addPicture(picture);
 	}
 
-	private startSession(message : any) {
+	/**
+	 * Lock the control of the Screen for the Session in param.
+	 *
+	 * @method lockControl
+	 * @param {Session} session - Session which takes the control of the Screen.
+	 */
+	lockControl(session : Session) {
 		var cmdList:CmdList = new CmdList(uuid.v1());
-		var cmd:Cmd = new Cmd(message._id);
-		var session : PhotoboxSession = message;
-		session.setCounterDuration(parseInt(this._params.CounterDuration));
+		var cmd:Cmd = new Cmd(session.id());
 
 		cmd.setCmd("startSession");
 		cmd.setPriority(InfoPriority.HIGH);

@@ -2,7 +2,7 @@
  * @author Simon Urli <simon@pulsetotem.fr>
  */
 
-/// <reference path="../t6s-core/core-backend/scripts/server/NamespaceManager.ts" />
+/// <reference path="../t6s-core/core-backend/scripts/server/ClientNamespaceManager.ts" />
 /// <reference path="../t6s-core/core-backend/scripts/session/SessionNamespaceManagerItf.ts" />
 /// <reference path="../t6s-core/core-backend/scripts/session/Session.ts" />
 /// <reference path="../t6s-core/core-backend/scripts/session/SessionStatus.ts" />
@@ -33,13 +33,16 @@ class PhotoboxClientNamespaceManager extends ClientNamespaceManager {
 	}
 
 	startCounter(callSocketId : any) {
-		this.getCallNamespaceManager().startCounter();
+		var callNamespace : any = this.getCallNamespaceManager();
+		callNamespace.startCounter();
 	}
 
 	postPicture(picture : any) {
 		var self = this;
 		var tag = this.getCallNamespaceManager().getParams().Tag;
 		var watermarkURL = this.getCallNamespaceManager().getParams().WatermarkURL;
+
+		var callNamespace : any = this.getCallNamespaceManager();
 
 		var callback = function (success : boolean, msg : any) {
 			if (success) {
@@ -53,10 +56,10 @@ class PhotoboxClientNamespaceManager extends ClientNamespaceManager {
 					'pics': arrayPictures
 				};
 
-				self.getCallNamespaceManager().pushPicture(pictures);
+				callNamespace.pushPicture(pictures);
 
-				self.unlockControl(self.getCallNamespaceManager().getSessionManager().getActiveSession());
-				self.getCallNamespaceManager().unlockControl();
+				self.unlockControl(callNamespace.getActiveSession());
+				callNamespace.unlockControl();
 			} else {
 
 			}

@@ -3,7 +3,7 @@
  * @author Simon Urli <simon@the6thscreen.fr>
  */
 
-/// <reference path="../t6s-core/core-backend/scripts/server/SourceNamespaceManager.ts" />
+/// <reference path="../t6s-core/core-backend/scripts/session/SessionSourceNamespaceManager.ts" />
 /// <reference path="../t6s-core/core-backend/t6s-core/core/scripts/infotype/CmdList.ts" />
 /// <reference path="../t6s-core/core-backend/t6s-core/core/scripts/infotype/Cmd.ts" />
 /// <reference path="../t6s-core/core-backend/scripts/Logger.ts" />
@@ -119,7 +119,7 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 		var self = this;
 		var activeSession : Session = self.getSessionManager().getActiveSession();
 
-		var clientNamespace = this.getSessionManager().getAttachedNamespace(activeSession.id());
+		var clientNamespace : any = this.getSessionManager().getAttachedNamespace(activeSession.id());
 		clientNamespace.postPicture(image);
 	}
 

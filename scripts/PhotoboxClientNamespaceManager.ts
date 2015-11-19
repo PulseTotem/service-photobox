@@ -37,8 +37,31 @@ class PhotoboxClientNamespaceManager extends ClientNamespaceManager {
 	}
 
 	postPicture(picture : any) {
-
+		var self = this;
 		var tag = this.getCallNamespaceManager().getParams().Tag;
 		var watermarkURL = this.getCallNamespaceManager().getParams().WatermarkURL;
+
+		var callback = function (success : boolean, msg : any) {
+			if (success) {
+				var arrayPictures : Array<string> = new Array();
+				arrayPictures[0] = msg.original;
+				arrayPictures[1] = msg.medium;
+				arrayPictures[2] = msg.small;
+
+				var pictures : any = {
+					'tag': tag,
+					'pics': arrayPictures
+				};
+
+				self.getCallNamespaceManager().pushPicture(pictures);
+
+				self.unlockControl(self.getCallNamespaceManager().getSessionManager().getActiveSession());
+				self.getCallNamespaceManager().unlockControl();
+			} else {
+
+			}
+		};
+
+		PhotoboxUtils.postAndApplyWatermark(picture, "image.jpg", watermarkURL, Photobox.upload_directory, true, callback);
 	}
 }

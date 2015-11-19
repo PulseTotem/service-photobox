@@ -14,7 +14,6 @@
 class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 
 	private static _albums : any = {};
-	private _params : any;
 
 
 	/**
@@ -30,11 +29,6 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 		this.addListenerToSocket('Album', function (params, photoboxNamespaceManager) { new Album(params, photoboxNamespaceManager); });
 
 		this.socket.on('postPicture', self.postPicture);
-		this._params = null;
-	}
-
-	public setParams(params : any) {
-		this._params = params;
 	}
 
 	public static createTag(tag : string) : PhotoboxAlbum {
@@ -106,9 +100,9 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 			cmd.setCmd("counter");
 
 			var args : Array<string> = new Array();
-			args.push(this._params.CounterDuration);
+			args.push(this.getParams().CounterDuration);
 
-			var postUrl = "http://"+Photobox.host+"/rest/post/"+cmd.getId().toString()+"/"+this._params.Tag+"/"+encodeURIComponent(this._params.WatermarkURL);
+			var postUrl = "http://"+Photobox.host+"/rest/post/"+cmd.getId().toString()+"/"+this.getParams().Tag+"/"+encodeURIComponent(this.getParams().WatermarkURL);
 			Logger.debug("PostURL: "+postUrl);
 			args.push(postUrl);
 			cmd.setArgs(args);
@@ -122,11 +116,15 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 	}
 
 	public postPicture(image : any) {
+		var self = this;
+		var activeSession : Session = self.getSessionManager().getActiveSession();
 
+		var clientNamespace = this.getSessionManager().getAttachedNamespace(activeSession.id());
+		clientNamespace.postPicture(image);
 	}
 
 
-	private pushPicture(message : any) {
+	public pushPicture(message : any) {
 		var tag : string = message.tag;
 		var picture : Array<string> = message.pics;
 
@@ -134,8 +132,8 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 		album.addPicture(picture);
 	}
 
-	private endSession(message : any) {
-		var time = parseInt(this._params.InfoDuration);
+	public endSession(message : any) {
+		var time = parseInt(this.getParams().InfoDuration);
 
 		var cmd:Cmd = new Cmd(message._id);
 

@@ -2,7 +2,7 @@
  * @author Simon Urli <simon@the6thscreen.fr>
  */
 
-/// <reference path="./PhotoboxUtils.ts" />
+/// <reference path="./../core/PhotoboxUtils.ts" />
 /// <reference path="./PhotoboxSessionStep.ts" />
 /// <reference path="./LogSession.ts" />
 

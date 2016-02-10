@@ -28,7 +28,7 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 		this.addListenerToSocket('Subscribe', function (params, photoboxNamespaceManager) { new Subscribe(params, photoboxNamespaceManager); });
 		this.addListenerToSocket('Album', function (params, photoboxNamespaceManager) { new Album(params, photoboxNamespaceManager); });
 
-		this.socket.on('postPicture', self.postPicture);
+		this.socket.on('PostPicture', function (msg) { self.postPicture(msg); } );
 	}
 
 	public static createTag(tag : string) : PhotoboxAlbum {
@@ -102,16 +102,19 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 			var args : Array<string> = new Array();
 			args.push(this.getParams().CounterDuration);
 
+			/*
 			var postUrl = "http://"+Photobox.host+"/rest/post/"+cmd.getId().toString()+"/"+this.getParams().Tag+"/"+encodeURIComponent(this.getParams().WatermarkURL);
 			Logger.debug("PostURL: "+postUrl);
 			args.push(postUrl);
+			*/
 			cmd.setArgs(args);
-
 
 			var cmdList : CmdList = new CmdList(uuid.v1());
 			cmdList.addCmd(cmd);
 
 			this.sendNewInfoToClient(cmdList);
+		} else {
+			Logger.error("Try to launch start counter without any active session!");
 		}
 	}
 
@@ -119,12 +122,37 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 		var self = this;
 		var activeSession : Session = self.getSessionManager().getActiveSession();
 
-		var clientNamespace : any = this.getSessionManager().getAttachedNamespace(activeSession.id());
-		clientNamespace.postPicture(image);
+		var tag = this.getParams().Tag;
+		var watermarkURL = this.getParams().WatermarkURL;
+		var clientNamespace : any = self.getSessionManager().getAttachedNamespace(activeSession.id());
+
+		var callback = function (success : boolean, msg : any) {
+			if (success) {
+				var arrayPictures : Array<string> = new Array();
+				arrayPictures[0] = msg.original;
+				arrayPictures[1] = msg.medium;
+				arrayPictures[2] = msg.small;
+
+				var pictures : any = {
+					'tag': tag,
+					'pics': arrayPictures
+				};
+				self.pushPicture(pictures);
+				clientNamespace.postPicture(msg.medium);
+
+				Logger.debug("Picture available : "+msg.medium);
+			} else {
+				// TODO Error to screen and mobile
+				Logger.error(msg);
+			}
+		};
+
+		PhotoboxUtils.postAndApplyWatermark(image, "image.jpg", watermarkURL, Photobox.upload_directory, true, callback);
+
 	}
 
 
-	public pushPicture(message : any) {
+	private pushPicture(message : any) {
 		var tag : string = message.tag;
 		var picture : Array<string> = message.pics;
 

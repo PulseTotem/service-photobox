@@ -14,7 +14,7 @@
 class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 
 	private static _albums : any = {};
-
+	private picturesBySession : any = {};
 
 	/**
 	 * Constructor.
@@ -68,6 +68,19 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 		var self = this;
 
 		self.getSessionManager().finishActiveSession();
+	}
+
+	unlockControl(session : Session) {
+		var self = this;
+		var cmdList:CmdList = new CmdList(uuid.v1());
+		var cmd:Cmd = new Cmd(session.id());
+
+		cmd.setCmd("removeInfo");
+		cmd.setPriority(InfoPriority.HIGH);
+		cmd.setDurationToDisplay(0);
+		cmdList.addCmd(cmd);
+
+		this.sendNewInfoToClient(cmdList);
 	}
 
 	/**
@@ -126,44 +139,56 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 		var watermarkURL = this.getParams().WatermarkURL;
 		var clientNamespace : any = self.getSessionManager().getAttachedNamespace(activeSession.id());
 
-		var callback = function (success : boolean, msg : any) {
+		var callback = function (success : boolean, picture : PhotoboxPicture) {
 			if (success) {
-				var arrayPictures : Array<string> = new Array();
-				arrayPictures[0] = msg.original;
-				arrayPictures[1] = msg.medium;
-				arrayPictures[2] = msg.small;
+				self.picturesBySession[activeSession.id()] = picture;
+				clientNamespace.postPicture(picture.getURLMediumPicture());
 
-				var pictures : any = {
-					'tag': tag,
-					'pics': arrayPictures
-				};
-				self.pushPicture(pictures);
-				clientNamespace.postPicture(msg.medium);
-
-				Logger.debug("Picture available : "+msg.medium);
+				Logger.debug("Picture available : "+picture.getURLMediumPicture());
 			} else {
 				// TODO Error to screen and mobile
-				Logger.error(msg);
+				Logger.error(picture);
 			}
 		};
 
-		PhotoboxUtils.postAndApplyWatermark(image, "image.jpg", watermarkURL, Photobox.upload_directory, true, callback);
+		PhotoboxUtils.postAndApplyWatermark(image, "image.jpg", watermarkURL, tag, true, callback);
 
 	}
 
+	public validatePicture() {
+		var self = this;
+		var activeSession : Session = self.getSessionManager().getActiveSession();
+		var clientNamespace : any = self.getSessionManager().getAttachedNamespace(activeSession.id());
+		var picture : PhotoboxPicture = self.picturesBySession[activeSession.id()];
+		self.pushPicture(picture);
+		delete self.picturesBySession[activeSession.id()];
+		self.getSessionManager().finishActiveSession();
+		clientNamespace.sessionEndedWithValidation();
+	}
 
-	private pushPicture(message : any) {
-		var tag : string = message.tag;
-		var picture : Array<string> = message.pics;
+	public unvalidatePicture() {
+		var self = this;
+		var activeSession : Session = self.getSessionManager().getActiveSession();
+		var clientNamespace : any = self.getSessionManager().getAttachedNamespace(activeSession.id());
+		var picture : PhotoboxPicture = self.picturesBySession[activeSession.id()];
+		picture.delete();
+		delete self.picturesBySession[activeSession.id()];
+		self.getSessionManager().finishActiveSession();
+		clientNamespace.sessionEndedWithoutValidation();
+	}
+
+
+	private pushPicture(picture : PhotoboxPicture) {
+		var tag : string = picture.getTag();
 
 		var album : PhotoboxAlbum = PhotoboxNamespaceManager._albums[tag];
 		album.addPicture(picture);
 	}
 
-	public endSession(message : any) {
+	public unlockControl(session : Session) {
 		var time = parseInt(this.getParams().InfoDuration);
 
-		var cmd:Cmd = new Cmd(message._id);
+		var cmd:Cmd = new Cmd(session.id());
 
 		cmd.setDurationToDisplay(time);
 		cmd.setCmd("validatedPicture");

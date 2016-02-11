@@ -60,6 +60,11 @@ class PhotoboxUtils {
 		return PhotoboxUtils.getCompleteHostname()+tag+"/";
 	}
 
+	public static getURLFromPath(path : string, tag : string) {
+		var splitname = PhotoboxUtils.getFileExtension(path);
+		return PhotoboxUtils.getBaseURL(tag)+splitname[0]+"."+splitname[1];
+	}
+
 	public static getNewImageNamesFromOriginalImage(imageName : string) : Array<string> {
 		var result : Array<string> = new Array<string>();
 
@@ -93,30 +98,27 @@ class PhotoboxUtils {
 	 * @param bottomWatermark Determine if the watermark should be placed at the bottom or at the top of the image
 	 * @param callback The callback in case of success or failure, it takes a boolean for success/failure and a message or an object containing the different images pathes.
 	 */
-	public static postAndApplyWatermark(image : any, imageName : string, watermarkUrl : string, uploadDir : string, bottomWatermark : boolean, callback : Function) {
+	public static postAndApplyWatermark(image : any, imageName : string, watermarkUrl : string, tag : string, bottomWatermark : boolean, callback : Function) {
 		var local_watermark : string = "/tmp/watermark.png";
 
-		var base64DrawContent = image.replace(/^data:image\/png;base64,/, "");
+		// TODO : check pattern...
+		var base64DrawContent = image.replace(/^data:image\/jpeg;base64,/, "");
 		var drawContentImg = new Buffer(base64DrawContent, 'base64');
 
 		var newPathes = PhotoboxUtils.getNewImageNamesFromOriginalImage(imageName);
 
-		var originalPath = uploadDir+newPathes[0];
-		var smallSizePath = uploadDir+newPathes[1];
-		var mediumSizePath = uploadDir+newPathes[2];
+		var originalPath = PhotoboxUtils.getDirectoryFromTag(tag)+newPathes[0];
+		var smallSizePath = PhotoboxUtils.getDirectoryFromTag(tag)+newPathes[1];
+		var mediumSizePath = PhotoboxUtils.getDirectoryFromTag(tag)+newPathes[2];
 
-		var writtenImages = {
-			'original': originalPath,
-			'small': smallSizePath,
-			'medium': mediumSizePath
-		};
+		var photoboxPicture : PhotoboxPicture = null;
 
 		var fail = function (msg) {
 			callback(false, "Error when posting the picture. Error: "+msg);
 		};
 
 		var successDownloadLogo = function () {
-			lwip.open(drawContentImg, 'png', function (drawContentErr, image) {
+			lwip.open(drawContentImg, 'jpg', function (drawContentErr, image) {
 				if (drawContentErr) {
 					fail("Fail opening original file : "+JSON.stringify(drawContentErr));
 				} else {
@@ -132,36 +134,42 @@ class PhotoboxUtils {
 										if (errWriteOriginal) {
 											fail("Fail writing original image with lwip : "+JSON.stringify(errWriteOriginal));
 										} else {
-											var callbackResizeImg = function (errScale, imgScaled) {
-												if (errScale) {
-													fail("Fail resizing image with lwip : "+JSON.stringify(errScale));
+											var callbackResizeImgMedium = function (errScaleMedium, imgScaledMedium) {
+												if (errScaleMedium) {
+													fail("Fail resizing to medium image with lwip : "+JSON.stringify(errScaleMedium));
 												} else {
-													var callbackWriteResized = function (errWriteResized) {
-														if (errWriteResized) {
-															fail("Fail writing resized image with lwip : "+JSON.stringify(errWriteResized));
+													var callbackWriteResizedMedium = function (errWriteResizedMedium) {
+														if (errWriteResizedMedium) {
+															fail("Fail writing medium image with lwip : "+JSON.stringify(errWriteResizedMedium));
 														} else {
-															counterResized++;
 
-															if (counterResized == 2) {
-																callback(true, writtenImages);
-															}
+															var callbackResizeImgSmall = function (errScaleSmall, imgScaledSmall) {
+																if (errScaleSmall) {
+																	fail("Fail resizing to small image with lwip : "+JSON.stringify(errScaleSmall));
+																} else {
+																	var callbackWriteResizedSmall = function (errWriteResizedSmall) {
+																		if (errWriteResizedSmall) {
+																			fail("Fail writing small image with lwip : "+JSON.stringify(errWriteResizedSmall));
+																		} else {
+																			photoboxPicture.setSmallPicture(smallSizePath);
+																			callback(true, photoboxPicture);
+																		}
+																	};
+
+																	imgScaledSmall.writeFile(smallSizePath, callbackWriteResizedSmall);
+																}
+															};
+															photoboxPicture.setMediumPicture(mediumSizePath);
+															imgWatermarked.resize(PhotoboxUtils.SMALL_SIZE.width, PhotoboxUtils.SMALL_SIZE.height, callbackResizeImgSmall);
 														}
 													};
 
-													var imgName;
-
-													if (imgScaled.height() == PhotoboxUtils.SMALL_SIZE.height) {
-														imgName = smallSizePath;
-													} else {
-														imgName = mediumSizePath;
-													}
-
-													imgScaled.writeFile(imgName, callbackWriteResized);
+													imgScaledMedium.writeFile(mediumSizePath, callbackWriteResizedMedium);
 												}
 											};
-											var counterResized = 0;
-											imgWatermarked.resize(PhotoboxUtils.SMALL_SIZE.width, PhotoboxUtils.SMALL_SIZE.height, callbackResizeImg);
-											imgWatermarked.resize(PhotoboxUtils.MIDDLE_SIZE.width, PhotoboxUtils.MIDDLE_SIZE.height, callbackResizeImg);
+
+											photoboxPicture = new PhotoboxPicture(tag, originalPath);
+											imgWatermarked.resize(PhotoboxUtils.MIDDLE_SIZE.width, PhotoboxUtils.MIDDLE_SIZE.height, callbackResizeImgMedium);
 										}
 									};
 

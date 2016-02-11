@@ -28,8 +28,15 @@ class PhotoboxClientNamespaceManager extends ClientNamespaceManager {
 		var self = this;
 
 		this.addListenerToSocket('StartCounter', function (callSocketId:any, self:PhotoboxClientNamespaceManager) {
-			Logger.debug("Start counter");
 			self.startCounter(callSocketId);
+		});
+
+		this.addListenerToSocket('ValidatePicture', function (callSocketId:any, self:PhotoboxClientNamespaceManager) {
+			self.validatePicture(callSocketId);
+		});
+
+		this.addListenerToSocket('UnvalidatePicture', function (callSocketId:any, self:PhotoboxClientNamespaceManager) {
+			self.unvalidatePicture(callSocketId);
 		});
 	}
 
@@ -40,6 +47,24 @@ class PhotoboxClientNamespaceManager extends ClientNamespaceManager {
 
 	postPicture(picture : string) {
 		var self = this;
-		this.socket.emit("DisplayPicture", picture);
+		this.socket.emit("DisplayPicture", self.formatResponse(true, picture));
+	}
+
+	validatePicture(callSocketId : any) {
+		var callNamespace : any = this.getCallNamespaceManager();
+		callNamespace.validatePicture();
+	}
+
+	unvalidatePicture(callSocketId : any) {
+		var callNamespace : any = this.getCallNamespaceManager();
+		callNamespace.unvalidatePicture();
+	}
+
+	sessionEndedWithValidation() {
+		this.socket.emit("SessionEndedWithValidation", this.formatResponse(true,""));
+	}
+
+	sessionEndedWithoutValidation() {
+		this.socket.emit("SessionEndedWithoutValidation", this.formatResponse(true,""));
 	}
 }

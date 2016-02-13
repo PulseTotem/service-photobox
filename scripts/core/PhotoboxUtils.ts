@@ -6,6 +6,7 @@
 
 var moment = require('moment');
 var request = require('request');
+var lwip = require('lwip');
 
 class PhotoboxUtils {
 	public static TIMEOUT_DURATION = 30;

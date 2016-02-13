@@ -10,6 +10,7 @@
 /// <reference path="../t6s-core/core-backend/t6s-core/core/scripts/infotype/priorities/InfoPriority.ts" />
 /// <reference path="./sources/Album.ts" />
 /// <reference path="./sources/Subscribe.ts" />
+/// <reference path="./core/PhotoboxPicture.ts" />
 
 class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 

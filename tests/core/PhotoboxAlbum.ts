@@ -145,44 +145,6 @@ describe('PhotoboxAlbum', function() {
 		});
 	});
 
-	describe('#addPicture', function () {
-		it('should create a proper Picture given a URL and tag', function() {
-			var mockPhotobox = sandbox.mock(PhotoboxAlbum.prototype);
-			mockPhotobox.expects('retrievePicsFromLocal').once();
-
-			var albumTag = "blop";
-
-			var photoboxTest = new PhotoboxAlbum(albumTag);
-			mockPhotobox.verify();
-
-			var urls = ["toto1.png", "toto2.png", "toto3.png"];
-
-			var pic : Picture = new Picture("toto1");
-			pic.setTitle("Photobox #"+albumTag);
-
-			var picUrlOriginal : PictureURL = new PictureURL("toto1");
-			picUrlOriginal.setURL("toto1.png");
-			pic.setOriginal(picUrlOriginal);
-
-			var picUrlMedium : PictureURL = new PictureURL("toto2");
-			picUrlMedium.setURL("toto2.png");
-			picUrlMedium.setWidth(PhotoboxUtils.MIDDLE_SIZE.width);
-			picUrlMedium.setHeight(PhotoboxUtils.MIDDLE_SIZE.height);
-			pic.setMedium(picUrlMedium);
-
-			var picUrlSmall : PictureURL = new PictureURL("toto3");
-			picUrlSmall.setURL("toto3.png");
-			picUrlSmall.setWidth(PhotoboxUtils.SMALL_SIZE.width);
-			picUrlSmall.setHeight(PhotoboxUtils.SMALL_SIZE.height);
-			pic.setSmall(picUrlSmall);
-
-			var allPics = [pic];
-
-			photoboxTest.addPicture(urls);
-			assert.deepEqual(photoboxTest.getPictures(), allPics);
-		});
-	});
-
 	describe('#getLastPictures', function () {
 		it('should return an empty list if there is no picture', function () {
 			var mockPhotobox = sandbox.mock(PhotoboxAlbum.prototype);
@@ -194,70 +156,6 @@ describe('PhotoboxAlbum', function() {
 			mockPhotobox.verify();
 
 			assert.deepEqual(photoboxTest.getLastPictures(10), []);
-		});
-
-		it('should return the last two pictures with a limit 2', function () {
-			var mockPhotobox = sandbox.mock(PhotoboxAlbum.prototype);
-			mockPhotobox.expects('retrievePicsFromLocal').once();
-
-			var albumTag = "blop";
-
-			var photoboxTest = new PhotoboxAlbum(albumTag);
-			mockPhotobox.verify();
-
-			var urls = ["toto1.png", "toto2.png", "toto3.png"];
-			photoboxTest.addPicture(urls);
-
-			urls =  ["titi1.png", "titi2.png", "titi3.png"];
-			photoboxTest.addPicture(urls);
-
-			urls = ["tata1.png", "tata2.png", "tata3.png"];
-			photoboxTest.addPicture(urls);
-
-			urls =  ["tutu1.png", "tutu2.png", "tutu3.png"];
-			photoboxTest.addPicture(urls);
-
-			var pic : Picture = new Picture("tata1");
-			pic.setTitle("Photobox #"+albumTag);
-
-			var picUrlOriginal : PictureURL = new PictureURL("tata1");
-			picUrlOriginal.setURL("tata1.png");
-			pic.setOriginal(picUrlOriginal);
-
-			var picUrlMedium : PictureURL = new PictureURL("tata2");
-			picUrlMedium.setURL("tata2.png");
-			picUrlMedium.setWidth(PhotoboxUtils.MIDDLE_SIZE.width);
-			picUrlMedium.setHeight(PhotoboxUtils.MIDDLE_SIZE.height);
-			pic.setMedium(picUrlMedium);
-
-			var picUrlSmall : PictureURL = new PictureURL("tata3");
-			picUrlSmall.setURL("tata3.png");
-			picUrlSmall.setWidth(PhotoboxUtils.SMALL_SIZE.width);
-			picUrlSmall.setHeight(PhotoboxUtils.SMALL_SIZE.height);
-			pic.setSmall(picUrlSmall);
-
-			var pic2 : Picture = new Picture("tutu1");
-			pic2.setTitle("Photobox #"+albumTag);
-
-			var picUrlOriginal : PictureURL = new PictureURL("tutu1");
-			picUrlOriginal.setURL("tutu1.png");
-			pic2.setOriginal(picUrlOriginal);
-
-			var picUrlMedium : PictureURL = new PictureURL("tutu2");
-			picUrlMedium.setURL("tutu2.png");
-			picUrlMedium.setWidth(PhotoboxUtils.MIDDLE_SIZE.width);
-			picUrlMedium.setHeight(PhotoboxUtils.MIDDLE_SIZE.height);
-			pic2.setMedium(picUrlMedium);
-
-			var picUrlSmall : PictureURL = new PictureURL("tutu3");
-			picUrlSmall.setURL("tutu3.png");
-			picUrlSmall.setWidth(PhotoboxUtils.SMALL_SIZE.width);
-			picUrlSmall.setHeight(PhotoboxUtils.SMALL_SIZE.height);
-			pic2.setSmall(picUrlSmall);
-
-			var allPics = [pic, pic2];
-
-			assert.deepEqual(photoboxTest.getLastPictures(2), allPics);
 		});
 	});
 });

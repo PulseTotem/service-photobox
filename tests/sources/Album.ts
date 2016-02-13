@@ -68,36 +68,4 @@ describe('Album', function() {
 			mockAlbum.verify();
 		});
 	});
-
-	describe('#run', function () {
-		it('should create the proper photo album given params and obtained pictures', function () {
-			var params = { Tag: 'toto', Limit: '1', InfoDuration: '15'};
-
-			var stubNSManager : any = sinon.createStubInstance(PhotoboxNamespaceManager);
-			var mockalbum = sandbox.mock(PhotoboxAlbum.prototype);
-			mockalbum.expects("retrievePicsFromLocal").once();
-
-			var photoAlbum : PhotoboxAlbum = new PhotoboxAlbum("toto");
-			photoAlbum.addPicture(["toto1.png","toto2.png","toto3.png"]);
-			photoAlbum.addPicture(["tata.png","tatab.png","tatac.png"]);
-
-			var stubPhotoboxNS = sandbox.stub(PhotoboxNamespaceManager,"createTag");
-			stubPhotoboxNS.withArgs('toto').returns(photoAlbum);
-
-			var mockuuid = sandbox.mock(uuid);
-			mockuuid.expects("v1").once().returns("uuid");
-
-			var expected : PictureAlbum = new PictureAlbum("uuid");
-			expected.setDurationToDisplay(15);
-			var pic : Picture = photoAlbum.getLastPictures(1)[0];
-			pic.setDurationToDisplay(15);
-			expected.addPicture(pic);
-
-			var album : Album = new Album(params, stubNSManager);
-
-			assert.ok(stubNSManager.sendNewInfoToClient.calledWithExactly(expected));
-			mockalbum.verify();
-			mockuuid.verify();
-		});
-	});
 });

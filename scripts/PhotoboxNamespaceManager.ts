@@ -70,19 +70,6 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 		self.getSessionManager().finishActiveSession();
 	}
 
-	unlockControl(session : Session) {
-		var self = this;
-		var cmdList:CmdList = new CmdList(uuid.v1());
-		var cmd:Cmd = new Cmd(session.id());
-
-		cmd.setCmd("removeInfo");
-		cmd.setPriority(InfoPriority.HIGH);
-		cmd.setDurationToDisplay(0);
-		cmdList.addCmd(cmd);
-
-		this.sendNewInfoToClient(cmdList);
-	}
-
 	/**
 	 * Lock the control of the Screen for the Session in param.
 	 *

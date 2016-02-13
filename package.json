@@ -21,8 +21,7 @@
     "mock-fs": "3.0.0"
   },
   "dependencies": {
-    "cloudinary": "1.2.2",
-    "lwip": "0.0.7",
+    "lwip": "0.0.8",
     "request": "2.60.0"
   }
 }

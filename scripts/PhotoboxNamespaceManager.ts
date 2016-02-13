@@ -3,7 +3,7 @@
  * @author Simon Urli <simon@the6thscreen.fr>
  */
 
-/// <reference path="../t6s-core/core-backend/scripts/server/SourceNamespaceManager.ts" />
+/// <reference path="../t6s-core/core-backend/scripts/session/SessionSourceNamespaceManager.ts" />
 /// <reference path="../t6s-core/core-backend/t6s-core/core/scripts/infotype/CmdList.ts" />
 /// <reference path="../t6s-core/core-backend/t6s-core/core/scripts/infotype/Cmd.ts" />
 /// <reference path="../t6s-core/core-backend/scripts/Logger.ts" />
@@ -11,11 +11,10 @@
 /// <reference path="./sources/Album.ts" />
 /// <reference path="./sources/Subscribe.ts" />
 
-class PhotoboxNamespaceManager extends SourceNamespaceManager {
+class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 
 	private static _albums : any = {};
-	private _params : any;
-
+	private picturesBySession : any = {};
 
 	/**
 	 * Constructor.
@@ -25,38 +24,33 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 	 */
 	constructor(socket : any) {
 		super(socket);
+		var self = this;
 		this.addListenerToSocket('Subscribe', function (params, photoboxNamespaceManager) { new Subscribe(params, photoboxNamespaceManager); });
 		this.addListenerToSocket('Album', function (params, photoboxNamespaceManager) { new Album(params, photoboxNamespaceManager); });
 
-		this._params = null;
+		this.socket.on('PostPicture', function (msg) { self.postPicture(msg); } );
 	}
 
-	public setParams(params : any) {
-		this._params = params;
-	}
-
-	public static createTag(tag : string, cloudStorage : boolean) : PhotoboxAlbum {
+	public static createTag(tag : string) : PhotoboxAlbum {
 		if (PhotoboxNamespaceManager._albums[tag] == undefined) {
 			Logger.debug("Create the PhotoboxAlbum for tag: "+tag);
-			PhotoboxNamespaceManager._albums[tag] = new PhotoboxAlbum(tag, cloudStorage);
+			PhotoboxNamespaceManager._albums[tag] = new PhotoboxAlbum(tag);
 		}
-		if (!cloudStorage) {
-			var uploadDir = PhotoboxUtils.getDirectoryFromTag(tag);
-			fs.open(uploadDir, 'r', function (err, fd) {
-				if (err) {
-					Logger.debug("The directory "+uploadDir+" is not accessible. The following error has been encountered: "+err+".\nPhotobox is now trying to create it.");
-					try {
-						fs.mkdirSync(uploadDir);
-						fs.writeFileSync(uploadDir+"index.html","");
-						Logger.debug("Creation of the directory "+uploadDir+" successful!");
-					} catch (e) {
-						Logger.error("This service is unable to create the tagged directory (path: "+uploadDir+"). Consequently the local storage is unavailable.");
-					}
-				} else {
-					fs.closeSync(fd);
+		var uploadDir = PhotoboxUtils.getDirectoryFromTag(tag);
+		fs.open(uploadDir, 'r', function (err, fd) {
+			if (err) {
+				Logger.debug("The directory "+uploadDir+" is not accessible. The following error has been encountered: "+err+".\nPhotobox is now trying to create it.");
+				try {
+					fs.mkdirSync(uploadDir);
+					fs.writeFileSync(uploadDir+"index.html","");
+					Logger.debug("Creation of the directory "+uploadDir+" successful!");
+				} catch (e) {
+					Logger.error("This service is unable to create the tagged directory (path: "+uploadDir+"). Consequently the local storage is unavailable.");
 				}
-			});
-		}
+			} else {
+				fs.closeSync(fd);
+			}
+		});
 		return PhotoboxNamespaceManager._albums[tag];
 	}
 
@@ -65,40 +59,26 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 	}
 
 	/**
-	 * Method called when external message comes from PhotoboxRouter.
+	 * Method called when socket is disconnected.
 	 *
-	 *
-	 * @method onExternalMessage
-	 * @param {string} from - Source description of message
-	 * @param {any} message - The received message is a PhotoboxSession here.
+	 * @method onClientDisconnection
 	 */
-	onExternalMessage(from : string, message : any) {
-		if (this._params != null) {
-			if (from == "startSession") {
-				this.startSession(message);
-			} else if (from == "counter") {
-				this.startCounter(message);
-			} else if (from == "endSession") {
-				this.endSession(message);
-			} else if (from == "newPicture") {
-				this.pushPicture(message);
-			}
-		}
+	public onClientDisconnection() {
+		super.onClientDisconnection();
+		var self = this;
+
+		self.getSessionManager().finishActiveSession();
 	}
 
-	private pushPicture(message : any) {
-		var tag : string = message.tag;
-		var picture : Array<string> = message.pics;
-
-		var album : PhotoboxAlbum = PhotoboxNamespaceManager._albums[tag];
-		album.addPicture(picture);
-	}
-
-	private startSession(message : any) {
+	/**
+	 * Lock the control of the Screen for the Session in param.
+	 *
+	 * @method lockControl
+	 * @param {Session} session - Session which takes the control of the Screen.
+	 */
+	lockControl(session : Session) {
 		var cmdList:CmdList = new CmdList(uuid.v1());
-		var cmd:Cmd = new Cmd(message._id);
-		var session : PhotoboxSession = message;
-		session.setCounterDuration(parseInt(this._params.CounterDuration));
+		var cmd:Cmd = new Cmd(session.id());
 
 		cmd.setCmd("startSession");
 		cmd.setPriority(InfoPriority.HIGH);
@@ -108,33 +88,94 @@ class PhotoboxNamespaceManager extends SourceNamespaceManager {
 		this.sendNewInfoToClient(cmdList);
 	}
 
-	private startCounter(message : any) {
-		var cmd:Cmd = new Cmd(message._id);
-		
-		cmd.setDurationToDisplay(30000);
-		cmd.setPriority(InfoPriority.HIGH);
-		cmd.setCmd("counter");
+	public startCounter() {
+		var self = this;
+		var activeSession : Session = self.getSessionManager().getActiveSession();
 
-		var args : Array<string> = new Array();
-		args.push(this._params.CounterDuration);
+		if (activeSession != null) {
+			var cmd:Cmd = new Cmd(activeSession.id());
 
-		var cloudStorage = JSON.parse(this._params.CloudStorage);
-		var postUrl = "http://"+Photobox.host+"/rest/post/"+cmd.getId().toString()+"/"+cloudStorage.toString()+"/"+this._params.Tag+"/"+encodeURIComponent(this._params.WatermarkURL);
-		Logger.debug("PostURL: "+postUrl);
-		args.push(postUrl);
-		cmd.setArgs(args);
+			cmd.setDurationToDisplay(30000);
+			cmd.setPriority(InfoPriority.HIGH);
+			cmd.setCmd("counter");
 
+			var args : Array<string> = new Array();
+			args.push(this.getParams().CounterDuration);
 
-		var cmdList : CmdList = new CmdList(uuid.v1());
-		cmdList.addCmd(cmd);
+			/*
+			var postUrl = "http://"+Photobox.host+"/rest/post/"+cmd.getId().toString()+"/"+this.getParams().Tag+"/"+encodeURIComponent(this.getParams().WatermarkURL);
+			Logger.debug("PostURL: "+postUrl);
+			args.push(postUrl);
+			*/
+			cmd.setArgs(args);
 
-		this.sendNewInfoToClient(cmdList);
+			var cmdList : CmdList = new CmdList(uuid.v1());
+			cmdList.addCmd(cmd);
+
+			this.sendNewInfoToClient(cmdList);
+		} else {
+			Logger.error("Try to launch start counter without any active session!");
+		}
 	}
 
-	private endSession(message : any) {
-		var time = parseInt(this._params.InfoDuration);
+	public postPicture(image : any) {
+		var self = this;
+		var activeSession : Session = self.getSessionManager().getActiveSession();
 
-		var cmd:Cmd = new Cmd(message._id);
+		var tag = this.getParams().Tag;
+		var watermarkURL = this.getParams().WatermarkURL;
+		var clientNamespace : any = self.getSessionManager().getAttachedNamespace(activeSession.id());
+
+		var callback = function (success : boolean, picture : PhotoboxPicture) {
+			if (success) {
+				self.picturesBySession[activeSession.id()] = picture;
+				clientNamespace.postPicture(picture.getURLMediumPicture());
+
+				Logger.debug("Picture available : "+picture.getURLMediumPicture());
+			} else {
+				// TODO Error to screen and mobile
+				Logger.error(picture);
+			}
+		};
+
+		PhotoboxUtils.postAndApplyWatermark(image, "image.jpg", watermarkURL, tag, true, callback);
+
+	}
+
+	public validatePicture() {
+		var self = this;
+		var activeSession : Session = self.getSessionManager().getActiveSession();
+		var clientNamespace : any = self.getSessionManager().getAttachedNamespace(activeSession.id());
+		var picture : PhotoboxPicture = self.picturesBySession[activeSession.id()];
+		self.pushPicture(picture);
+		delete self.picturesBySession[activeSession.id()];
+		self.getSessionManager().finishActiveSession();
+		clientNamespace.sessionEndedWithValidation();
+	}
+
+	public unvalidatePicture() {
+		var self = this;
+		var activeSession : Session = self.getSessionManager().getActiveSession();
+		var clientNamespace : any = self.getSessionManager().getAttachedNamespace(activeSession.id());
+		var picture : PhotoboxPicture = self.picturesBySession[activeSession.id()];
+		picture.delete();
+		delete self.picturesBySession[activeSession.id()];
+		self.getSessionManager().finishActiveSession();
+		clientNamespace.sessionEndedWithoutValidation();
+	}
+
+
+	private pushPicture(picture : PhotoboxPicture) {
+		var tag : string = picture.getTag();
+
+		var album : PhotoboxAlbum = PhotoboxNamespaceManager._albums[tag];
+		album.addPicture(picture);
+	}
+
+	public unlockControl(session : Session) {
+		var time = parseInt(this.getParams().InfoDuration);
+
+		var cmd:Cmd = new Cmd(session.id());
 
 		cmd.setDurationToDisplay(time);
 		cmd.setCmd("validatedPicture");

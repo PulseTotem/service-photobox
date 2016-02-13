@@ -13,10 +13,9 @@ class Subscribe extends SourceItf {
 		Logger.debug("Retrieve subscribe with params:");
 		Logger.debug(this.getParams());
 
-		if (this.checkParams(["InfoDuration","Tag","CloudStorage","URL","WatermarkURL","CounterDuration","Limit","AppliURL"])) {
+		if (this.checkParams(["InfoDuration","Tag","WatermarkURL","CounterDuration","Limit"])) {
 			photoboxNamespaceManager.setParams(params);
-			var cloudStorage : boolean = JSON.parse(this.getParams().CloudStorage);
-			this._album = PhotoboxNamespaceManager.createTag(this.getParams().Tag, cloudStorage);
+			this._album = PhotoboxNamespaceManager.createTag(this.getParams().Tag);
 			this.run();
 		}
 	}
@@ -25,13 +24,10 @@ class Subscribe extends SourceItf {
 		var arraylastPic = this._album.getLastPictures(1);
 
 		var cmd : Cmd = new Cmd(uuid.v1());
-		//cmd.setDurationToDisplay(parseInt(this.getParams().InfoDuration));
-		cmd.setDurationToDisplay(0);
+		cmd.setDurationToDisplay(parseInt(this.getParams().InfoDuration));
 		cmd.setCmd("Wait");
 		var args : Array<string> = new Array<string>();
-		args.push(this.getParams().URL);
-		args.push(this.getParams().AppliURL);
-
+		args.push(this.getSourceNamespaceManager().socket.id);
 		if (arraylastPic.length > 0) {
 			var lastPic : Picture = arraylastPic[0];
 			var urlLastPic = lastPic.getOriginal().getURL();

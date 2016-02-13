@@ -6,7 +6,7 @@
 /// <reference path="../t6s-core/core-backend/scripts/Logger.ts" />
 
 /// <reference path="./PhotoboxNamespaceManager.ts" />
-/// <reference path="./PhotoboxRouter.ts" />
+/// <reference path="./PhotoboxClientNamespaceManager.ts" />
 /// <reference path="./core/PhotoboxUtils.ts" />
 
 var fs : any = require('fs');
@@ -58,9 +58,8 @@ class Photobox extends SourceServer {
 	init() {
 		var self = this;
 
-		this.addAPIEndpoint("rest", PhotoboxRouter);
-
 		this.addNamespace("Photobox", PhotoboxNamespaceManager);
+		this.addNamespace("PhotoboxClient", PhotoboxClientNamespaceManager);
 
 		fs.open(Photobox.upload_directory, 'r', function (err, fd) {
 			if (err) {

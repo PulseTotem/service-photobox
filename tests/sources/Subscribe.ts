@@ -70,17 +70,6 @@ describe('Subscribe', function() {
 			mockSubscribe.verify();
 		});
 
-		it('should not launch run if the parameter URL is missing', function () {
-			var mockSubscribe = sandbox.mock(Subscribe.prototype);
-			mockSubscribe.expects('run').never();
-
-			var params = { Tag: 'toto', Limit: '10', InfoDuration: '15', AppliURL: 'http://tutu', WatermarkURL: 'http://tata', CounterDuration: '5'};
-
-			var stubNSManager : any = sinon.createStubInstance(PhotoboxNamespaceManager);
-			new Subscribe(params, stubNSManager);
-			mockSubscribe.verify();
-		});
-
 		it('should not launch run if the parameter WatermarkURL is missing', function () {
 			var mockSubscribe = sandbox.mock(Subscribe.prototype);
 			mockSubscribe.expects('run').never();
@@ -97,17 +86,6 @@ describe('Subscribe', function() {
 			mockSubscribe.expects('run').never();
 
 			var params = { Tag: 'toto', Limit: '10', InfoDuration: '15', URL: 'http://toto', AppliURL: 'http://tutu', WatermarkURL: 'http://toto'};
-
-			var stubNSManager : any = sinon.createStubInstance(PhotoboxNamespaceManager);
-			new Subscribe(params, stubNSManager);
-			mockSubscribe.verify();
-		});
-
-		it('should not launch run if the parameter AppliURL is missing', function () {
-			var mockSubscribe = sandbox.mock(Subscribe.prototype);
-			mockSubscribe.expects('run').never();
-
-			var params = { Tag: 'toto', Limit: '10', InfoDuration: '15', URL: 'http://toto', WatermarkURL: 'http://tata', CounterDuration: '5'};
 
 			var stubNSManager : any = sinon.createStubInstance(PhotoboxNamespaceManager);
 			new Subscribe(params, stubNSManager);

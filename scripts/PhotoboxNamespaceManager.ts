@@ -195,9 +195,10 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 	}
 
 	public unlockControl(session : Session) {
+		var time = 3;
 		var cmd:Cmd = new Cmd(session.id());
 
-		cmd.setDurationToDisplay(3);
+		cmd.setDurationToDisplay(time);
 		cmd.setCmd("removeInfo");
 		cmd.setPriority(InfoPriority.HIGH);
 

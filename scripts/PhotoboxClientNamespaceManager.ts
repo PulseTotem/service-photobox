@@ -42,21 +42,25 @@ class PhotoboxClientNamespaceManager extends ClientNamespaceManager {
 
 	startCounter(callSocketId : any) {
 		var callNamespace : any = this.getCallNamespaceManager();
+		this.resetTimeout();
 		callNamespace.startCounter();
 	}
 
 	postPicture(picture : string) {
 		var self = this;
+		this.resetTimeout();
 		this.socket.emit("DisplayPicture", self.formatResponse(true, picture));
 	}
 
 	validatePicture(callSocketId : any) {
 		var callNamespace : any = this.getCallNamespaceManager();
+		this.resetTimeout();
 		callNamespace.validatePicture();
 	}
 
 	unvalidatePicture(callSocketId : any) {
 		var callNamespace : any = this.getCallNamespaceManager();
+		this.resetTimeout();
 		callNamespace.unvalidatePicture();
 	}
 

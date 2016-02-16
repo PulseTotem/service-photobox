@@ -84,7 +84,7 @@ class PhotoboxAlbum {
 
 						if (self._blacklistedPictures.indexOf(fileId) == -1 && files.indexOf(completeMediumPath) != -1 && files.indexOf(completeSmallPath) != -1) {
 							var originalPath = file;
-							var picture : PhotoboxPicture = new PhotoboxPicture(this._tag, originalPath);
+							var picture : PhotoboxPicture = new PhotoboxPicture(self._tag, originalPath);
 							picture.setMediumPicture(completeMediumPath);
 							picture.setSmallPicture(completeSmallPath);
 

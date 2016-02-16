@@ -140,7 +140,7 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 				cmd.setDurationToDisplay(30000);
 				cmdList.addCmd(cmd);
 
-				this.sendNewInfoToClient(cmdList);
+				self.sendNewInfoToClient(cmdList);
 
 				Logger.debug("Picture available : "+picture.getURLMediumPicture());
 			} else {

@@ -13,7 +13,7 @@ class Subscribe extends SourceItf {
 		Logger.debug("Retrieve subscribe with params:");
 		Logger.debug(this.getParams());
 
-		if (this.checkParams(["InfoDuration","Tag","WatermarkURL","CounterDuration","Limit"])) {
+		if (this.checkParams(["InfoDuration","Tag","WatermarkURL","CounterDuration","Limit","AppliURL"])) {
 			photoboxNamespaceManager.setParams(params);
 			this._album = PhotoboxNamespaceManager.createTag(this.getParams().Tag);
 			this.run();
@@ -21,18 +21,29 @@ class Subscribe extends SourceItf {
 	}
 
 	public run() {
-		var arraylastPic = this._album.getLastPictures(1);
+		var infoDuration = parseInt(this.getParams().InfoDuration);
+		var socketId = this.getSourceNamespaceManager().socket.id;
+		var appliUrl = this.getParams().AppliURL;
+		var urlLastPic = null;
 
-		var cmd : Cmd = new Cmd(uuid.v1());
-		cmd.setDurationToDisplay(parseInt(this.getParams().InfoDuration));
-		cmd.setCmd("Wait");
-		var args : Array<string> = new Array<string>();
-		args.push(this.getSourceNamespaceManager().socket.id);
+		var arraylastPic = this._album.getLastPictures(1);
 		if (arraylastPic.length > 0) {
 			var lastPic : Picture = arraylastPic[0];
-			var urlLastPic = lastPic.getOriginal().getURL();
+			urlLastPic = lastPic.getOriginal().getURL();
+		}
+
+		var cmd : Cmd = new Cmd(uuid.v1());
+		cmd.setDurationToDisplay(infoDuration);
+		cmd.setCmd("Wait");
+
+		var args : Array<string> = new Array<string>();
+		args.push(socketId);
+		args.push(appliUrl);
+
+		if (urlLastPic != null) {
 			args.push(urlLastPic);
 		}
+
 		cmd.setArgs(args);
 
 		var list : CmdList = new CmdList(uuid.v1());

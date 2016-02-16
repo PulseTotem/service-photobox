@@ -132,6 +132,16 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 				self.picturesBySession[activeSession.id()] = picture;
 				clientNamespace.postPicture(picture.getURLMediumPicture());
 
+				var cmdList:CmdList = new CmdList(uuid.v1());
+				var cmd:Cmd = new Cmd(activeSession.id());
+
+				cmd.setCmd("postedPicture");
+				cmd.setPriority(InfoPriority.HIGH);
+				cmd.setDurationToDisplay(30000);
+				cmdList.addCmd(cmd);
+
+				this.sendNewInfoToClient(cmdList);
+
 				Logger.debug("Picture available : "+picture.getURLMediumPicture());
 			} else {
 				// TODO Error to screen and mobile
@@ -150,8 +160,19 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 		var picture : PhotoboxPicture = self.picturesBySession[activeSession.id()];
 		self.pushPicture(picture);
 		delete self.picturesBySession[activeSession.id()];
-		self.getSessionManager().finishActiveSession();
 		clientNamespace.sessionEndedWithValidation();
+
+		var cmd:Cmd = new Cmd(activeSession.id());
+
+		cmd.setDurationToDisplay(3000);
+		cmd.setCmd("validatedPicture");
+		cmd.setPriority(InfoPriority.HIGH);
+
+		var cmdList : CmdList = new CmdList(uuid.v1());
+		cmdList.addCmd(cmd);
+		this.sendNewInfoToClient(cmdList);
+
+		self.getSessionManager().finishActiveSession();
 	}
 
 	public unvalidatePicture() {
@@ -179,11 +200,12 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 		var cmd:Cmd = new Cmd(session.id());
 
 		cmd.setDurationToDisplay(time);
-		cmd.setCmd("validatedPicture");
+		cmd.setCmd("removeInfo");
 		cmd.setPriority(InfoPriority.HIGH);
 
 		var cmdList : CmdList = new CmdList(uuid.v1());
 		cmdList.addCmd(cmd);
+		this.sendNewInfoToClient(cmdList);
 
 		var self = this;
 		var timeoutFunc = function () {

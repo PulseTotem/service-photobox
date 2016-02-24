@@ -54,7 +54,7 @@ class PhotoboxUtils {
 	}
 
 	public static getCompleteHostname() : string {
-		return "http://"+Photobox.host+"/"+Photobox.serving_upload_dir+"/";
+		return "https://"+Photobox.host+"/"+Photobox.serving_upload_dir+"/";
 	}
 
 	public static getBaseURL(tag : string) : string {

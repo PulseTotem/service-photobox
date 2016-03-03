@@ -89,6 +89,63 @@ class PhotoboxUtils {
 		});
 	}
 
+	public static createWatermark(width : number, height : number, logoLeftUrl : string, logoRightUrl : string, successCallback: Function, failCallback: Function) {
+		var uniqueWatermarkId = uuid.v1();
+		var localLogoLeft = "/tmp/"+uniqueWatermarkId+"_left";
+		var localLogoRight = "/tmp/"+uniqueWatermarkId+"_right";
+
+		var counterDownload = 0;
+
+		var successCreateImage = function (errCreateImage, image) {
+			if (errCreateImage) {
+				failCallback("Error when creating watermark image: "+JSON.stringify(errCreateImage));
+			} else {
+
+			}
+		};
+		lwip.create(width, height, {r: 255, g: 255, b: 255, a: 70}, successCreateImage);
+
+		var successDownloadLogo = function() {
+			counterDownload++;
+			if (counterDownload == 2) {
+				lwip.open(localLogoLeft, function (errOpenLogoLeft, logoLeft) {
+					if (errOpenLogoLeft) {
+						failCallback("Error when opening left logo: "+JSON.stringify(errOpenLogoLeft));
+					} else {
+						lwip.open(localLogoRight, function (errOpenLogoRight, logoRight) {
+							if (errOpenLogoRight) {
+								failCallback("Error when opening right logo: "+JSON.stringify(errOpenLogoRight));
+							} else {
+								var newLogoLeftHeight : number = height;
+								var newLogoLeftWidth : number = (logoLeft.height*logoLeft.width) / height;
+
+								var newLogoRightHeight : number = height;
+								var newLogoRightWidth : number = (logoRight.height*logoRight.width) / height;
+
+								if ((newLogoLeftWidth + newLogoRightWidth) > (width-50)) {
+									var maxSize = (width-50)/2;
+									if (newLogoLeftWidth > maxSize) {
+										newLogoLeftWidth = maxSize;
+										newLogoLeftHeight = (logoLeft.width*logoLeft.height)/maxSize;
+									}
+									if (newLogoRightWidth > maxSize) {
+										newLogoRightWidth = maxSize;
+										newLogoRightHeight = (logoRight.width*logoRight.height)/maxSize;
+									}
+								}
+
+								
+							};
+						})
+					}
+				});
+			}
+		};
+
+		PhotoboxUtils.downloadFile(logoLeftUrl, localLogoLeft, successDownloadLogo, failCallback);
+		PhotoboxUtils.downloadFile(logoRightUrl, localLogoRight, successDownloadLogo, failCallback);
+	}
+
 	/**
 	 * Write a picture given in base64 format and write it to a specified directory after applying a watermark and creating small and medium pictures.
 	 *

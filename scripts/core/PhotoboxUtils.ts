@@ -96,14 +96,16 @@ class PhotoboxUtils {
 
 		var counterDownload = 0;
 
-		var successCreateImage = function (errCreateImage, image) {
-			if (errCreateImage) {
-				failCallback("Error when creating watermark image: "+JSON.stringify(errCreateImage));
-			} else {
-
-			}
+		var successResizingLogos = function () {
+			var successCreateImage = function (errCreateImage, image) {
+				if (errCreateImage) {
+					failCallback("Error when creating watermark image: "+JSON.stringify(errCreateImage));
+				} else {
+					image.batch().paste()
+				}
+			};
+			lwip.create(width, height, {r: 255, g: 255, b: 255, a: 70}, successCreateImage);
 		};
-		lwip.create(width, height, {r: 255, g: 255, b: 255, a: 70}, successCreateImage);
 
 		var successDownloadLogo = function() {
 			counterDownload++;
@@ -134,7 +136,21 @@ class PhotoboxUtils {
 									}
 								}
 
-								
+								logoLeft.batch().resize(newLogoLeftWidth, newLogoLeftHeight)
+									.writeFile(localLogoLeft, function (errWriteLogoLeft) {
+										if (errWriteLogoLeft) {
+											failCallback("Error when resizing logo left: "+JSON.stringify(errWriteLogoLeft));
+										} else {
+											logoRight.batch().resize(newLogoRightWidth, newLogoRightHeight)
+												.writeFile(localLogoRight, function (errWriteLogoRight) {
+													if (errWriteLogoRight) {
+														failCallback("Error when resizing logo right: "+JSON.stringify(errWriteLogoRight));
+													} else {
+														successResizingLogos();
+													}
+												});
+										}
+									});
 							};
 						})
 					}

@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "lwip": "0.0.8",
+    "mime-sniffer": "0.0.3",
     "request": "2.60.0"
   }
 }

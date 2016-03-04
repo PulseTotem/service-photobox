@@ -7,6 +7,7 @@
 var moment = require('moment');
 var request = require('request');
 var lwip = require('lwip');
+var mime = require('mime-sniffer');
 
 class PhotoboxUtils {
 	public static TIMEOUT_DURATION = 30;
@@ -139,49 +140,63 @@ class PhotoboxUtils {
 		var successDownloadLogo = function() {
 			counterDownload++;
 			if (counterDownload == 2) {
-				lwip.open(localLogoLeft, function (errOpenLogoLeft, logoLeft) {
-					if (errOpenLogoLeft) {
-						failCallback("Error when opening left logo: "+JSON.stringify(errOpenLogoLeft));
+				mime.lookup(localLogoLeft, function(errSniffMimeLogoLeft, infoLogoLeft: any) {
+					if (errSniffMimeLogoLeft) {
+						failCallback("Error when detecting mimetype of logo left: "+JSON.stringify(errSniffMimeLogoLeft));
 					} else {
-						lwip.open(localLogoRight, function (errOpenLogoRight, logoRight) {
-							if (errOpenLogoRight) {
-								failCallback("Error when opening right logo: "+JSON.stringify(errOpenLogoRight));
+						localLogoLeft += "."+infoLogoLeft.extension;
+						mime.lookup(localLogoRight, function (errSniffMimeLogoRight, infoLogoRight : any) {
+							if (errSniffMimeLogoRight) {
+								failCallback("Error when detecting mimetype of logo right: "+JSON.stringify(errSniffMimeLogoRight));
 							} else {
-								var newLogoLeftHeight : number = height;
-								var newLogoLeftWidth : number = (logoLeft.height()*logoLeft.width()) / height;
+								localLogoRight += "."+infoLogoRight.extension;
+								lwip.open(localLogoLeft, function (errOpenLogoLeft, logoLeft) {
+									if (errOpenLogoLeft) {
+										failCallback("Error when opening left logo: "+JSON.stringify(errOpenLogoLeft));
+									} else {
+										lwip.open(localLogoRight, function (errOpenLogoRight, logoRight) {
+											if (errOpenLogoRight) {
+												failCallback("Error when opening right logo: "+JSON.stringify(errOpenLogoRight));
+											} else {
+												var newLogoLeftHeight : number = height;
+												var newLogoLeftWidth : number = (logoLeft.height()*logoLeft.width()) / height;
 
-								var newLogoRightHeight : number = height;
-								var newLogoRightWidth : number = (logoRight.height()*logoRight.width()) / height;
+												var newLogoRightHeight : number = height;
+												var newLogoRightWidth : number = (logoRight.height()*logoRight.width()) / height;
 
-								if ((newLogoLeftWidth + newLogoRightWidth) > (width-50)) {
-									var maxSize = (width-50)/2;
-									if (newLogoLeftWidth > maxSize) {
-										newLogoLeftWidth = maxSize;
-										newLogoLeftHeight = (logoLeft.width()*logoLeft.height())/maxSize;
-									}
-									if (newLogoRightWidth > maxSize) {
-										newLogoRightWidth = maxSize;
-										newLogoRightHeight = (logoRight.width()*logoRight.height())/maxSize;
-									}
-								}
-
-								logoLeft.batch().resize(newLogoLeftWidth, newLogoLeftHeight)
-									.writeFile(localLogoLeft, function (errWriteLogoLeft) {
-										if (errWriteLogoLeft) {
-											failCallback("Error when resizing logo left: "+JSON.stringify(errWriteLogoLeft));
-										} else {
-											logoRight.batch().resize(newLogoRightWidth, newLogoRightHeight)
-												.writeFile(localLogoRight, function (errWriteLogoRight) {
-													if (errWriteLogoRight) {
-														failCallback("Error when resizing logo right: "+JSON.stringify(errWriteLogoRight));
-													} else {
-														successResizingLogos();
+												if ((newLogoLeftWidth + newLogoRightWidth) > (width-50)) {
+													var maxSize = (width-50)/2;
+													if (newLogoLeftWidth > maxSize) {
+														newLogoLeftWidth = maxSize;
+														newLogoLeftHeight = (logoLeft.width()*logoLeft.height())/maxSize;
 													}
-												});
-										}
-									});
-							};
-						})
+													if (newLogoRightWidth > maxSize) {
+														newLogoRightWidth = maxSize;
+														newLogoRightHeight = (logoRight.width()*logoRight.height())/maxSize;
+													}
+												}
+
+												logoLeft.batch().resize(newLogoLeftWidth, newLogoLeftHeight)
+													.writeFile(localLogoLeft, function (errWriteLogoLeft) {
+														if (errWriteLogoLeft) {
+															failCallback("Error when resizing logo left: "+JSON.stringify(errWriteLogoLeft));
+														} else {
+															logoRight.batch().resize(newLogoRightWidth, newLogoRightHeight)
+																.writeFile(localLogoRight, function (errWriteLogoRight) {
+																	if (errWriteLogoRight) {
+																		failCallback("Error when resizing logo right: "+JSON.stringify(errWriteLogoRight));
+																	} else {
+																		successResizingLogos();
+																	}
+																});
+														}
+													});
+											};
+										})
+									}
+								});
+							}
+						});
 					}
 				});
 			}

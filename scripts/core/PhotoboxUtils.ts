@@ -181,12 +181,12 @@ class PhotoboxUtils {
 												}
 
 												logoLeft.batch().resize(newLogoLeftWidth, newLogoLeftHeight)
-													.writeFile(localLogoLeft, function (errWriteLogoLeft) {
+													.writeFile(localLogoLeft, leftExtension, function (errWriteLogoLeft) {
 														if (errWriteLogoLeft) {
 															failCallback("Error when resizing logo left: "+JSON.stringify(errWriteLogoLeft));
 														} else {
 															logoRight.batch().resize(newLogoRightWidth, newLogoRightHeight)
-																.writeFile(localLogoRight, function (errWriteLogoRight) {
+																.writeFile(localLogoRight, rightExtension, function (errWriteLogoRight) {
 																	if (errWriteLogoRight) {
 																		failCallback("Error when resizing logo right: "+JSON.stringify(errWriteLogoRight));
 																	} else {

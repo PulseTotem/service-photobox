@@ -166,20 +166,32 @@ class PhotoboxUtils {
 												failCallback("Error when opening right logo: "+JSON.stringify(errOpenLogoRight));
 											} else {
 												var newLogoLeftHeight : number = height;
-												var newLogoLeftWidth : number = Math.round((newLogoLeftHeight*logoLeft.width()) / logoLeft.height);
+												var newLogoLeftWidth : number = Math.round((newLogoLeftHeight*logoLeft.width()) / logoLeft.height());
+
+												Logger.debug("Compute new dimension for logo left: H:"+newLogoLeftHeight+" | W:"+newLogoLeftWidth);
 
 												var newLogoRightHeight : number = height;
-												var newLogoRightWidth : number = Math.round((newLogoRightHeight*logoRight.width()) / logoRight.height);
+												var newLogoRightWidth : number = Math.round((newLogoRightHeight*logoRight.width()) / logoRight.height());
+
+												Logger.debug("Compute new dimension for logo right: H:"+newLogoRightHeight+" | W:"+newLogoRightWidth);
 
 												if ((newLogoLeftWidth + newLogoRightWidth) > (width-50)) {
 													var maxSize = (width-50)/2;
+
+													Logger.debug("Sum of logo width is higher than image width + 50px. Max width: "+maxSize);
+
 													if (newLogoLeftWidth > maxSize) {
 														newLogoLeftWidth = maxSize;
-														newLogoLeftHeight = Math.round((newLogoLeftWidth*logoLeft.height())/logoLeft.width);
+														newLogoLeftHeight = Math.round((newLogoLeftWidth*logoLeft.height())/logoLeft.width());
+
+														Logger.debug("Compute new logo left dimension: H:"+newLogoLeftHeight+"| W:"+newLogoLeftWidth);
 													}
+
+
 													if (newLogoRightWidth > maxSize) {
 														newLogoRightWidth = maxSize;
-														newLogoRightHeight = Math.round((newLogoRightWidth*logoRight.height())/logoRight.width);
+														newLogoRightHeight = Math.round((newLogoRightWidth*logoRight.height())/logoRight.width());
+														Logger.debug("Compute new logo right dimension: H:"+newLogoRightHeight+"| W:"+newLogoRightWidth);
 													}
 												}
 

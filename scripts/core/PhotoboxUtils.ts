@@ -166,20 +166,20 @@ class PhotoboxUtils {
 												failCallback("Error when opening right logo: "+JSON.stringify(errOpenLogoRight));
 											} else {
 												var newLogoLeftHeight : number = height;
-												var newLogoLeftWidth : number = Math.round((logoLeft.height()*logoLeft.width()) / height);
+												var newLogoLeftWidth : number = Math.round((newLogoLeftHeight*logoLeft.width()) / logoLeft.height);
 
 												var newLogoRightHeight : number = height;
-												var newLogoRightWidth : number = Math.round((logoRight.height()*logoRight.width()) / height);
+												var newLogoRightWidth : number = Math.round((newLogoRightHeight*logoRight.width()) / logoRight.height);
 
 												if ((newLogoLeftWidth + newLogoRightWidth) > (width-50)) {
 													var maxSize = (width-50)/2;
 													if (newLogoLeftWidth > maxSize) {
 														newLogoLeftWidth = maxSize;
-														newLogoLeftHeight = Math.round((logoLeft.width()*logoLeft.height())/maxSize);
+														newLogoLeftHeight = Math.round((newLogoLeftWidth*logoLeft.height())/logoLeft.width);
 													}
 													if (newLogoRightWidth > maxSize) {
 														newLogoRightWidth = maxSize;
-														newLogoRightHeight = Math.round((logoRight.width()*logoRight.height())/maxSize);
+														newLogoRightHeight = Math.round((newLogoRightWidth*logoRight.height())/logoRight.width);
 													}
 												}
 

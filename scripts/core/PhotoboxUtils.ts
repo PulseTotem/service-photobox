@@ -95,6 +95,8 @@ class PhotoboxUtils {
 		var localLogoLeft = "/tmp/"+uniqueWatermarkId+"_left";
 		var localLogoRight = "/tmp/"+uniqueWatermarkId+"_right";
 		var pathWatermark = "/tmp/"+uniqueWatermarkId+".png";
+		var leftExtension;
+		var rightExtension;
 
 		var counterDownload = 0;
 
@@ -103,11 +105,11 @@ class PhotoboxUtils {
 				if (errCreateImage) {
 					failCallback("Error when creating watermark image: "+JSON.stringify(errCreateImage));
 				} else {
-					lwip.open(localLogoLeft, function (errOpenLogoLeft, newLogoLeft) {
+					lwip.open(localLogoLeft, leftExtension, function (errOpenLogoLeft, newLogoLeft) {
 						if (errOpenLogoLeft) {
 							failCallback("Error when opening new logo left to paste it : "+JSON.stringify(errOpenLogoLeft));
 						} else {
-							lwip.open(localLogoRight, function (errOpenLogoRight, newLogoRight) {
+							lwip.open(localLogoRight, rightExtension, function (errOpenLogoRight, newLogoRight) {
 								if (errOpenLogoRight) {
 									failCallback("Error when opening new logo right to paste it : "+JSON.stringify(errOpenLogoRight));
 								} else {
@@ -124,6 +126,8 @@ class PhotoboxUtils {
 											if (errPasteWrite) {
 												failCallback("Error when pasting logos or writing final file: "+JSON.stringify(errPasteWrite));
 											} else {
+												fs.unlinkSync(localLogoLeft);
+												fs.unlinkSync(localLogoRight);
 												successCallback(pathWatermark);
 											}
 										});
@@ -144,17 +148,17 @@ class PhotoboxUtils {
 					if (errSniffMimeLogoLeft) {
 						failCallback("Error when detecting mimetype of logo left: "+JSON.stringify(errSniffMimeLogoLeft));
 					} else {
-						localLogoLeft += "."+infoLogoLeft.extension;
+						leftExtension = infoLogoLeft.extension;
 						mime.lookup(localLogoRight, function (errSniffMimeLogoRight, infoLogoRight : any) {
 							if (errSniffMimeLogoRight) {
 								failCallback("Error when detecting mimetype of logo right: "+JSON.stringify(errSniffMimeLogoRight));
 							} else {
-								localLogoRight += "."+infoLogoRight.extension;
-								lwip.open(localLogoLeft, function (errOpenLogoLeft, logoLeft) {
+								rightExtension = infoLogoRight.extension;
+								lwip.open(localLogoLeft, leftExtension, function (errOpenLogoLeft, logoLeft) {
 									if (errOpenLogoLeft) {
 										failCallback("Error when opening left logo: "+JSON.stringify(errOpenLogoLeft));
 									} else {
-										lwip.open(localLogoRight, function (errOpenLogoRight, logoRight) {
+										lwip.open(localLogoRight, rightExtension, function (errOpenLogoRight, logoRight) {
 											if (errOpenLogoRight) {
 												failCallback("Error when opening right logo: "+JSON.stringify(errOpenLogoRight));
 											} else {
@@ -250,6 +254,7 @@ class PhotoboxUtils {
 										if (errWriteOriginal) {
 											fail("Fail writing original image with lwip : "+JSON.stringify(errWriteOriginal));
 										} else {
+											fs.unlinkSync(local_watermark);
 											var callbackResizeImgMedium = function (errScaleMedium, imgScaledMedium) {
 												if (errScaleMedium) {
 													fail("Fail resizing to medium image with lwip : "+JSON.stringify(errScaleMedium));

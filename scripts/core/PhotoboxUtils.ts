@@ -7,6 +7,7 @@
 var moment = require('moment');
 var request = require('request');
 var lwip = require('lwip');
+var mime = require('mime-sniffer');
 
 class PhotoboxUtils {
 	public static TIMEOUT_DURATION = 30;
@@ -89,6 +90,141 @@ class PhotoboxUtils {
 		});
 	}
 
+	public static createWatermark(width : number, height : number, logoLeftUrl : string, logoRightUrl : string, successCallback: Function, failCallback: Function) {
+		var uniqueWatermarkId = uuid.v1();
+		var localLogoLeft = "/tmp/"+uniqueWatermarkId+"_left";
+		var localLogoRight = "/tmp/"+uniqueWatermarkId+"_right";
+		var pathWatermark = "/tmp/"+uniqueWatermarkId+".png";
+		var leftExtension;
+		var rightExtension;
+
+		var counterDownload = 0;
+
+		var successResizingLogos = function () {
+			var successCreateImage = function (errCreateImage, image) {
+				if (errCreateImage) {
+					failCallback("Error when creating watermark image: "+JSON.stringify(errCreateImage));
+				} else {
+					lwip.open(localLogoLeft, leftExtension, function (errOpenLogoLeft, newLogoLeft) {
+						if (errOpenLogoLeft) {
+							failCallback("Error when opening new logo left to paste it : "+JSON.stringify(errOpenLogoLeft));
+						} else {
+							lwip.open(localLogoRight, rightExtension, function (errOpenLogoRight, newLogoRight) {
+								if (errOpenLogoRight) {
+									failCallback("Error when opening new logo right to paste it : "+JSON.stringify(errOpenLogoRight));
+								} else {
+									var logoLeftLeft : number = 10; //10px from border left;
+									var logoLeftTop : number = Math.round((image.height() - newLogoLeft.height())/2);
+
+									var logoRightLeft : number = image.width() - newLogoRight.width() - 10;
+									var logoRightTop : number = Math.round((image.height() - newLogoRight.height()) /2);
+
+									Logger.debug("Position of left logo: left: "+logoLeftLeft+" | top: "+logoLeftTop);
+									Logger.debug("Position of right logo: left: "+logoRightLeft+" | top: "+logoRightTop);
+
+									image.batch()
+										.paste(logoLeftLeft, logoLeftTop, newLogoLeft)
+										.paste(logoRightLeft, logoRightTop, newLogoRight)
+										.writeFile(pathWatermark, function (errPasteWrite) {
+											if (errPasteWrite) {
+												failCallback("Error when pasting logos or writing final file: "+JSON.stringify(errPasteWrite));
+											} else {
+												fs.unlinkSync(localLogoLeft);
+												fs.unlinkSync(localLogoRight);
+												successCallback(pathWatermark);
+											}
+										});
+								}
+							});
+						}
+					});
+				}
+			};
+			Logger.debug("Create image with following dimension: W: "+width+" | H: "+height);
+			lwip.create(width, height, {r: 255, g: 255, b: 255, a: 70}, successCreateImage);
+		};
+
+		var successDownloadLogo = function() {
+			counterDownload++;
+			if (counterDownload == 2) {
+				mime.lookup(localLogoLeft, function(errSniffMimeLogoLeft, infoLogoLeft: any) {
+					if (errSniffMimeLogoLeft) {
+						failCallback("Error when detecting mimetype of logo left: "+JSON.stringify(errSniffMimeLogoLeft));
+					} else {
+						leftExtension = infoLogoLeft.extension;
+						mime.lookup(localLogoRight, function (errSniffMimeLogoRight, infoLogoRight : any) {
+							if (errSniffMimeLogoRight) {
+								failCallback("Error when detecting mimetype of logo right: "+JSON.stringify(errSniffMimeLogoRight));
+							} else {
+								rightExtension = infoLogoRight.extension;
+								lwip.open(localLogoLeft, leftExtension, function (errOpenLogoLeft, logoLeft) {
+									if (errOpenLogoLeft) {
+										failCallback("Error when opening left logo: "+JSON.stringify(errOpenLogoLeft));
+									} else {
+										lwip.open(localLogoRight, rightExtension, function (errOpenLogoRight, logoRight) {
+											if (errOpenLogoRight) {
+												failCallback("Error when opening right logo: "+JSON.stringify(errOpenLogoRight));
+											} else {
+												var newLogoLeftHeight : number = height;
+												var newLogoLeftWidth : number = Math.round((newLogoLeftHeight*logoLeft.width()) / logoLeft.height());
+
+												Logger.debug("Compute new dimension for logo left: H:"+newLogoLeftHeight+" | W:"+newLogoLeftWidth);
+
+												var newLogoRightHeight : number = height;
+												var newLogoRightWidth : number = Math.round((newLogoRightHeight*logoRight.width()) / logoRight.height());
+
+												Logger.debug("Compute new dimension for logo right: H:"+newLogoRightHeight+" | W:"+newLogoRightWidth);
+
+												if ((newLogoLeftWidth + newLogoRightWidth) > (width-50)) {
+													var maxSize = (width-50)/2;
+
+													Logger.debug("Sum of logo width is higher than image width + 50px. Max width: "+maxSize);
+
+													if (newLogoLeftWidth > maxSize) {
+														newLogoLeftWidth = maxSize;
+														newLogoLeftHeight = Math.round((newLogoLeftWidth*logoLeft.height())/logoLeft.width());
+
+														Logger.debug("Compute new logo left dimension: H:"+newLogoLeftHeight+"| W:"+newLogoLeftWidth);
+													}
+
+
+													if (newLogoRightWidth > maxSize) {
+														newLogoRightWidth = maxSize;
+														newLogoRightHeight = Math.round((newLogoRightWidth*logoRight.height())/logoRight.width());
+														Logger.debug("Compute new logo right dimension: H:"+newLogoRightHeight+"| W:"+newLogoRightWidth);
+													}
+												}
+
+												logoLeft.batch().resize(newLogoLeftWidth, newLogoLeftHeight)
+													.writeFile(localLogoLeft, leftExtension, function (errWriteLogoLeft) {
+														if (errWriteLogoLeft) {
+															failCallback("Error when resizing logo left: "+JSON.stringify(errWriteLogoLeft));
+														} else {
+															logoRight.batch().resize(newLogoRightWidth, newLogoRightHeight)
+																.writeFile(localLogoRight, rightExtension, function (errWriteLogoRight) {
+																	if (errWriteLogoRight) {
+																		failCallback("Error when resizing logo right: "+JSON.stringify(errWriteLogoRight));
+																	} else {
+																		successResizingLogos();
+																	}
+																});
+														}
+													});
+											};
+										})
+									}
+								});
+							}
+						});
+					}
+				});
+			}
+		};
+
+		PhotoboxUtils.downloadFile(logoLeftUrl, localLogoLeft, successDownloadLogo, failCallback);
+		PhotoboxUtils.downloadFile(logoRightUrl, localLogoRight, successDownloadLogo, failCallback);
+	}
+
 	/**
 	 * Write a picture given in base64 format and write it to a specified directory after applying a watermark and creating small and medium pictures.
 	 *
@@ -99,10 +235,8 @@ class PhotoboxUtils {
 	 * @param bottomWatermark Determine if the watermark should be placed at the bottom or at the top of the image
 	 * @param callback The callback in case of success or failure, it takes a boolean for success/failure and a message or an object containing the different images pathes.
 	 */
-	public static postAndApplyWatermark(image : any, imageName : string, watermarkUrl : string, tag : string, bottomWatermark : boolean, callback : Function) {
-		var local_watermark : string = "/tmp/watermark.png";
-
-		// TODO : check pattern...
+	public static postAndApplyWatermark(image : any, imageName : string, tag : string, logoLeft: string, logoRight: string, callback : Function) {
+		// TODO : check pattern... (cf CMS)
 		var base64DrawContent = image.replace(/^data:image\/jpeg;base64,/, "");
 		var drawContentImg = new Buffer(base64DrawContent, 'base64');
 
@@ -118,11 +252,11 @@ class PhotoboxUtils {
 			callback(false, "Error when posting the picture. Error: "+msg);
 		};
 
-		var successDownloadLogo = function () {
-			lwip.open(drawContentImg, 'jpg', function (drawContentErr, image) {
-				if (drawContentErr) {
-					fail("Fail opening original file : "+JSON.stringify(drawContentErr));
-				} else {
+		lwip.open(drawContentImg, 'jpg', function (drawContentErr, image) {
+			if (drawContentErr) {
+				fail("Fail opening original file : "+JSON.stringify(drawContentErr));
+			} else {
+				var successCreateWatermark = function (local_watermark) {
 					lwip.open(local_watermark, function (errOpen, img_watermark) {
 						if (errOpen) {
 							fail("Fail opening watermark file : "+JSON.stringify(errOpen));
@@ -135,6 +269,7 @@ class PhotoboxUtils {
 										if (errWriteOriginal) {
 											fail("Fail writing original image with lwip : "+JSON.stringify(errWriteOriginal));
 										} else {
+											fs.unlinkSync(local_watermark);
 											var callbackResizeImgMedium = function (errScaleMedium, imgScaledMedium) {
 												if (errScaleMedium) {
 													fail("Fail resizing to medium image with lwip : "+JSON.stringify(errScaleMedium));
@@ -178,19 +313,15 @@ class PhotoboxUtils {
 								}
 							};
 
-							if (bottomWatermark) {
-								image.paste(0, (image.height()-img_watermark.height()), img_watermark, callbackPasteWatermark);
-							} else {
-								image.paste(0, 0, img_watermark, callbackPasteWatermark);
-							}
-
+							image.paste(0, (image.height()-img_watermark.height()), img_watermark, callbackPasteWatermark);
 						}
 					});
-				}
-			});
-		};
+				};
 
-
-		PhotoboxUtils.downloadFile(watermarkUrl, local_watermark, successDownloadLogo, fail);
+				var watermark_width = image.width();
+				var watermark_height = (image.height() * 10) / 100;
+				PhotoboxUtils.createWatermark(watermark_width, watermark_height, logoLeft, logoRight, successCreateWatermark, fail);
+			}
+		});
 	}
 }

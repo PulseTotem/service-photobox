@@ -124,7 +124,8 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 		var activeSession : Session = self.getSessionManager().getActiveSession();
 
 		var tag = this.getParams().Tag;
-		var watermarkURL = this.getParams().WatermarkURL;
+		var logoLeftURL = this.getParams().LogoLeftURL;
+		var logoRightURL = this.getParams().LogoRightURL;
 		var clientNamespace : any = self.getSessionManager().getAttachedNamespace(activeSession.id());
 
 		var callback = function (success : boolean, picture : PhotoboxPicture) {
@@ -149,7 +150,7 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 			}
 		};
 
-		PhotoboxUtils.postAndApplyWatermark(image, "image.jpg", watermarkURL, tag, true, callback);
+		PhotoboxUtils.postAndApplyWatermark(image, "image.jpg", tag, logoLeftURL, logoRightURL, callback);
 
 	}
 

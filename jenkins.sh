@@ -23,4 +23,4 @@ cd $currentDir
 npm install
 echo '{ "coreBackendRepoPath" : "'$absolutePathBackend'", "coreRepoPath": "'$absolutePathCore'" }' > core-repos-config.json
 grunt initJenkins
-grunt --verbose jenkins
+grunt --verbose --force jenkins

@@ -119,6 +119,9 @@ class PhotoboxUtils {
 									var logoRightLeft : number = image.width() - newLogoRight.width() - 10;
 									var logoRightTop : number = Math.round((image.height() - newLogoRight.height()) /2);
 
+									Logger.debug("Position of left logo: left: "+logoLeftLeft+" | top: "+logoLeftTop);
+									Logger.debug("Position of right logo: left: "+logoRightLeft+" | top: "+logoRightTop);
+
 									image.batch()
 										.paste(logoLeftLeft, logoLeftTop, newLogoLeft)
 										.paste(logoRightLeft, logoRightTop, newLogoRight)
@@ -138,6 +141,7 @@ class PhotoboxUtils {
 					image.batch().paste()
 				}
 			};
+			Logger.debug("Create image with following dimension: W: "+width+" | H: "+height);
 			lwip.create(width, height, {r: 255, g: 255, b: 255, a: 70}, successCreateImage);
 		};
 

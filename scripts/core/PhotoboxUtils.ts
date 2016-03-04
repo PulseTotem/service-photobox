@@ -138,7 +138,6 @@ class PhotoboxUtils {
 							});
 						}
 					});
-					image.batch().paste()
 				}
 			};
 			Logger.debug("Create image with following dimension: W: "+width+" | H: "+height);

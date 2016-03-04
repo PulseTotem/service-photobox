@@ -113,11 +113,11 @@ class PhotoboxUtils {
 								if (errOpenLogoRight) {
 									failCallback("Error when opening new logo right to paste it : "+JSON.stringify(errOpenLogoRight));
 								} else {
-									var logoLeftLeft = 10; //10px from border left;
-									var logoLeftTop = (image.height() - newLogoLeft.height())/2;
+									var logoLeftLeft : number = 10; //10px from border left;
+									var logoLeftTop : number = Math.round((image.height() - newLogoLeft.height())/2);
 
-									var logoRightLeft = image.width() - newLogoRight.height() - 10;
-									var logoRightTop = (image.height() - newLogoRight.height()) /2;
+									var logoRightLeft : number = image.width() - newLogoRight.width() - 10;
+									var logoRightTop : number = Math.round((image.height() - newLogoRight.height()) /2);
 
 									image.batch()
 										.paste(logoLeftLeft, logoLeftTop, newLogoLeft)
@@ -163,20 +163,20 @@ class PhotoboxUtils {
 												failCallback("Error when opening right logo: "+JSON.stringify(errOpenLogoRight));
 											} else {
 												var newLogoLeftHeight : number = height;
-												var newLogoLeftWidth : number = (logoLeft.height()*logoLeft.width()) / height;
+												var newLogoLeftWidth : number = Math.round((logoLeft.height()*logoLeft.width()) / height);
 
 												var newLogoRightHeight : number = height;
-												var newLogoRightWidth : number = (logoRight.height()*logoRight.width()) / height;
+												var newLogoRightWidth : number = Math.round((logoRight.height()*logoRight.width()) / height);
 
 												if ((newLogoLeftWidth + newLogoRightWidth) > (width-50)) {
 													var maxSize = (width-50)/2;
 													if (newLogoLeftWidth > maxSize) {
 														newLogoLeftWidth = maxSize;
-														newLogoLeftHeight = (logoLeft.width()*logoLeft.height())/maxSize;
+														newLogoLeftHeight = Math.round((logoLeft.width()*logoLeft.height())/maxSize);
 													}
 													if (newLogoRightWidth > maxSize) {
 														newLogoRightWidth = maxSize;
-														newLogoRightHeight = (logoRight.width()*logoRight.height())/maxSize;
+														newLogoRightHeight = Math.round((logoRight.width()*logoRight.height())/maxSize);
 													}
 												}
 

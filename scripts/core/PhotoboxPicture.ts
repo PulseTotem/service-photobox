@@ -2,6 +2,7 @@
  * @author Simon Urli <simon@the6thscreen.fr>
  */
 
+var moment = require('moment');
 /**
  * Represent a picture taken using Photobox.
  */
@@ -11,10 +12,49 @@ class PhotoboxPicture {
 
     private _urlOriginalPicture : string;
     private _urlMediumPicture : string;
-    private _urlSmallPicture : string;
+    private _picture : Picture;
 
     constructor(hashid : string) {
         this._hashid = hashid;
+
+        this._urlOriginalPicture = ServiceConfig.getCMSHost() + "images/" + this._hashid + "/raw?size=original";
+        this._urlMediumPicture = ServiceConfig.getCMSHost() + "images/" + this._hashid + "/raw?size=medium";
+
+        this.initPicture();
+    }
+    
+    private initPicture() {
+        var picture : Picture = new Picture();
+        picture.setId(this._hashid);
+        var pictureCreationDate : any = moment.moment();
+        picture.setCreationDate(pictureCreationDate.toDate());
+        
+        var pictureOriginalURL : PictureURL = new PictureURL();
+        pictureOriginalURL.setId(this._hashid + "_original");
+        pictureOriginalURL.setURL(this._urlOriginalPicture);
+        picture.setOriginal(pictureOriginalURL);
+
+        var pictureLargeURL : PictureURL = new PictureURL();
+        pictureLargeURL.setId(this._hashid + "_large");
+        pictureLargeURL.setURL(ServiceConfig.getCMSHost() + "images/" + this._hashid + "/raw?size=large");
+        picture.setLarge(pictureLargeURL);
+
+        var pictureMediumURL : PictureURL = new PictureURL();
+        pictureMediumURL.setId(this._hashid + "_medium");
+        pictureMediumURL.setURL(this._urlMediumPicture);
+        picture.setMedium(pictureMediumURL);
+
+        var pictureSmallURL : PictureURL = new PictureURL();
+        pictureSmallURL.setId(this._hashid + "_small");
+        pictureSmallURL.setURL(ServiceConfig.getCMSHost() + "images/" + this._hashid + "/raw?size=small");
+        picture.setSmall(pictureSmallURL);
+
+        var pictureThumbURL : PictureURL = new PictureURL();
+        pictureThumbURL.setId(this._hashid + "_thumb");
+        pictureThumbURL.setURL(ServiceConfig.getCMSHost() + "images/" + this._hashid + "/raw?size=thumb");
+        picture.setThumb(pictureThumbURL);
+
+        this._picture = picture;
     }
 
     getURLOriginalPicture() : string {
@@ -25,8 +65,8 @@ class PhotoboxPicture {
         return this._urlMediumPicture;
     }
 
-    getURLSmallPicture() : string {
-        return this._urlSmallPicture;
+    getPicture() : Picture {
+        return this._picture;
     }
 
     delete() {

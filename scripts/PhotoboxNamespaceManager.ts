@@ -13,9 +13,7 @@
 /// <reference path="./core/PhotoboxPicture.ts" />
 
 class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
-
-	private static _albums : any = {};
-	private picturesBySession : any = {};
+	private picturesBySession = {};
 
 	/**
 	 * Constructor.
@@ -27,36 +25,8 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 		super(socket);
 		var self = this;
 		this.addListenerToSocket('Subscribe', function (params, photoboxNamespaceManager) { new Subscribe(params, photoboxNamespaceManager); });
-		this.addListenerToSocket('Album', function (params, photoboxNamespaceManager) { new Album(params, photoboxNamespaceManager); });
 
 		this.socket.on('PostPicture', function (msg) { self.postPicture(msg); } );
-	}
-
-	public static createTag(tag : string) : PhotoboxAlbum {
-		if (PhotoboxNamespaceManager._albums[tag] == undefined) {
-			Logger.debug("Create the PhotoboxAlbum for tag: "+tag);
-			PhotoboxNamespaceManager._albums[tag] = new PhotoboxAlbum(tag);
-		}
-		var uploadDir = PhotoboxUtils.getDirectoryFromTag(tag);
-		fs.open(uploadDir, 'r', function (err, fd) {
-			if (err) {
-				Logger.debug("The directory "+uploadDir+" is not accessible. The following error has been encountered: "+err+".\nPhotobox is now trying to create it.");
-				try {
-					fs.mkdirSync(uploadDir);
-					fs.writeFileSync(uploadDir+"index.html","");
-					Logger.debug("Creation of the directory "+uploadDir+" successful!");
-				} catch (e) {
-					Logger.error("This service is unable to create the tagged directory (path: "+uploadDir+"). Consequently the local storage is unavailable.");
-				}
-			} else {
-				fs.closeSync(fd);
-			}
-		});
-		return PhotoboxNamespaceManager._albums[tag];
-	}
-
-	public static getTags() : Array<string> {
-		return Object.keys(PhotoboxNamespaceManager._albums);
 	}
 
 	/**
@@ -103,11 +73,6 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 			var args : Array<string> = new Array();
 			args.push(this.getParams().CounterDuration);
 
-			/*
-			var postUrl = "http://"+Photobox.host+"/rest/post/"+cmd.getId().toString()+"/"+this.getParams().Tag+"/"+encodeURIComponent(this.getParams().WatermarkURL);
-			Logger.debug("PostURL: "+postUrl);
-			args.push(postUrl);
-			*/
 			cmd.setArgs(args);
 
 			var cmdList : CmdList = new CmdList(uuid.v1());
@@ -123,7 +88,7 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 		var self = this;
 		var activeSession : Session = self.getSessionManager().getActiveSession();
 
-		var tag = this.getParams().Tag;
+		var cmsAlbumId = this.getParams().CMSAlbumId;
 		var logoLeftURL = this.getParams().LogoLeftURL;
 		var logoRightURL = this.getParams().LogoRightURL;
 		var clientNamespace : any = self.getSessionManager().getAttachedNamespace(activeSession.id());
@@ -150,7 +115,7 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 			}
 		};
 
-		PhotoboxUtils.postAndApplyWatermark(image, "image.jpg", tag, logoLeftURL, logoRightURL, callback);
+		PhotoboxUtils.postAndApplyWatermark(image, "image.jpg", cmsAlbumId, logoLeftURL, logoRightURL, callback);
 
 	}
 
@@ -159,7 +124,6 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 		var activeSession : Session = self.getSessionManager().getActiveSession();
 		var clientNamespace : any = self.getSessionManager().getAttachedNamespace(activeSession.id());
 		var picture : PhotoboxPicture = self.picturesBySession[activeSession.id()];
-		self.pushPicture(picture);
 		delete self.picturesBySession[activeSession.id()];
 		clientNamespace.sessionEndedWithValidation();
 
@@ -185,14 +149,6 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 		delete self.picturesBySession[activeSession.id()];
 		self.getSessionManager().finishActiveSession();
 		clientNamespace.sessionEndedWithoutValidation();
-	}
-
-
-	private pushPicture(picture : PhotoboxPicture) {
-		var tag : string = picture.getTag();
-
-		var album : PhotoboxAlbum = PhotoboxNamespaceManager._albums[tag];
-		album.addPicture(picture);
 	}
 
 	public unlockControl(session : Session) {

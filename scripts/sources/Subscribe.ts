@@ -4,20 +4,22 @@
 
 /// <reference path="../../t6s-core/core-backend/scripts/server/SourceItf.ts" />
 
+var request = require('request');
+
 class Subscribe extends SourceItf {
-
-	private _album : PhotoboxAlbum;
-
 	constructor(params : any, photoboxNamespaceManager : PhotoboxNamespaceManager) {
 		super(params, photoboxNamespaceManager);
 		Logger.debug("Retrieve subscribe with params:");
 		Logger.debug(this.getParams());
 
-		if (this.checkParams(["InfoDuration","Tag","CounterDuration","Limit","AppliURL","LogoLeftURL","LogoRightURL"])) {
+		if (this.checkParams(["InfoDuration","CMSAlbumId","CounterDuration","Limit","AppliURL","LogoLeftURL","LogoRightURL"])) {
 			photoboxNamespaceManager.setParams(params);
-			this._album = PhotoboxNamespaceManager.createTag(this.getParams().Tag);
 			this.run();
 		}
+	}
+
+	private getIDLastPicture() : string {
+	
 	}
 
 	public run() {
@@ -26,7 +28,6 @@ class Subscribe extends SourceItf {
 		var appliUrl = this.getParams().AppliURL;
 		var urlLastPic = null;
 
-		var arraylastPic = this._album.getLastPictures(1);
 		if (arraylastPic.length > 0) {
 			var lastPic : Picture = arraylastPic[0];
 			urlLastPic = lastPic.getOriginal().getURL();

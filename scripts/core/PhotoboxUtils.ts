@@ -12,19 +12,6 @@ var mime = require('mime-sniffer');
 
 class PhotoboxUtils {
 	public static TIMEOUT_DURATION = 30;
-	public static BLACKLIST_FILE = "blacklist.txt";
-
-	public static MIDDLE_SIZE = {
-		identifier: "_medium",
-		width: 640,
-		height: 360
-	};
-
-	public static SMALL_SIZE = {
-		identifier: "_small",
-		width: 320,
-		height: 180
-	};
 
 	public static getFileExtension(filename : string) : Array<string> {
 		var res = [];

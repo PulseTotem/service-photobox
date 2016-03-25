@@ -18,38 +18,57 @@ class Subscribe extends SourceItf {
 		}
 	}
 
-	private getIDLastPicture() : string {
-	
+	private getIDLastPicture(callback : Function) : string {
+		var url = ServiceConfig.getCMSHost()+"/admin/images_collection/"+this.getParams().CMSAlbumId+"/images";
+
+		var options = {
+			url: url,
+			header: {
+				Authorization: ServiceConfig.getCMSAuthKey()
+			}
+		};
+
+		var fail = function (error) {
+			Logger.error("Error while getting last picture from: "+url);
+			callback(null);
+		};
+
+		var success = function (arrayImages : Array<any>) {
+			var lastImage = arrayImages.slice(-1);
+			callback(lastImage.id);
+		};
+
+		request.get(options, success, fail);
 	}
 
 	public run() {
+		var self = this;
 		var infoDuration = parseInt(this.getParams().InfoDuration);
 		var socketId = this.getSourceNamespaceManager().socket.id;
 		var appliUrl = this.getParams().AppliURL;
-		var urlLastPic = null;
 
-		if (arraylastPic.length > 0) {
-			var lastPic : Picture = arraylastPic[0];
-			urlLastPic = lastPic.getOriginal().getURL();
-		}
+		var callbackLastpicture = function (idLastPic) {
+			var cmd : Cmd = new Cmd(uuid.v1());
+			cmd.setDurationToDisplay(infoDuration);
+			cmd.setCmd("Wait");
 
-		var cmd : Cmd = new Cmd(uuid.v1());
-		cmd.setDurationToDisplay(infoDuration);
-		cmd.setCmd("Wait");
+			var args : Array<string> = new Array<string>();
+			args.push(socketId);
+			args.push(appliUrl);
 
-		var args : Array<string> = new Array<string>();
-		args.push(socketId);
-		args.push(appliUrl);
+			if (idLastPic != null) {
+				var urlLastPic = PhotoboxUtils.getMediumUrlFromId(idLastPic);
+				args.push(urlLastPic);
+			};
 
-		if (urlLastPic != null) {
-			args.push(urlLastPic);
-		}
+			cmd.setArgs(args);
 
-		cmd.setArgs(args);
+			var list : CmdList = new CmdList(uuid.v1());
+			list.addCmd(cmd);
 
-		var list : CmdList = new CmdList(uuid.v1());
-		list.addCmd(cmd);
+			self.getSourceNamespaceManager().sendNewInfoToClient(list);
+		};
 
-		this.getSourceNamespaceManager().sendNewInfoToClient(list);
+		this.getIDLastPicture(callbackLastpicture);
 	}
 }

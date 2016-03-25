@@ -3,6 +3,7 @@
  */
 
 var moment = require('moment');
+var request = require('request');
 
 /**
  * Represent a picture taken using Photobox.
@@ -17,8 +18,8 @@ class PhotoboxPicture {
     constructor(hashid : string) {
         this._hashid = hashid;
 
-        this._urlOriginalPicture = ServiceConfig.getCMSHost() + "images/" + this._hashid + "/raw?size=original";
-        this._urlMediumPicture = ServiceConfig.getCMSHost() + "images/" + this._hashid + "/raw?size=medium";
+        this._urlOriginalPicture = PhotoboxUtils.getOriginalUrlFromId(this._hashid);
+        this._urlMediumPicture = PhotoboxUtils.getMediumUrlFromId(this._hashid);
     }
 
     getURLOriginalPicture() : string {
@@ -29,26 +30,20 @@ class PhotoboxPicture {
         return this._urlMediumPicture;
     }
 
-    delete() {
-        try {
-            fs.unlinkSync(this._localOriginalPicture);
-            Logger.debug("Delete the original picture at the path: "+this._localOriginalPicture);
-        } catch (e) {
-            Logger.error("Error when trying to delete the original picture at the path: "+this._localOriginalPicture+". "+e);
-        }
+    getId() : string {
+        return this._hashid;
+    }
 
-        try {
-            fs.unlinkSync(this._localMediumPicture);
-            Logger.debug("Delete the medium picture at the path: "+this._localMediumPicture);
-        } catch (e) {
-            Logger.error("Error when trying to delete the medium picture at the path: "+this._localMediumPicture+". "+e);
-        }
+    delete(successCallback : Function, failCallback : Function) {
+        var urlDelete = ServiceConfig.getCMSHost() + "/images/"+this._hashid;
 
-        try {
-            fs.unlinkSync(this._localSmallPicture);
-            Logger.debug("Delete the small picture at the path: "+this._localSmallPicture);
-        } catch (e) {
-            Logger.error("Error when trying to delete the small picture at the path: "+this._localSmallPicture+". "+e);
-        }
+        var options = {
+            url: urlDelete,
+            header: {
+                Authorization: ServiceConfig.getCMSAuthKey()
+            }
+        };
+
+        request.delete(options, successCallback, failCallback);
     }
 }

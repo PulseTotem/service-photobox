@@ -32,10 +32,6 @@ class PhotoboxUtils {
 		return res;
 	}
 
-	public static getDirectoryFromTag(tag : string) : string {
-		return Photobox.upload_directory+"/"+tag+"/";
-	}
-
 	public static createImageName() : string {
 		var stringDate = moment().format("YYYYMMDDHHmmss");
 
@@ -44,15 +40,6 @@ class PhotoboxUtils {
 
 	public static getCompleteHostname() : string {
 		return "https://"+Photobox.host+"/"+Photobox.serving_upload_dir+"/";
-	}
-
-	public static getBaseURL(tag : string) : string {
-		return PhotoboxUtils.getCompleteHostname()+tag+"/";
-	}
-
-	public static getURLFromPath(path : string, tag : string) {
-		var splitname = PhotoboxUtils.getFileExtension(path);
-		return PhotoboxUtils.getBaseURL(tag)+splitname[0]+"."+splitname[1];
 	}
 
 	public static getNewImageNamesFromOriginalImage(imageName : string) : string {
@@ -247,7 +234,7 @@ class PhotoboxUtils {
 		var drawContentImg = new Buffer(base64DrawContent, 'base64');
 
 		var newImagename = PhotoboxUtils.getNewImageNamesFromOriginalImage(imageName);
-		var newPath = "/tmp/uploads/"+newImagename;
+		var newPath = "/tmp/"+uuid.v1()+newImagename;
 
 		var type = this.guessImageMimeFromB64(image);
 		var extension = this.guessImageExtensionFromMimeType(type);
@@ -323,7 +310,7 @@ class PhotoboxUtils {
 
 		var successPostPicture = function (imageObject : any) {
 			unlinkSync(imagePath);
-			successCallback(imageObject._hashid);
+			successCallback(imageObject.id);
 		};
 
 		var options = {
@@ -333,5 +320,13 @@ class PhotoboxUtils {
 			}
 		};
 		request.post(options, imageDatas, successPostPicture, failCallback);
+	}
+
+	public static getMediumUrlFromId(id : string) {
+		return ServiceConfig.getCMSHost() + "images/" + id + "/raw?size=medium";
+	}
+
+	public static getOriginalUrlFromId(id: string) {
+		return ServiceConfig.getCMSHost() + "images/" + id + "/raw?size=original"
 	}
 }

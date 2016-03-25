@@ -145,10 +145,23 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 		var activeSession : Session = self.getSessionManager().getActiveSession();
 		var clientNamespace : any = self.getSessionManager().getAttachedNamespace(activeSession.id());
 		var picture : PhotoboxPicture = self.picturesBySession[activeSession.id()];
-		picture.delete();
-		delete self.picturesBySession[activeSession.id()];
-		self.getSessionManager().finishActiveSession();
-		clientNamespace.sessionEndedWithoutValidation();
+
+		var endSession = function() {
+			delete self.picturesBySession[activeSession.id()];
+			self.getSessionManager().finishActiveSession();
+			clientNamespace.sessionEndedWithoutValidation();
+		};
+
+		var fail = function () {
+			Logger.error("Error while deleting picture: "+picture.getId());
+			endSession();
+		};
+
+		var success = function () {
+			endSession();
+		};
+
+		picture.delete(success, fail);
 	}
 
 	public unlockControl(session : Session) {

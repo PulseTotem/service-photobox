@@ -7,19 +7,14 @@
  */
 class PhotoboxPicture {
 
-    private _tag : string;
-
-    private _localOriginalPicture : string;
-    private _localMediumPicture : string;
-    private _localSmallPicture : string;
+    private _hashid : string;
 
     private _urlOriginalPicture : string;
     private _urlMediumPicture : string;
     private _urlSmallPicture : string;
 
-    constructor(tag : string, _originalPicture : string) {
-        this._tag = tag;
-        this.setOriginalPicture(_originalPicture);
+    constructor(hashid : string) {
+        this._hashid = hashid;
     }
 
     getURLOriginalPicture() : string {
@@ -32,25 +27,6 @@ class PhotoboxPicture {
 
     getURLSmallPicture() : string {
         return this._urlSmallPicture;
-    }
-
-    getTag() : string {
-        return this._tag;
-    }
-
-    setOriginalPicture(originalPicture : string) {
-        this._localOriginalPicture = originalPicture;
-        this._urlOriginalPicture = PhotoboxUtils.getURLFromPath(originalPicture, this._tag);
-    }
-
-    setMediumPicture(mediumPicture : string) {
-        this._localMediumPicture = mediumPicture;
-        this._urlMediumPicture = PhotoboxUtils.getURLFromPath(mediumPicture, this._tag);
-    }
-
-    setSmallPicture(smallPicture : string) {
-        this._localSmallPicture = smallPicture;
-        this._urlSmallPicture = PhotoboxUtils.getURLFromPath(smallPicture, this._tag);
     }
 
     delete() {

@@ -1,3 +1,4 @@
+import {unlinkSync} from "fs";
 /**
  * @author Simon Urli <simon@the6thscreen.fr>
  */
@@ -67,17 +68,11 @@ class PhotoboxUtils {
 		return PhotoboxUtils.getBaseURL(tag)+splitname[0]+"."+splitname[1];
 	}
 
-	public static getNewImageNamesFromOriginalImage(imageName : string) : Array<string> {
-		var result : Array<string> = new Array<string>();
-
+	public static getNewImageNamesFromOriginalImage(imageName : string) : string {
 		var basename = PhotoboxUtils.createImageName();
 		var extension = PhotoboxUtils.getFileExtension(imageName);
 
-		result.push(basename+"."+extension[1]);
-		result.push(basename+PhotoboxUtils.MIDDLE_SIZE.identifier+"."+extension[1]);
-		result.push(basename+PhotoboxUtils.SMALL_SIZE.identifier+"."+extension[1]);
-
-		return result;
+		return basename+"."+extension[1];
 	}
 
 	public static downloadFile(url, localpath, callbackSuccess, callbackError) {
@@ -121,7 +116,6 @@ class PhotoboxUtils {
 
 									Logger.debug("Position of left logo: left: "+logoLeftLeft+" | top: "+logoLeftTop);
 									Logger.debug("Position of right logo: left: "+logoRightLeft+" | top: "+logoRightTop);
-
 									image.batch()
 										.paste(logoLeftLeft, logoLeftTop, newLogoLeft)
 										.paste(logoRightLeft, logoRightTop, newLogoRight)
@@ -226,6 +220,32 @@ class PhotoboxUtils {
 	}
 
 	/**
+	 * Return the mimetype from a base64 image
+	 *
+	 * @param data The base64 image
+	 * @returns {string} a mimetype
+	 */
+	private static guessImageMimeFromB64(data){
+		if(data.charAt(0)=='/'){
+			return "image/jpeg";
+		}else if(data.charAt(0)=='R'){
+			return "image/gif";
+		}else if(data.charAt(0)=='i'){
+			return "image/png";
+		}
+	}
+
+	private static guessImageExtensionFromMimeType(mime : string) {
+		if (mime == "image/jpeg") {
+			return "jpg";
+		} else if (mime == "image/gif") {
+			return "gif";
+		} else if (mime == "image/png") {
+			return "png";
+		}
+	}
+
+	/**
 	 * Write a picture given in base64 format and write it to a specified directory after applying a watermark and creating small and medium pictures.
 	 *
 	 * @param image A base64 image to write and manipulate
@@ -235,16 +255,15 @@ class PhotoboxUtils {
 	 * @param bottomWatermark Determine if the watermark should be placed at the bottom or at the top of the image
 	 * @param callback The callback in case of success or failure, it takes a boolean for success/failure and a message or an object containing the different images pathes.
 	 */
-	public static postAndApplyWatermark(image : any, imageName : string, tag : string, logoLeft: string, logoRight: string, callback : Function) {
-		// TODO : check pattern... (cf CMS)
-		var base64DrawContent = image.replace(/^data:image\/jpeg;base64,/, "");
+	public static postAndApplyWatermark(image : any, imageName : string, cmsAlbumId : string, logoLeft: string, logoRight: string, callback : Function) {
+		var base64DrawContent = image.replace(/^data:image\/(jpeg|png|gif);base64,/, "");
 		var drawContentImg = new Buffer(base64DrawContent, 'base64');
 
-		var newPathes = PhotoboxUtils.getNewImageNamesFromOriginalImage(imageName);
+		var newImagename = PhotoboxUtils.getNewImageNamesFromOriginalImage(imageName);
+		var newPath = "/tmp/uploads/"+newImagename;
 
-		var originalPath = PhotoboxUtils.getDirectoryFromTag(tag)+newPathes[0];
-		var smallSizePath = PhotoboxUtils.getDirectoryFromTag(tag)+newPathes[1];
-		var mediumSizePath = PhotoboxUtils.getDirectoryFromTag(tag)+newPathes[2];
+		var type = this.guessImageMimeFromB64(image);
+		var extension = this.guessImageExtensionFromMimeType(type);
 
 		var photoboxPicture : PhotoboxPicture = null;
 
@@ -252,7 +271,7 @@ class PhotoboxUtils {
 			callback(false, "Error when posting the picture. Error: "+msg);
 		};
 
-		lwip.open(drawContentImg, 'jpg', function (drawContentErr, image) {
+		lwip.open(drawContentImg, extension, function (drawContentErr, image) {
 			if (drawContentErr) {
 				fail("Fail opening original file : "+JSON.stringify(drawContentErr));
 			} else {
@@ -270,46 +289,18 @@ class PhotoboxUtils {
 											fail("Fail writing original image with lwip : "+JSON.stringify(errWriteOriginal));
 										} else {
 											fs.unlinkSync(local_watermark);
-											var callbackResizeImgMedium = function (errScaleMedium, imgScaledMedium) {
-												if (errScaleMedium) {
-													fail("Fail resizing to medium image with lwip : "+JSON.stringify(errScaleMedium));
-												} else {
-													var callbackWriteResizedMedium = function (errWriteResizedMedium) {
-														if (errWriteResizedMedium) {
-															fail("Fail writing medium image with lwip : "+JSON.stringify(errWriteResizedMedium));
-														} else {
 
-															var callbackResizeImgSmall = function (errScaleSmall, imgScaledSmall) {
-																if (errScaleSmall) {
-																	fail("Fail resizing to small image with lwip : "+JSON.stringify(errScaleSmall));
-																} else {
-																	var callbackWriteResizedSmall = function (errWriteResizedSmall) {
-																		if (errWriteResizedSmall) {
-																			fail("Fail writing small image with lwip : "+JSON.stringify(errWriteResizedSmall));
-																		} else {
-																			photoboxPicture.setSmallPicture(smallSizePath);
-																			callback(true, photoboxPicture);
-																		}
-																	};
-
-																	imgScaledSmall.writeFile(smallSizePath, callbackWriteResizedSmall);
-																}
-															};
-															photoboxPicture.setMediumPicture(mediumSizePath);
-															imgWatermarked.resize(PhotoboxUtils.SMALL_SIZE.width, PhotoboxUtils.SMALL_SIZE.height, callbackResizeImgSmall);
-														}
-													};
-
-													imgScaledMedium.writeFile(mediumSizePath, callbackWriteResizedMedium);
-												}
+											var successPostPicture = function (hashid : string) {
+												photoboxPicture = new PhotoboxPicture(hashid);
+												callback(true, photoboxPicture.getURLMediumPicture());
 											};
 
-											photoboxPicture = new PhotoboxPicture(tag, originalPath);
-											imgWatermarked.resize(PhotoboxUtils.MIDDLE_SIZE.width, PhotoboxUtils.MIDDLE_SIZE.height, callbackResizeImgMedium);
+											var description = "Picture taken "+moment.format('LLLL');
+											PhotoboxUtils.postPictureToCMS(newPath, newImagename, description, cmsAlbumId, successPostPicture, fail);
 										}
 									};
 
-									imgWatermarked.writeFile(originalPath, callbackWriteOriginalFile);
+									imgWatermarked.writeFile(newPath, callbackWriteOriginalFile);
 								}
 							};
 
@@ -323,5 +314,37 @@ class PhotoboxUtils {
 				PhotoboxUtils.createWatermark(watermark_width, watermark_height, logoLeft, logoRight, successCreateWatermark, fail);
 			}
 		});
+	}
+
+	private static base64_encode(file) {
+		// read binary data
+		var bitmap = fs.readFileSync(file);
+		// convert binary data to base64 encoded string
+		return new Buffer(bitmap).toString('base64');
+	}
+
+	private static postPictureToCMS(imagePath : string, imageName : string, description : string, cmsAlbumId : string, successCallback : Function, failCallback : Function) {
+		var postPhotoUrl = ServiceConfig.getCMSHost() + "admin/images_collections/"+cmsAlbumId+"/images/";
+
+		var b64datas = PhotoboxUtils.base64_encode(imagePath);
+
+		var imageDatas = {
+			'name': imageName,
+			'description': description,
+			'file': b64datas
+		};
+
+		var successPostPicture = function (imageObject : any) {
+			unlinkSync(imagePath);
+			successCallback(imageObject._hashid);
+		};
+
+		var options = {
+			url: postPhotoUrl,
+			headers: {
+				'Authorization': ServiceConfig.getCMSAuthKey()
+			}
+		};
+		request.post(options, imageDatas, successPostPicture, failCallback);
 	}
 }

@@ -1,4 +1,3 @@
-import {unlinkSync} from "fs";
 /**
  * @author Simon Urli <simon@the6thscreen.fr>
  */
@@ -9,6 +8,7 @@ var moment = require('moment');
 var request = require('request');
 var lwip = require('lwip');
 var mime = require('mime-sniffer');
+var fs : any = require('fs');
 
 class PhotoboxUtils {
 	public static TIMEOUT_DURATION = 30;
@@ -309,7 +309,7 @@ class PhotoboxUtils {
 		};
 
 		var successPostPicture = function (imageObject : any) {
-			unlinkSync(imagePath);
+			fs.unlinkSync(imagePath);
 			successCallback(imageObject.id);
 		};
 

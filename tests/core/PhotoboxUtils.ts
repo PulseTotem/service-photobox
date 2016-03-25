@@ -75,56 +75,10 @@ describe('PhotoboxUtils', function() {
 		});
 	});
 
-	describe('#getDirectoryFromTag', function () {
-		it('should end with a slash', function () {
-			var result = PhotoboxUtils.getDirectoryFromTag("bidule");
-			assert.equal(result.substr(-1), "/");
-		});
-	});
-
 	describe('#getCompleteHostName', function () {
 		it('should end with a slash', function () {
 			var result = PhotoboxUtils.getCompleteHostname();
 			assert.equal(result.substr(-1), "/");
 		});
 	});
-
-	describe('#getBaseURL', function () {
-		it('should end with a slash', function () {
-			var result = PhotoboxUtils.getBaseURL("toto");
-			assert.equal(result.substr(-1), "/");
-		});
-	});
-
-	describe('#getNewImageNamesFromOriginalImage', function () {
-		it('should return an array of three images with medium and small and the right extension', function () {
-			var originalImage = "toto.png";
-
-			var result = PhotoboxUtils.getNewImageNamesFromOriginalImage(originalImage);
-
-			assert.equal(result.length, 3, "The array does not contain 3 names");
-
-			var ok = true;
-
-			var small = false;
-			var medium = false;
-
-			for (var i = 0; i < result.length; i++) {
-				ok = ok && (result[i].indexOf(".png") != -1);
-
-				if ((result[i].indexOf(PhotoboxUtils.MIDDLE_SIZE.identifier) != -1) && (i = 1)) {
-					medium = true;
-				}
-				if ((result[i].indexOf(PhotoboxUtils.SMALL_SIZE.identifier) != -1) && (i = 2)) {
-					small = true;
-				}
-			}
-
-			assert.ok(ok, "The extension is not on every filename");
-			assert.ok(medium, "The medium filename is not on second position in the array");
-			assert.ok(small, "The small filename is not on final position in the array");
-		});
-	});
-
-
 });

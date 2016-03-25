@@ -3,6 +3,7 @@
 */
 
 /// <reference path="../../t6s-core/core-backend/scripts/server/SourceItf.ts" />
+/// <reference path="../core/ServiceConfig.ts" />
 
 var request = require('request');
 
@@ -18,7 +19,7 @@ class Subscribe extends SourceItf {
 		}
 	}
 
-	private getIDLastPicture(callback : Function) : string {
+	private getIDLastPicture(callback : Function) {
 		var url = ServiceConfig.getCMSHost()+"/admin/images_collection/"+this.getParams().CMSAlbumId+"/images";
 
 		var options = {
@@ -34,7 +35,7 @@ class Subscribe extends SourceItf {
 		};
 
 		var success = function (arrayImages : Array<any>) {
-			var lastImage = arrayImages.slice(-1);
+			var lastImage : any = arrayImages.slice(-1);
 			callback(lastImage.id);
 		};
 

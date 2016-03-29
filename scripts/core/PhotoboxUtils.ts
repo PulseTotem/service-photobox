@@ -257,7 +257,7 @@ class PhotoboxUtils {
 
 											var successPostPicture = function (hashid : string) {
 												photoboxPicture = new PhotoboxPicture(hashid);
-												callback(true, photoboxPicture.getURLMediumPicture());
+												callback(true, photoboxPicture);
 											};
 
 											var description = "Picture taken "+moment().format('LLLL');
@@ -301,15 +301,19 @@ class PhotoboxUtils {
 
 		var successPostPicture = function (imageObject : any) {
 			fs.unlinkSync(imagePath);
+			Logger.debug("Obtained picture info: "+imageObject);
 			successCallback(imageObject.id);
 		};
 
 		var options = {
 			url: postPhotoUrl,
 			headers: {
-				'Authorization': ServiceConfig.getCMSAuthKey()
+				'Authorization': ServiceConfig.getCMSAuthKey(),
+				'Content-Type': 'application/json'
 			}
 		};
+
+		Logger.debug("Post picture "+imagePath+" with options: "+JSON.stringify(options));
 		request.post(options, imageDatas, successPostPicture, failCallback);
 	}
 

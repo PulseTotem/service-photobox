@@ -230,14 +230,15 @@ class PhotoboxUtils {
 	 * @param callback The callback in case of success or failure, it takes a boolean for success/failure and a message or an object containing the different images pathes.
 	 */
 	public static postAndApplyWatermark(image : any, imageName : string, cmsAlbumId : string, logoLeft: string, logoRight: string, callback : Function) {
+		var type = PhotoboxUtils.guessImageMimeFromB64(image);
+		var extension = PhotoboxUtils.guessImageExtensionFromMimeType(type);
+
 		var base64DrawContent = image.replace(/^data:image\/(jpeg|png|gif);base64,/, "");
 		var drawContentImg = new Buffer(base64DrawContent, 'base64');
 
 		var newImagename = PhotoboxUtils.getNewImageNamesFromOriginalImage(imageName);
 		var newPath = "/tmp/"+uuid.v1()+newImagename;
 
-		var type = this.guessImageMimeFromB64(image);
-		var extension = this.guessImageExtensionFromMimeType(type);
 
 		var photoboxPicture : PhotoboxPicture = null;
 

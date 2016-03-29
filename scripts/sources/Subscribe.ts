@@ -35,8 +35,15 @@ class Subscribe extends SourceItf {
 		};
 
 		var success = function (arrayImages : Array<any>) {
-			var lastImage : any = arrayImages.slice(-1);
-			callback(lastImage.id);
+			if (arrayImages !== null && arrayImages.length > 0) {
+				var lastImage : any = arrayImages.slice(-1);
+				callback(lastImage.id);
+			} else {
+				Logger.debug("Obtained array for last picture: "+arrayImages);
+				callback(null);
+			}
+
+
 		};
 
 		request.get(options, success, fail);

@@ -188,7 +188,7 @@ class PhotoboxUtils {
 				});
 			}
 		};
-
+		Logger.debug("Download logo files...");
 		PhotoboxUtils.downloadFile(logoLeftUrl, localLogoLeft, successDownloadLogo, failCallback);
 		PhotoboxUtils.downloadFile(logoRightUrl, localLogoRight, successDownloadLogo, failCallback);
 	}
@@ -245,6 +245,7 @@ class PhotoboxUtils {
 			callback(false, "Error when posting the picture. Error: "+msg);
 		};
 
+		Logger.debug("Open image of type "+type+" with extension "+extension+" to the following path: "+newPath);
 		lwip.open(drawContentImg, extension, function (drawContentErr, image) {
 			if (drawContentErr) {
 				fail("Fail opening original file : "+JSON.stringify(drawContentErr));
@@ -282,7 +283,7 @@ class PhotoboxUtils {
 						}
 					});
 				};
-
+				Logger.debug("Opening success. Launch watermark creation.");
 				var watermark_width = image.width();
 				var watermark_height = (image.height() * 10) / 100;
 				PhotoboxUtils.createWatermark(watermark_width, watermark_height, logoLeft, logoRight, successCreateWatermark, fail);

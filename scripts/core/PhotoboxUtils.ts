@@ -194,13 +194,11 @@ class PhotoboxUtils {
 	}
 
 	private static guessImageExtensionFromB64(data) {
-		var decoded = new Buffer(data).toString('base64');
-		var lowerCase = decoded.toLowerCase();
-		if (lowerCase.indexOf("data:image\/png") !== -1) {
+		if (data.indexOf("data:image/png") !== -1) {
 			return "png"
-		} else if (lowerCase.indexOf("data:image\/jpeg") !== -1) {
+		} else if (data.indexOf("data:image/jpeg") !== -1) {
 			return "jpg";
-		} else if (lowerCase.indexOf("data:image\/gif") !== -1) {
+		} else if (data.indexOf("data:image/gif") !== -1) {
 			return "gif";
 		} else {
 			return null;

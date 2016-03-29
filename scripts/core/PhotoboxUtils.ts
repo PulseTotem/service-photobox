@@ -260,7 +260,7 @@ class PhotoboxUtils {
 												callback(true, photoboxPicture.getURLMediumPicture());
 											};
 
-											var description = "Picture taken "+moment.format('LLLL');
+											var description = "Picture taken "+moment().format('LLLL');
 											PhotoboxUtils.postPictureToCMS(newPath, newImagename, description, cmsAlbumId, successPostPicture, fail);
 										}
 									};

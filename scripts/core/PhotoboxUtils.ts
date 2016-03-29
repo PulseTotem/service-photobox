@@ -193,29 +193,17 @@ class PhotoboxUtils {
 		PhotoboxUtils.downloadFile(logoRightUrl, localLogoRight, successDownloadLogo, failCallback);
 	}
 
-	/**
-	 * Return the mimetype from a base64 image
-	 *
-	 * @param data The base64 image
-	 * @returns {string} a mimetype
-	 */
-	private static guessImageMimeFromB64(data){
-		if(data.charAt(0)=='/'){
-			return "image/jpeg";
-		}else if(data.charAt(0)=='R'){
-			return "image/gif";
-		}else if(data.charAt(0)=='i'){
-			return "image/png";
-		}
-	}
-
-	private static guessImageExtensionFromMimeType(mime : string) {
-		if (mime == "image/jpeg") {
+	private static guessImageExtensionFromB64(data) {
+		var decoded = btoa(data);
+		var lowerCase = decoded.toLowerCase();
+		if (lowerCase.indexOf("png") !== -1) {
+			return "png"
+		} else if (lowerCase.indexOf("jpg") !== -1 || lowerCase.indexOf("jpeg") !== -1) {
 			return "jpg";
-		} else if (mime == "image/gif") {
+		} else if (lowerCase.indexOf("gif") !== -1) {
 			return "gif";
-		} else if (mime == "image/png") {
-			return "png";
+		} else {
+			return null;
 		}
 	}
 
@@ -230,8 +218,15 @@ class PhotoboxUtils {
 	 * @param callback The callback in case of success or failure, it takes a boolean for success/failure and a message or an object containing the different images pathes.
 	 */
 	public static postAndApplyWatermark(image : any, imageName : string, cmsAlbumId : string, logoLeft: string, logoRight: string, callback : Function) {
-		var type = PhotoboxUtils.guessImageMimeFromB64(image);
-		var extension = PhotoboxUtils.guessImageExtensionFromMimeType(type);
+		var fail = function (msg) {
+			callback(false, "Error when posting the picture. Error: "+msg);
+		};
+
+		var extension = PhotoboxUtils.guessImageExtensionFromB64(image);
+
+		if (extension == null) {
+			fail("Unable to recognize file extension.");
+		}
 
 		var base64DrawContent = image.replace(/^data:image\/(jpeg|png|gif);base64,/, "");
 		var drawContentImg = new Buffer(base64DrawContent, 'base64');
@@ -242,11 +237,7 @@ class PhotoboxUtils {
 
 		var photoboxPicture : PhotoboxPicture = null;
 
-		var fail = function (msg) {
-			callback(false, "Error when posting the picture. Error: "+msg);
-		};
-
-		Logger.debug("Open image of type "+type+" with extension "+extension+" to the following path: "+newPath);
+		Logger.debug("Open image with extension "+extension+" to the following path: "+newPath);
 		lwip.open(drawContentImg, extension, function (drawContentErr, image) {
 			if (drawContentErr) {
 				fail("Fail opening original file : "+JSON.stringify(drawContentErr));

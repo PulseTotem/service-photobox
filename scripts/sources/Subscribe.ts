@@ -20,7 +20,7 @@ class Subscribe extends SourceItf {
 	}
 
 	private getIDLastPicture(callback : Function) {
-		var url = ServiceConfig.getCMSHost()+"/admin/images_collection/"+this.getParams().CMSAlbumId+"/images";
+		var url = ServiceConfig.getCMSHost()+"/admin/images_collections/"+this.getParams().CMSAlbumId+"/images";
 
 		var options = {
 			url: url,

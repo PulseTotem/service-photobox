@@ -194,7 +194,7 @@ class PhotoboxUtils {
 	}
 
 	private static guessImageExtensionFromB64(data) {
-		var decoded = btoa(data);
+		var decoded = new Buffer(data).toString('base64');
 		var lowerCase = decoded.toLowerCase();
 		if (lowerCase.indexOf("png") !== -1) {
 			return "png"

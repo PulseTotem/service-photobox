@@ -3,6 +3,7 @@
  */
 
 /// <reference path="../Photobox.ts" />
+/// <reference path="../../t6s-core/core-backend/scripts/RestClient.ts" />
 
 var moment = require('moment');
 var request = require('request');
@@ -304,7 +305,7 @@ class PhotoboxUtils {
 			Logger.debug("Obtained picture info: "+imageObject);
 			successCallback(imageObject.id);
 		};
-		
+
 		Logger.debug("Post picture "+imagePath+" to "+postPhotoUrl);
 		RestClient.post(postPhotoUrl, imageDatas, successPostPicture, failCallback, ServiceConfig.getCMSAuthKey());
 	}

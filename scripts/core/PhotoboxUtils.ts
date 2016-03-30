@@ -299,9 +299,11 @@ class PhotoboxUtils {
 			'file': b64datas
 		};
 
-		var callback = function (err, res, body) {
+		var callback = function (err, response, body) {
 			if (err) {
 				failCallback(err);
+			} else if (response.statusCode != 200) {
+				failCallback(body);
 			} else {
 				successPostPicture(body);
 			}
@@ -319,7 +321,7 @@ class PhotoboxUtils {
 				'Authorization': ServiceConfig.getCMSAuthKey(),
 				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify(imageDatas)
+			body: imageDatas
 		};
 
 		Logger.debug("Post picture "+imagePath+" with options: "+JSON.stringify(options));

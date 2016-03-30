@@ -314,16 +314,16 @@ class PhotoboxUtils {
 		};
 
 		var options = {
-			url: postPhotoUrl,
+			uri: postPhotoUrl,
 			headers: {
 				'Authorization': ServiceConfig.getCMSAuthKey(),
 				'Content-Type': 'application/json'
 			},
-			body: imageDatas
+			body: JSON.stringify(imageDatas)
 		};
 
 		Logger.debug("Post picture "+imagePath+" with options: "+JSON.stringify(options));
-		request.post(postPhotoUrl, options, callback);
+		request.post(options, callback);
 	}
 
 	public static getMediumUrlFromId(id : string) {

@@ -321,7 +321,7 @@ class PhotoboxUtils {
 				'Authorization': ServiceConfig.getCMSAuthKey(),
 				'Content-Type': 'application/json'
 			},
-			body: imageDatas
+			json: imageDatas
 		};
 
 		Logger.debug("Post picture "+imagePath+" with options: "+JSON.stringify(options));

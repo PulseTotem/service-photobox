@@ -295,19 +295,24 @@ class PhotoboxUtils {
 		var b64datas = PhotoboxUtils.base64_encode(imagePath);
 
 		var imageDatas = {
-			'name': imageName,
-			'description': description,
-			'file': b64datas
+			name: imageName,
+			description: description,
+			file: b64datas
 		};
 
-		var successPostPicture = function (imageObject : any) {
+		var fail = function (error : RestClientResponse) {
+			failCallback(error.data());
+		};
+
+		var successPostPicture = function (imageObjectResponse : RestClientResponse) {
+			var imageObject = imageObjectResponse.data();
 			fs.unlinkSync(imagePath);
 			Logger.debug("Obtained picture info: "+imageObject);
 			successCallback(imageObject.id);
 		};
 
 		Logger.debug("Post picture "+imagePath+" to "+postPhotoUrl);
-		RestClient.post(postPhotoUrl, imageDatas, successPostPicture, failCallback, ServiceConfig.getCMSAuthKey());
+		RestClient.post(postPhotoUrl, imageDatas, successPostPicture, fail, ServiceConfig.getCMSAuthKey());
 	}
 
 	public static getMediumUrlFromId(id : string) {

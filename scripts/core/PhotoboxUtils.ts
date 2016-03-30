@@ -299,33 +299,14 @@ class PhotoboxUtils {
 			'file': b64datas
 		};
 
-		var callback = function (err, response, body) {
-			if (err) {
-				failCallback(err);
-			} else if (response.statusCode != 200) {
-				failCallback(body);
-			} else {
-				successPostPicture(body);
-			}
-		}
-
 		var successPostPicture = function (imageObject : any) {
 			fs.unlinkSync(imagePath);
 			Logger.debug("Obtained picture info: "+imageObject);
 			successCallback(imageObject.id);
 		};
-
-		var options = {
-			uri: postPhotoUrl,
-			headers: {
-				'Authorization': ServiceConfig.getCMSAuthKey(),
-				'Content-Type': 'application/json'
-			},
-			json: imageDatas
-		};
-
-		Logger.debug("Post picture "+imagePath+" with options: "+JSON.stringify(options));
-		request.post(options, callback);
+		
+		Logger.debug("Post picture "+imagePath+" to "+postPhotoUrl);
+		RestClient.post(postPhotoUrl, imageDatas, successPostPicture, failCallback, ServiceConfig.getCMSAuthKey());
 	}
 
 	public static getMediumUrlFromId(id : string) {

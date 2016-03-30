@@ -299,6 +299,14 @@ class PhotoboxUtils {
 			'file': b64datas
 		};
 
+		var callback = function (err, res, body) {
+			if (err) {
+				failCallback(err);
+			} else {
+				successPostPicture(body);
+			}
+		}
+
 		var successPostPicture = function (imageObject : any) {
 			fs.unlinkSync(imagePath);
 			Logger.debug("Obtained picture info: "+imageObject);
@@ -310,11 +318,12 @@ class PhotoboxUtils {
 			headers: {
 				'Authorization': ServiceConfig.getCMSAuthKey(),
 				'Content-Type': 'application/json'
-			}
+			},
+			body: imageDatas
 		};
 
 		Logger.debug("Post picture "+imagePath+" with options: "+JSON.stringify(options));
-		request.post(options, imageDatas, successPostPicture, failCallback);
+		request.post(postPhotoUrl, options, callback);
 	}
 
 	public static getMediumUrlFromId(id : string) {

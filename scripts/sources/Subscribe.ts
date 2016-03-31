@@ -21,12 +21,14 @@ class Subscribe extends SourceItf {
 	private getIDLastPicture(callback : Function) {
 		var url = ServiceConfig.getCMSHost()+"admin/images_collections/"+this.getParams().CMSAlbumId+"/images";
 
-		var fail = function (error) {
+		var fail = function (error : RestClientResponse) {
 			Logger.error("Error while getting last picture from: "+url);
+			Logger.error(error.data());
 			callback(null);
 		};
 
-		var success = function (arrayImages : Array<any>) {
+		var success = function (response : RestClientResponse) {
+			var arrayImages : Array<any> = response.data();
 			if (arrayImages !== null && arrayImages.length > 0) {
 				var lastImage : any = arrayImages.slice(-1);
 				callback(lastImage.id);

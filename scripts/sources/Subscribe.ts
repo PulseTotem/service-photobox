@@ -3,9 +3,8 @@
 */
 
 /// <reference path="../../t6s-core/core-backend/scripts/server/SourceItf.ts" />
+/// <reference path="../../t6s-core/core-backend/scripts/RestClient.ts" />
 /// <reference path="../core/ServiceConfig.ts" />
-
-var request = require('request');
 
 class Subscribe extends SourceItf {
 	constructor(params : any, photoboxNamespaceManager : PhotoboxNamespaceManager) {
@@ -21,13 +20,6 @@ class Subscribe extends SourceItf {
 
 	private getIDLastPicture(callback : Function) {
 		var url = ServiceConfig.getCMSHost()+"/admin/images_collections/"+this.getParams().CMSAlbumId+"/images";
-
-		var options = {
-			url: url,
-			header: {
-				Authorization: ServiceConfig.getCMSAuthKey()
-			}
-		};
 
 		var fail = function (error) {
 			Logger.error("Error while getting last picture from: "+url);
@@ -46,7 +38,7 @@ class Subscribe extends SourceItf {
 
 		};
 
-		request.get(options, success, fail);
+		RestClient.get(url, success, fail, ServiceConfig.getCMSAuthKey());
 	}
 
 	public run() {

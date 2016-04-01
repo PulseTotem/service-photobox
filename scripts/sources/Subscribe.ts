@@ -52,7 +52,7 @@ class Subscribe extends SourceItf {
 		var appliUrl = this.getParams().AppliURL;
 
 		var callbackLastpicture = function (idLastPic) {
-			var cmd : Cmd = new Cmd(uuid.v1());
+			var cmd : Cmd = new Cmd(self.getParams().CMSAlbumId);
 			cmd.setDurationToDisplay(infoDuration);
 			cmd.setCmd("Wait");
 

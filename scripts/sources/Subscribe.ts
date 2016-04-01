@@ -30,7 +30,7 @@ class Subscribe extends SourceItf {
 		var success = function (response : RestClientResponse) {
 			var arrayImages : Array<any> = response.data();
 			if (arrayImages !== null && arrayImages.length > 0) {
-				var lastImage : any = arrayImages.slice(-1);
+				var lastImage : any = arrayImages.slice(-1)[0];
 				Logger.debug("Last image obtained: ");
 				Logger.debug(lastImage);
 				callback(lastImage.id);

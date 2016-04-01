@@ -60,10 +60,14 @@ class Subscribe extends SourceItf {
 			args.push(socketId);
 			args.push(appliUrl);
 
-			if (idLastPic != null) {
+			if (idLastPic !== null) {
 				var urlLastPic = PhotoboxUtils.getMediumUrlFromId(idLastPic);
+				Logger.debug("URL Last picture :");
+				Logger.debug(urlLastPic);
 				args.push(urlLastPic);
-			};
+			} else {
+				Logger.debug("IdLastPic:"+idLastPic);
+			}
 
 			cmd.setArgs(args);
 

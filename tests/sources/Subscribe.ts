@@ -22,21 +22,19 @@ describe('Subscribe', function() {
 	});
 	
 	describe('#constructor', function () {
-		it('should launch the createTag with the proper parameters', function () {
+		it('should launch the createCMSAlbumId with the proper parameters', function () {
 			var mockSubscribe = sandbox.mock(Subscribe.prototype);
 			mockSubscribe.expects('run').once();
 
-			var params = { Tag: 'toto', Limit: '10', InfoDuration: '15', URL: 'http://toto', LogoLeftURL: 'http://tata', LogoRightURL: 'http://titi', AppliURL: 'http://tutu', CounterDuration: '5'};
+			var params = { CMSAlbumId: 'toto', Limit: '10', InfoDuration: '15', URL: 'http://toto', LogoLeftURL: 'http://tata', LogoRightURL: 'http://titi', AppliURL: 'http://tutu', CounterDuration: '5'};
 
-			var stubNSManager : any = sandbox.stub(PhotoboxNamespaceManager, "createTag");
 			var stubNSManager2 : any = sinon.createStubInstance(PhotoboxNamespaceManager);
 			var album = new Subscribe(params, stubNSManager2);
 
-			assert.ok(stubNSManager.calledWithExactly('toto'));
 			mockSubscribe.verify();
 		});
 
-		it('should not launch run if the parameter Tag is missing', function () {
+		it('should not launch run if the parameter CMSAlbumId is missing', function () {
 			var mockSubscribe = sandbox.mock(Subscribe.prototype);
 			mockSubscribe.expects('run').never();
 
@@ -52,7 +50,7 @@ describe('Subscribe', function() {
 			var mockSubscribe = sandbox.mock(Subscribe.prototype);
 			mockSubscribe.expects('run').never();
 
-			var params = { Tag: 'toto', InfoDuration: '15', URL: 'http://toto', AppliURL: 'http://tutu', LogoLeftURL: 'http://tata', LogoRightURL: 'http://titi', CounterDuration: '5'};
+			var params = { CMSAlbumId: 'toto', InfoDuration: '15', URL: 'http://toto', AppliURL: 'http://tutu', LogoLeftURL: 'http://tata', LogoRightURL: 'http://titi', CounterDuration: '5'};
 
 			var stubNSManager : any = sinon.createStubInstance(PhotoboxNamespaceManager);
 			new Subscribe(params, stubNSManager);
@@ -63,7 +61,7 @@ describe('Subscribe', function() {
 			var mockSubscribe = sandbox.mock(Subscribe.prototype);
 			mockSubscribe.expects('run').never();
 
-			var params = { Tag: 'toto', Limit: '10', URL: 'http://toto', AppliURL: 'http://tutu', LogoLeftURL: 'http://tata', LogoRightURL: 'http://titi', CounterDuration: '5'};
+			var params = { CMSAlbumId: 'toto', Limit: '10', URL: 'http://toto', AppliURL: 'http://tutu', LogoLeftURL: 'http://tata', LogoRightURL: 'http://titi', CounterDuration: '5'};
 
 			var stubNSManager : any = sinon.createStubInstance(PhotoboxNamespaceManager);
 			new Subscribe(params, stubNSManager);
@@ -74,7 +72,7 @@ describe('Subscribe', function() {
 			var mockSubscribe = sandbox.mock(Subscribe.prototype);
 			mockSubscribe.expects('run').never();
 
-			var params = { Tag: 'toto', Limit: '10', InfoDuration: '15', URL: 'http://toto', AppliURL: 'http://tutu', CounterDuration: '5', LogoLeftURL: 'http://tata'};
+			var params = { CMSAlbumId: 'toto', Limit: '10', InfoDuration: '15', URL: 'http://toto', AppliURL: 'http://tutu', CounterDuration: '5', LogoLeftURL: 'http://tata'};
 
 			var stubNSManager : any = sinon.createStubInstance(PhotoboxNamespaceManager);
 			new Subscribe(params, stubNSManager);
@@ -85,7 +83,7 @@ describe('Subscribe', function() {
 			var mockSubscribe = sandbox.mock(Subscribe.prototype);
 			mockSubscribe.expects('run').never();
 
-			var params = { Tag: 'toto', Limit: '10', InfoDuration: '15', URL: 'http://toto', AppliURL: 'http://tutu', CounterDuration: '5', LogoRightURL: 'http://tata'};
+			var params = { CMSAlbumId: 'toto', Limit: '10', InfoDuration: '15', URL: 'http://toto', AppliURL: 'http://tutu', CounterDuration: '5', LogoRightURL: 'http://tata'};
 
 			var stubNSManager : any = sinon.createStubInstance(PhotoboxNamespaceManager);
 			new Subscribe(params, stubNSManager);
@@ -96,7 +94,7 @@ describe('Subscribe', function() {
 			var mockSubscribe = sandbox.mock(Subscribe.prototype);
 			mockSubscribe.expects('run').never();
 
-			var params = { Tag: 'toto', Limit: '10', InfoDuration: '15', URL: 'http://toto', AppliURL: 'http://tutu', LogoLeftURL: 'http://tata', LogoRightURL: 'http://titi'};
+			var params = { CMSAlbumId: 'toto', Limit: '10', InfoDuration: '15', URL: 'http://toto', AppliURL: 'http://tutu', LogoLeftURL: 'http://tata', LogoRightURL: 'http://titi'};
 
 			var stubNSManager : any = sinon.createStubInstance(PhotoboxNamespaceManager);
 			new Subscribe(params, stubNSManager);

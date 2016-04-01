@@ -2,24 +2,24 @@
  * @author Simon Urli <simon@the6thscreen.fr>
  */
 
+var moment = require('moment');
+var request = require('request');
+
 /**
  * Represent a picture taken using Photobox.
  */
 class PhotoboxPicture {
 
-    private _tag : string;
-
-    private _localOriginalPicture : string;
-    private _localMediumPicture : string;
-    private _localSmallPicture : string;
+    private _hashid : string;
 
     private _urlOriginalPicture : string;
     private _urlMediumPicture : string;
-    private _urlSmallPicture : string;
 
-    constructor(tag : string, _originalPicture : string) {
-        this._tag = tag;
-        this.setOriginalPicture(_originalPicture);
+    constructor(hashid : string) {
+        this._hashid = hashid;
+
+        this._urlOriginalPicture = PhotoboxUtils.getOriginalUrlFromId(this._hashid);
+        this._urlMediumPicture = PhotoboxUtils.getMediumUrlFromId(this._hashid);
     }
 
     getURLOriginalPicture() : string {
@@ -30,49 +30,20 @@ class PhotoboxPicture {
         return this._urlMediumPicture;
     }
 
-    getURLSmallPicture() : string {
-        return this._urlSmallPicture;
+    getId() : string {
+        return this._hashid;
     }
 
-    getTag() : string {
-        return this._tag;
-    }
+    delete(successCallback : Function, failCallback : Function) {
+        var urlDelete = ServiceConfig.getCMSHost() + "/images/"+this._hashid;
 
-    setOriginalPicture(originalPicture : string) {
-        this._localOriginalPicture = originalPicture;
-        this._urlOriginalPicture = PhotoboxUtils.getURLFromPath(originalPicture, this._tag);
-    }
+        var options = {
+            url: urlDelete,
+            header: {
+                Authorization: ServiceConfig.getCMSAuthKey()
+            }
+        };
 
-    setMediumPicture(mediumPicture : string) {
-        this._localMediumPicture = mediumPicture;
-        this._urlMediumPicture = PhotoboxUtils.getURLFromPath(mediumPicture, this._tag);
-    }
-
-    setSmallPicture(smallPicture : string) {
-        this._localSmallPicture = smallPicture;
-        this._urlSmallPicture = PhotoboxUtils.getURLFromPath(smallPicture, this._tag);
-    }
-
-    delete() {
-        try {
-            fs.unlinkSync(this._localOriginalPicture);
-            Logger.debug("Delete the original picture at the path: "+this._localOriginalPicture);
-        } catch (e) {
-            Logger.error("Error when trying to delete the original picture at the path: "+this._localOriginalPicture+". "+e);
-        }
-
-        try {
-            fs.unlinkSync(this._localMediumPicture);
-            Logger.debug("Delete the medium picture at the path: "+this._localMediumPicture);
-        } catch (e) {
-            Logger.error("Error when trying to delete the medium picture at the path: "+this._localMediumPicture+". "+e);
-        }
-
-        try {
-            fs.unlinkSync(this._localSmallPicture);
-            Logger.debug("Delete the small picture at the path: "+this._localSmallPicture);
-        } catch (e) {
-            Logger.error("Error when trying to delete the small picture at the path: "+this._localSmallPicture+". "+e);
-        }
+        request.delete(options, successCallback, failCallback);
     }
 }

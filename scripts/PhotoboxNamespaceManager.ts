@@ -7,6 +7,7 @@
 /// <reference path="../t6s-core/core-backend/t6s-core/core/scripts/infotype/CmdList.ts" />
 /// <reference path="../t6s-core/core-backend/t6s-core/core/scripts/infotype/Cmd.ts" />
 /// <reference path="../t6s-core/core-backend/scripts/Logger.ts" />
+/// <reference path="../t6s-core/core-backend/scripts/RestClientResponse.ts" />
 /// <reference path="../t6s-core/core-backend/t6s-core/core/scripts/infotype/priorities/InfoPriority.ts" />
 /// <reference path="./sources/Subscribe.ts" />
 /// <reference path="./core/PhotoboxPicture.ts" />
@@ -151,8 +152,9 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 			clientNamespace.sessionEndedWithoutValidation();
 		};
 
-		var fail = function () {
+		var fail = function (response : RestClientResponse) {
 			Logger.error("Error while deleting picture: "+picture.getId());
+			Logger.error(response);
 			endSession();
 		};
 

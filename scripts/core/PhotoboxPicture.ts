@@ -2,8 +2,9 @@
  * @author Simon Urli <simon@the6thscreen.fr>
  */
 
+/// <reference path="../../t6s-core/core-backend/scripts/RestClient.ts" />
+    
 var moment = require('moment');
-var request = require('request');
 
 /**
  * Represent a picture taken using Photobox.
@@ -36,14 +37,6 @@ class PhotoboxPicture {
 
     delete(successCallback : Function, failCallback : Function) {
         var urlDelete = ServiceConfig.getCMSHost() + "/images/"+this._hashid;
-
-        var options = {
-            url: urlDelete,
-            header: {
-                Authorization: ServiceConfig.getCMSAuthKey()
-            }
-        };
-
-        request.delete(options, successCallback, failCallback);
+        RestClient.delete(urlDelete, successCallback, failCallback, ServiceConfig.getCMSAuthKey());
     }
 }

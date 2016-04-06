@@ -3,7 +3,7 @@
  */
 
 /// <reference path="../../t6s-core/core-backend/scripts/RestClient.ts" />
-    
+
 var moment = require('moment');
 
 /**
@@ -36,7 +36,7 @@ class PhotoboxPicture {
     }
 
     delete(successCallback : Function, failCallback : Function) {
-        var urlDelete = ServiceConfig.getCMSHost() + "/images/"+this._hashid;
+        var urlDelete = ServiceConfig.getCMSHost() + "images/"+this._hashid;
         RestClient.delete(urlDelete, successCallback, failCallback, ServiceConfig.getCMSAuthKey());
     }
 }

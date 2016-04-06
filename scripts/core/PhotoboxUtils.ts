@@ -257,7 +257,7 @@ class PhotoboxUtils {
 											fs.unlinkSync(local_watermark);
 
 											var successPostPicture = function (hashid : string) {
-												photoboxPicture = new PhotoboxPicture(hashid);
+												photoboxPicture = new PhotoboxPicture(hashid, cmsAlbumId);
 												callback(true, photoboxPicture);
 											};
 

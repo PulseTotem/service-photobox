@@ -154,7 +154,7 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 
 		var fail = function (response : RestClientResponse) {
 			Logger.error("Error while deleting picture: "+picture.getId());
-			Logger.error(response);
+			Logger.error(response.data());
 			endSession();
 		};
 

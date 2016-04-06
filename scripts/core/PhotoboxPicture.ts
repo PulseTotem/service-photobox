@@ -13,11 +13,13 @@ class PhotoboxPicture {
 
     private _hashid : string;
 
+    private _collectionId : string;
     private _urlOriginalPicture : string;
     private _urlMediumPicture : string;
 
-    constructor(hashid : string) {
+    constructor(hashid : string, collectionid : string) {
         this._hashid = hashid;
+        this._collectionId = collectionid;
 
         this._urlOriginalPicture = PhotoboxUtils.getOriginalUrlFromId(this._hashid);
         this._urlMediumPicture = PhotoboxUtils.getMediumUrlFromId(this._hashid);
@@ -36,7 +38,7 @@ class PhotoboxPicture {
     }
 
     delete(successCallback : Function, failCallback : Function) {
-        var urlDelete = ServiceConfig.getCMSHost() + "images/"+this._hashid;
+        var urlDelete = ServiceConfig.getCMSHost() + "admin/images_collections/"+this._collectionId+"/images/"+this._hashid;
         RestClient.delete(urlDelete, successCallback, failCallback, ServiceConfig.getCMSAuthKey());
     }
 }

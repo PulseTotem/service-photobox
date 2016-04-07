@@ -110,7 +110,8 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 
 				Logger.debug("Picture available : "+picture.getURLMediumPicture());
 			} else {
-				// TODO Error to screen and mobile
+				self.getSessionManager().finishActiveSession();
+				clientNamespace.sessionEndedWithoutValidation();
 				Logger.error(picture);
 			}
 		};

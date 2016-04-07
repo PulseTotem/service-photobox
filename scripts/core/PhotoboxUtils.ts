@@ -164,9 +164,8 @@ class PhotoboxUtils {
 													}
 												}
 
-												// Use "grid" interpolation as recommended in https://github.com/aslansky/css-sprite/issues/42#issuecomment-76169341
-												// in order to solve http://jira.the6thscreen.fr/browse/SERVICES-151
-												logoLeft.batch().resize(newLogoLeftWidth, newLogoLeftHeight, "cubic")
+												// Try interpolation to solve http://jira.the6thscreen.fr/browse/SERVICES-151
+												logoLeft.batch().resize(newLogoLeftWidth, newLogoLeftHeight, "moving-average")
 													.writeFile(localLogoLeft, leftExtension, function (errWriteLogoLeft) {
 														if (errWriteLogoLeft) {
 															failCallback("Error when resizing logo left: "+JSON.stringify(errWriteLogoLeft));

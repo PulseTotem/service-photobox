@@ -165,7 +165,7 @@ class PhotoboxUtils {
 												}
 
 												// Try interpolation to solve http://jira.the6thscreen.fr/browse/SERVICES-151
-												logoLeft.batch().resize(newLogoLeftWidth, newLogoLeftHeight, "nearest-neighbor")
+												logoLeft.batch().resize(newLogoLeftWidth, newLogoLeftHeight, "linear")
 													.writeFile(localLogoLeft, leftExtension, function (errWriteLogoLeft) {
 														if (errWriteLogoLeft) {
 															failCallback("Error when resizing logo left: "+JSON.stringify(errWriteLogoLeft));

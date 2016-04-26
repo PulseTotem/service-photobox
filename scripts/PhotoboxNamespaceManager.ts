@@ -215,7 +215,7 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 		var cmd:Cmd = new Cmd(session.id());
 
 
-		self.pushStat("End session", session.id());
+		this.pushStat("End session", session.id());
 
 		cmd.setDurationToDisplay(time);
 		cmd.setCmd("removeInfo");

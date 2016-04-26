@@ -33,7 +33,7 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 	private pushStat(step: string, sessionId : string) {
 		var stat : StatObject = new StatObject();
 		stat.setCollection("service-photobox");
-		stat.setSocketId(this.socket);
+		stat.setSocketId(this.socket.id);
 		stat.setIp(this.getIP());
 		stat.setSDIId(this.getProfilId().toString());
 		stat.setProfilId(this.getSDIId().toString());

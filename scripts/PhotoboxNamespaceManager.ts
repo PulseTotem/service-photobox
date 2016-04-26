@@ -8,6 +8,7 @@
 /// <reference path="../t6s-core/core-backend/t6s-core/core/scripts/infotype/Cmd.ts" />
 /// <reference path="../t6s-core/core-backend/scripts/Logger.ts" />
 /// <reference path="../t6s-core/core-backend/scripts/RestClientResponse.ts" />
+/// <reference path="../t6s-core/core-backend/scripts/stats/StatObject.ts" />
 /// <reference path="../t6s-core/core-backend/t6s-core/core/scripts/infotype/priorities/InfoPriority.ts" />
 /// <reference path="./sources/Subscribe.ts" />
 /// <reference path="./core/PhotoboxPicture.ts" />
@@ -29,6 +30,31 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 		this.socket.on('PostPicture', function (msg) { self.postPicture(msg); } );
 	}
 
+	private pushStat(step: string, sessionId : string) {
+		var stat : StatObject = new StatObject();
+		stat.setCollection("service-photobox");
+		stat.setSocketId(this.socket);
+		stat.setIp(this.getIP());
+		stat.setSDIId(this.getProfilId().toString());
+		stat.setProfilId(this.getSDIId().toString());
+		stat.setHash(this.getHashProfil());
+
+		var data = {
+			"step": step,
+			"sessionId": sessionId
+		};
+
+		stat.setData(data);
+
+		var urlPostStat = ServiceConfig.getStatHost()+"create";
+
+		RestClient.post(urlPostStat, stat.toJSON(), function () {
+			Logger.debug("Stat has been posted.");
+		}, function (err) {
+			Logger.debug("Error when posting the stat on the following URL: "+urlPostStat);
+		});
+	}
+
 	/**
 	 * Method called when socket is disconnected.
 	 *
@@ -37,6 +63,15 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 	public onClientDisconnection() {
 		super.onClientDisconnection();
 		var self = this;
+
+		var activeSession = self.getSessionManager().getActiveSession();
+
+		var idActiveSession = "";
+		if (activeSession != null) {
+			idActiveSession = activeSession.id();
+		}
+
+		self.pushStat("SDI disconnected", idActiveSession);
 
 		self.getSessionManager().finishActiveSession();
 	}
@@ -55,6 +90,8 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 		cmd.setPriority(InfoPriority.HIGH);
 		cmd.setDurationToDisplay(30000);
 		cmdList.addCmd(cmd);
+
+		this.pushStat("Start session", session.id());
 
 		this.sendNewInfoToClient(cmdList);
 	}
@@ -77,6 +114,8 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 
 			var cmdList : CmdList = new CmdList(uuid.v1());
 			cmdList.addCmd(cmd);
+
+			this.pushStat("Start counter", activeSession.id());
 
 			this.sendNewInfoToClient(cmdList);
 		} else {
@@ -105,6 +144,8 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 				cmd.setPriority(InfoPriority.HIGH);
 				cmd.setDurationToDisplay(30000);
 				cmdList.addCmd(cmd);
+
+				self.pushStat("Post picture", activeSession.id());
 
 				self.sendNewInfoToClient(cmdList);
 
@@ -137,6 +178,8 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 		cmdList.addCmd(cmd);
 		this.sendNewInfoToClient(cmdList);
 
+		self.pushStat("validate", activeSession.id());
+
 		self.getSessionManager().finishActiveSession();
 	}
 
@@ -162,12 +205,17 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 			endSession();
 		};
 
+		self.pushStat("unvalidate", activeSession.id());
+
 		picture.delete(success, fail);
 	}
 
 	public unlockControl(session : Session) {
 		var time = 3;
 		var cmd:Cmd = new Cmd(session.id());
+
+
+		self.pushStat("End session", session.id());
 
 		cmd.setDurationToDisplay(time);
 		cmd.setCmd("removeInfo");

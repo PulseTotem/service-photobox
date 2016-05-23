@@ -191,9 +191,9 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 
 	private tweetPicture = function (picture : PhotoboxPicture, callback) {
 		var self = this;
-		if (this.getParams().oAuthkey && this.getParams().TweetMessage) {
-
-			var oAuthKey = this.getParams().oAuthkey;
+		if (this.getParams().oauthKey && this.getParams().TweetMessage) {
+			Logger.debug("Will tweet picture...");
+			var oAuthKey = this.getParams().oauthKey;
 			var message = this.getParams().TweetMessage + " "+picture.getURLMediumPicture();
 
 			var failOAuth = function (err) {
@@ -203,7 +203,8 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 			};
 
 			var successOAuth = function (oauthActions) {
-				var urlPost = "/1.1/statuses/update.json?status="+message;
+				Logger.debug("Oauth OK for tweeting");
+				var urlPost = "/1.1/statuses/update.json?status="+encodeURIComponent(message);
 
 				var successPost = function (result) {
 					var tweetId = result.id_str;
@@ -218,6 +219,8 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 
 
 			self.getSourceNamespaceManager().manageOAuth('twitter', oAuthKey, successOAuth, failOAuth);
+		} else {
+			callback();
 		}
 	};
 

@@ -194,7 +194,7 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 		if (this.getParams().oauthKey && this.getParams().TweetMessage) {
 			Logger.debug("Will tweet picture...");
 			var oAuthKey = this.getParams().oauthKey;
-			var message = this.getParams().TweetMessage + " "+picture.getURLMediumPicture();
+			var message = this.getParams().TweetMessage;
 
 			var failOAuth = function (err) {
 				Logger.error("Error while logging to twitter");
@@ -204,17 +204,33 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 
 			var successOAuth = function (oauthActions) {
 				Logger.debug("Oauth OK for tweeting");
-				var urlPost = "/1.1/statuses/update.json?status="+encodeURIComponent(message);
 
-				var successPost = function (result) {
-					var tweetId = result.id_str;
-					var username = result.user.name;
-					Logger.debug("The tweet has been posted! Account: "+username+" id : "+tweetId);
-					self.pushStat("tweet photo account "+username+" and id "+tweetId, self.getSessionManager().getActiveSession().id());
-					callback();
+				var urlUploadPic = "https://upload.twitter.com/1.1/media/upload.json";
+				var data = {
+					"media_data": picture.getBase64()
 				};
 
-				oauthActions.post(urlPost, null, successPost, failOAuth);
+				var successUpload = function (result) {
+					var media_id = result.media_id;
+					Logger.debug("Success to upload picture, media_id : "+media_id);
+					self.pushStat("Upload picture on twitter. Media id: "+media_id);
+
+					var urlPost = "/1.1/statuses/update.json?status="+encodeURIComponent(message)+"&media_ids="+media_id;
+
+					var successPostTweet = function (result) {
+						var tweetId = result.id_str;
+						var username = result.user.name;
+						Logger.debug("The tweet has been posted! Account: "+username+" id : "+tweetId);
+						self.pushStat("tweet photo account "+username+" and id "+tweetId, self.getSessionManager().getActiveSession().id());
+						callback();
+					};
+
+					oauthActions.post(urlPost, null, successUpload, failOAuth);
+				};
+
+				oauthActions.post(urlUploadPic, data, successUpload, failOAuth);
+
+
 			};
 
 

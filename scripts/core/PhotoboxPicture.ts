@@ -16,13 +16,19 @@ class PhotoboxPicture {
     private _collectionId : string;
     private _urlOriginalPicture : string;
     private _urlMediumPicture : string;
+    private _base64 : string;
 
-    constructor(hashid : string, collectionid : string) {
+    constructor(hashid : string, base64 : string, collectionid : string) {
         this._hashid = hashid;
         this._collectionId = collectionid;
+        this._base64 = base64;
 
         this._urlOriginalPicture = PhotoboxUtils.getOriginalUrlFromId(this._hashid);
         this._urlMediumPicture = PhotoboxUtils.getMediumUrlFromId(this._hashid);
+    }
+
+    getBase64() : string {
+        return this._base64;
     }
 
     getURLOriginalPicture() : string {

@@ -257,8 +257,8 @@ class PhotoboxUtils {
 										} else {
 											fs.unlinkSync(local_watermark);
 
-											var successPostPicture = function (hashid : string) {
-												photoboxPicture = new PhotoboxPicture(hashid, image, cmsAlbumId);
+											var successPostPicture = function (hashid : string, b64datas : string) {
+												photoboxPicture = new PhotoboxPicture(hashid, b64datas, cmsAlbumId);
 												callback(true, photoboxPicture);
 											};
 
@@ -309,7 +309,7 @@ class PhotoboxUtils {
 			var imageObject = imageObjectResponse.data();
 			fs.unlinkSync(imagePath);
 			Logger.debug("Obtained picture info: "+imageObject);
-			successCallback(imageObject.id);
+			successCallback(imageObject.id, b64datas);
 		};
 
 		Logger.debug("Post picture "+imagePath+" to "+postPhotoUrl);

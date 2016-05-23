@@ -13,6 +13,9 @@
 /// <reference path="./sources/Subscribe.ts" />
 /// <reference path="./core/PhotoboxPicture.ts" />
 
+var request = require('request');
+var FormData = require('form-data');
+
 class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 	private picturesBySession = {};
 
@@ -205,10 +208,10 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 			var successOAuth = function (oauthActions) {
 				Logger.debug("Oauth OK for tweeting");
 
+				var form = new FormData();
+				form.append('media', request(picture.getURLOriginalPicture()));
+
 				var urlUploadPic = "https://upload.twitter.com/1.1/media/upload.json";
-				var data = {
-					"media_data": picture.getBase64()
-				};
 
 				var successUpload = function (result) {
 					var media_id = result.media_id;
@@ -228,7 +231,7 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 					oauthActions.post(urlPost, null, successPostTweet, failOAuth);
 				};
 
-				oauthActions.post(urlUploadPic, data, successUpload, failOAuth, {"Content-Type":"multipart/form-data"});
+				oauthActions.post(urlUploadPic, form, successUpload, failOAuth, form.headers());
 
 
 			};

@@ -21,6 +21,7 @@
     "mock-fs": "3.7.0"
   },
   "dependencies": {
+    "form-data": "^1.0.0-rc4",
     "lwip": "0.0.8",
     "mime-sniffer": "0.0.3",
     "request": "2.60.0"

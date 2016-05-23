@@ -205,8 +205,11 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 			var successOAuth = function (oauthActions) {
 				var urlPost = "/1.1/statuses/update.json?status="+message;
 
-				var successPost = function () {
-					Logger.debug("The tweet has been posted!");
+				var successPost = function (result) {
+					var tweetId = result.id_str;
+					var username = result.user.name;
+					Logger.debug("The tweet has been posted! Account: "+username+" id : "+tweetId);
+					self.pushStat("tweet photo account "+username+" and id "+tweetId, self.getSessionManager().getActiveSession().id());
 					callback();
 				};
 

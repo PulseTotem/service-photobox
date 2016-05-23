@@ -164,24 +164,59 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 		var self = this;
 		var activeSession : Session = self.getSessionManager().getActiveSession();
 		var clientNamespace : any = self.getSessionManager().getAttachedNamespace(activeSession.id());
+
 		var picture : PhotoboxPicture = self.picturesBySession[activeSession.id()];
-		delete self.picturesBySession[activeSession.id()];
-		clientNamespace.sessionEndedWithValidation();
 
-		var cmd:Cmd = new Cmd(activeSession.id());
+		var finishValidate = function () {
+			delete self.picturesBySession[activeSession.id()];
+			clientNamespace.sessionEndedWithValidation();
 
-		cmd.setDurationToDisplay(30000);
-		cmd.setCmd("validatedPicture");
-		cmd.setPriority(InfoPriority.HIGH);
+			var cmd:Cmd = new Cmd(activeSession.id());
 
-		var cmdList : CmdList = new CmdList(uuid.v1());
-		cmdList.addCmd(cmd);
-		this.sendNewInfoToClient(cmdList);
+			cmd.setDurationToDisplay(30000);
+			cmd.setCmd("validatedPicture");
+			cmd.setPriority(InfoPriority.HIGH);
 
-		self.pushStat("validate", activeSession.id());
+			var cmdList : CmdList = new CmdList(uuid.v1());
+			cmdList.addCmd(cmd);
+			self.sendNewInfoToClient(cmdList);
 
-		self.getSessionManager().finishActiveSession();
+			self.pushStat("validate", activeSession.id());
+
+			self.getSessionManager().finishActiveSession();
+		};
+
+		this.tweetPicture(picture, finishValidate);
 	}
+
+	private tweetPicture = function (picture : PhotoboxPicture, callback) {
+		var self = this;
+		if (this.getParams().oAuthkey && this.getParams().TweetMessage) {
+
+			var oAuthKey = this.getParams().oAuthkey;
+			var message = this.getParams().TweetMessage + " "+picture.getURLMediumPicture();
+
+			var failOAuth = function (err) {
+				Logger.error("Error while logging to twitter");
+				Logger.debug(err);
+				callback();
+			};
+
+			var successOAuth = function (oauthActions) {
+				var urlPost = "/1.1/statuses/update.json?status="+message;
+
+				var successPost = function () {
+					Logger.debug("The tweet has been posted!");
+					callback();
+				};
+
+				oauthActions.post(urlPost, null, successPost, failOAuth);
+			};
+
+
+			self.getSourceNamespaceManager().manageOAuth('twitter', oAuthKey, successOAuth, failOAuth);
+		}
+	};
 
 	public unvalidatePicture() {
 		var self = this;

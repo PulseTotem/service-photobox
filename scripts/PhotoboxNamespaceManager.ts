@@ -225,7 +225,7 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 						callback();
 					};
 
-					oauthActions.post(urlPost, null, successUpload, failOAuth);
+					oauthActions.post(urlPost, null, successPostTweet, failOAuth);
 				};
 
 				oauthActions.post(urlUploadPic, data, successUpload, failOAuth);

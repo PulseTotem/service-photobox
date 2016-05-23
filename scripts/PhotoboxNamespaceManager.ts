@@ -218,7 +218,7 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 			};
 
 
-			self.getSourceNamespaceManager().manageOAuth('twitter', oAuthKey, successOAuth, failOAuth);
+			self.manageOAuth('twitter', oAuthKey, successOAuth, failOAuth);
 		} else {
 			callback();
 		}

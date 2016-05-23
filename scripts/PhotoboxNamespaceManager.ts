@@ -14,7 +14,7 @@
 /// <reference path="./core/PhotoboxPicture.ts" />
 
 var request = require('request');
-var FormData = require('form-data');
+var formData : any = require('form-data');
 
 class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 	private picturesBySession = {};
@@ -208,7 +208,7 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 			var successOAuth = function (oauthActions) {
 				Logger.debug("Oauth OK for tweeting");
 
-				var form = new FormData();
+				var form : any = new formData();
 				form.append('media', request(picture.getURLOriginalPicture()));
 
 				var urlUploadPic = "https://upload.twitter.com/1.1/media/upload.json";

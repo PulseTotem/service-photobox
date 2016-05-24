@@ -15,6 +15,7 @@
 
 var request = require('request');
 var formData : any = require('form-data');
+var uuid : any = require('node-uuid');
 
 class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 	private picturesBySession = {};

@@ -209,12 +209,13 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 				Logger.debug("Oauth OK for tweeting");
 
 				var CRLF = '\r\n';
-				var form : any = new formData();
+				var boundary = "pulse"+uuid.v1()+"eslup";
+				 var supplementaryHeaders = {
+					 "Content-Type": "multipart/form-data, boundary=\""+boundary+"\"",
+					 "Content-Length": picture.getBase64().length
+				 };
 
-				var options = {
-					header: CRLF + '--' + form.getBoundary() + CRLF + 'Content-Transfer-Encoding: base64' + CRLF + CRLF
-				};
-				form.append('media_data', picture.getBase64(), options);
+				var data = "--"+boundary+CRLF+"Content-Disposition: form-data; name=\"media_data\"; filename=\"phototem\""+CRLF+"Content-Type: application/octet-stream"+CRLF+CRLF+picture.getBase64()+"\n"+CRLF+"--"+boundary+"--"+CRLF;
 
 				var urlUploadPic = "https://upload.twitter.com/1.1/media/upload.json";
 
@@ -238,7 +239,7 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 					oauthActions.post(urlPost, null, successPostTweet, failOAuth);
 				};
 
-				oauthActions.post(urlUploadPic, form, successUpload, failOAuth, form.getHeaders());
+				oauthActions.post(urlUploadPic, data, successUpload, failOAuth, supplementaryHeaders);
 
 
 			};

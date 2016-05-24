@@ -219,7 +219,8 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 
 				var urlUploadPic = "https://upload.twitter.com/1.1/media/upload.json";
 
-				var successUpload = function (result : any) {
+				var successUpload = function (resultStr : string) {
+					var result = JSON.parse(resultStr);
 					Logger.debug("Result = ");
 					Logger.debug(result);
 					var media_id = result.media_id_string;

@@ -208,8 +208,13 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 			var successOAuth = function (oauthActions) {
 				Logger.debug("Oauth OK for tweeting");
 
-				var form : any = new formData();
-				form.append('media_data', picture.getBase64());
+				var CRLF = '\r\n';
+				var form : any = new FormData();
+
+				var options = {
+					header: CRLF + '--' + form.getBoundary() + CRLF + 'Content-Transfer-Encoding: base64' + CRLF + CRLF
+				};
+				form.append('media_data', picture.getBase64(), options);
 
 				var urlUploadPic = "https://upload.twitter.com/1.1/media/upload.json";
 

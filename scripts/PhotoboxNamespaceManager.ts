@@ -209,7 +209,7 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 				Logger.debug("Oauth OK for tweeting");
 
 				var CRLF = '\r\n';
-				var form : any = new FormData();
+				var form : any = new formData();
 
 				var options = {
 					header: CRLF + '--' + form.getBoundary() + CRLF + 'Content-Transfer-Encoding: base64' + CRLF + CRLF

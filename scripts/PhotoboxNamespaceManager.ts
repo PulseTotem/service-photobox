@@ -216,7 +216,7 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 					 "Content-Length": picture.getBase64().length.toString()
 				 };
 
-				var data = "--"+boundary+CRLF+"Content-Disposition: form-data; name=\\\"media_data\\\"; filename=\\\"phototem\\\""+CRLF+"Content-Type: application/octet-stream"+CRLF+CRLF+picture.getBase64()+"\n"+CRLF+"--"+boundary+"--"+CRLF;
+				var data = "--"+boundary+CRLF+"Content-Disposition: form-data; name=\"media_data\"; filename=\"phototem\""+CRLF+"Content-Type: application/octet-stream"+CRLF+CRLF+picture.getBase64()+"\n"+CRLF+"--"+boundary+"--"+CRLF;
 
 				var urlUploadPic = "https://upload.twitter.com/1.1/media/upload.json";
 

@@ -212,8 +212,7 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 				var CRLF = '\r\n';
 				var boundary = "pulse"+uuid.v1()+"eslup";
 				 var supplementaryHeaders = {
-					 "Content-Type": "multipart/form-data, boundary=\""+boundary+"\"",
-					 "Content-Length": picture.getBase64().length.toString()
+					 "Content-Type": "multipart/form-data, boundary=\""+boundary+"\""
 				 };
 
 				var data = "--"+boundary+CRLF+"Content-Disposition: form-data; name=\"media_data\"; filename=\"phototem\""+CRLF+"Content-Type: application/octet-stream"+CRLF+CRLF+picture.getBase64()+"\n"+CRLF+"--"+boundary+"--"+CRLF;

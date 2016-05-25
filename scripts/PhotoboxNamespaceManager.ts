@@ -38,6 +38,8 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 
 
 		this.socket.on('PostPicture', function (msg) { self.postPicture(msg); } );
+
+		this.socket.on('Snap', function () { self.startCounter()});
 		this.socket.on('PostAndValidate', function (msg) { self.postAndValidatePicture(msg); } );
 		this.socket.on('DestroyInitInfo', function (info) { self.destroyInitInfo(info); });
 	}
@@ -128,9 +130,16 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 	public startCounter() {
 		var self = this;
 		var activeSession : Session = self.getSessionManager().getActiveSession();
+		var sessionId;
 
 		if (activeSession != null) {
-			var cmd:Cmd = new Cmd(activeSession.id());
+			sessionId = activeSession.id();
+		} else {
+			sessionId = "oneclick_"+uuid.v1();
+		}
+
+		if (activeSession != null) {
+			var cmd:Cmd = new Cmd(sessionId);
 
 			cmd.setDurationToDisplay(30000);
 			cmd.setPriority(InfoPriority.HIGH);
@@ -144,7 +153,7 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 			var cmdList : CmdList = new CmdList(uuid.v1());
 			cmdList.addCmd(cmd);
 
-			this.pushStat("Start counter", activeSession.id());
+			this.pushStat("Start counter", sessionId);
 
 			this.sendNewInfoToClient(cmdList);
 		} else {
@@ -237,6 +246,7 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 
 				var finishValidate = function () {
 					self.pushStat("validate", "oneclick");
+					self.endSession("oneclick_"+uuid.v1());
 				};
 
 				this.tweetPicture(picture, finishValidate);
@@ -337,11 +347,15 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 	}
 
 	public unlockControl(session : Session) {
+		this.endSession(session.id())
+	}
+
+	private endSession(idSession) {
 		var time = 3;
-		var cmd:Cmd = new Cmd(session.id());
+		var cmd:Cmd = new Cmd(idSession);
 
 
-		this.pushStat("End session", session.id());
+		this.pushStat("End session", idSession);
 
 		cmd.setDurationToDisplay(time);
 		cmd.setCmd("removeInfo");

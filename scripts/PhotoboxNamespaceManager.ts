@@ -138,27 +138,23 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 			sessionId = "oneclick_"+uuid.v1();
 		}
 
-		if (activeSession != null) {
-			var cmd:Cmd = new Cmd(sessionId);
+		var cmd:Cmd = new Cmd(sessionId);
 
-			cmd.setDurationToDisplay(30000);
-			cmd.setPriority(InfoPriority.HIGH);
-			cmd.setCmd("counter");
+		cmd.setDurationToDisplay(30000);
+		cmd.setPriority(InfoPriority.HIGH);
+		cmd.setCmd("counter");
 
-			var args : Array<string> = new Array();
-			args.push(this.getParams().CounterDuration);
+		var args : Array<string> = new Array();
+		args.push(this.getParams().CounterDuration);
 
-			cmd.setArgs(args);
+		cmd.setArgs(args);
 
-			var cmdList : CmdList = new CmdList(uuid.v1());
-			cmdList.addCmd(cmd);
+		var cmdList : CmdList = new CmdList(uuid.v1());
+		cmdList.addCmd(cmd);
 
-			this.pushStat("Start counter", sessionId);
+		this.pushStat("Start counter", sessionId);
 
-			this.sendNewInfoToClient(cmdList);
-		} else {
-			Logger.error("Try to launch start counter without any active session!");
-		}
+		this.sendNewInfoToClient(cmdList);
 	}
 
 	public postPicture(image : any) {

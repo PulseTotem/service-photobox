@@ -1,3 +1,4 @@
+import {session} from "express";
 /**
  * @author Christian Brel <christian@the6thscreen.fr, ch.brel@gmail.com>
  * @author Simon Urli <simon@the6thscreen.fr>
@@ -227,7 +228,9 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 		this.tweetPicture(picture, finishValidate);
 	}
 
-	public postAndValidatePicture(image : any) {
+	public postAndValidatePicture(info : any) {
+		var image = info.image;
+		var sessionid = info.id;
 		var self = this;
 
 		var cmsAlbumId = this.getParams().CMSAlbumId;
@@ -241,8 +244,8 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 				Logger.debug("Picture available (oneclick) : "+picture.getURLMediumPicture());
 
 				var finishValidate = function () {
-					self.pushStat("validate", "oneclick");
-					self.endSession("oneclick_"+uuid.v1());
+					self.pushStat("validate", sessionid);
+					self.endSession(sessionid);
 				};
 
 				self.tweetPicture(picture, finishValidate);

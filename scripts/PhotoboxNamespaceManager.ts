@@ -11,6 +11,7 @@
 /// <reference path="../t6s-core/core-backend/scripts/stats/StatObject.ts" />
 /// <reference path="../t6s-core/core-backend/t6s-core/core/scripts/infotype/priorities/InfoPriority.ts" />
 /// <reference path="./sources/Subscribe.ts" />
+/// <reference path="./sources/SubscribeOneClick.ts" />
 /// <reference path="./core/PhotoboxPicture.ts" />
 
 var request = require('request');
@@ -19,6 +20,7 @@ var uuid : any = require('node-uuid');
 
 class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 	private picturesBySession = {};
+	private _isClientInitialized : boolean;
 
 	/**
 	 * Constructor.
@@ -29,9 +31,19 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 	constructor(socket : any) {
 		super(socket);
 		var self = this;
+		this._isClientInitialized = false;
+
 		this.addListenerToSocket('Subscribe', function (params, photoboxNamespaceManager) { new Subscribe(params, photoboxNamespaceManager); });
+		this.addListenerToSocket('SubscribeOneClick', function (params, photoboxNamespaceManager) { new SubscribeOneClick(params, photoboxNamespaceManager); });
+
 
 		this.socket.on('PostPicture', function (msg) { self.postPicture(msg); } );
+		this.socket.on('PostAndValidate', function (msg) { self.postAndValidatePicture(msg); } );
+		this.socket.on('DestroyInitInfo', function (info) { self.destroyInitInfo(info); });
+	}
+
+	public isClientInitialized() : boolean {
+		return this._isClientInitialized;
 	}
 
 	private pushStat(step: string, sessionId : string) {
@@ -59,6 +71,19 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 		});
 	}
 
+	private destroyInitInfo(info : any) {
+		var infoId = info.infoId;
+
+		var cmd : Cmd = new Cmd(this.getParams().CMSAlbumId);
+		cmd.setDurationToDisplay(0);
+		cmd.setCmd("WaitOneClick");
+
+		var list : CmdList = new CmdList(uuid.v1());
+		list.addCmd(cmd);
+
+		this.sendNewInfoToClient(list);
+		this._isClientInitialized = true;
+	}
 	/**
 	 * Method called when socket is disconnected.
 	 *
@@ -134,7 +159,11 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 		var cmsAlbumId = this.getParams().CMSAlbumId;
 		var logoLeftURL = this.getParams().LogoLeftURL;
 		var logoRightURL = this.getParams().LogoRightURL;
-		var clientNamespace : any = self.getSessionManager().getAttachedNamespace(activeSession.id());
+		var clientNamespace : any = null;
+
+		if (activeSession != null){
+			clientNamespace = self.getSessionManager().getAttachedNamespace(activeSession.id());
+		}
 
 		var callback = function (success : boolean, picture : PhotoboxPicture) {
 			if (success) {
@@ -191,6 +220,34 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 		};
 
 		this.tweetPicture(picture, finishValidate);
+	}
+
+	public postAndValidatePicture(image : any) {
+		var self = this;
+
+		var cmsAlbumId = this.getParams().CMSAlbumId;
+		var logoLeftURL = this.getParams().LogoLeftURL;
+		var logoRightURL = this.getParams().LogoRightURL;
+
+		var callback = function (success : boolean, picture : PhotoboxPicture) {
+			if (success) {
+				self.pushStat("Post picture", "oneclick");
+
+				Logger.debug("Picture available (oneclick) : "+picture.getURLMediumPicture());
+
+				var finishValidate = function () {
+					self.pushStat("validate", "oneclick");
+				};
+
+				this.tweetPicture(picture, finishValidate);
+			} else {
+				self.getSessionManager().finishActiveSession();
+				Logger.error(picture);
+			}
+		};
+
+		PhotoboxUtils.postAndApplyWatermark(image, "image.jpg", cmsAlbumId, logoLeftURL, logoRightURL, callback);
+
 	}
 
 	private tweetPicture = function (picture : PhotoboxPicture, callback) {

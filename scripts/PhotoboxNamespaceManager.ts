@@ -296,7 +296,7 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 						var tweetId = result.id_str;
 						var username = result.user.name;
 						Logger.debug("The tweet has been posted! Account: "+username+" id : "+tweetId);
-						self.pushStat("tweet photo account "+username+" and id "+tweetId, self.getSessionManager().getActiveSession().id());
+						self.pushStat("tweet photo account "+username+" and id "+tweetId, "oneclick");
 						callback();
 					};
 

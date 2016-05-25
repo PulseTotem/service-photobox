@@ -245,7 +245,7 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 					self.endSession("oneclick_"+uuid.v1());
 				};
 
-				this.tweetPicture(picture, finishValidate);
+				self.tweetPicture(picture, finishValidate);
 			} else {
 				self.getSessionManager().finishActiveSession();
 				Logger.error(picture);

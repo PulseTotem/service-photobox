@@ -226,7 +226,7 @@ class PhotoboxUtils {
 											if (errWriteLogoLeft) {
 												failCallback("Error when resizing logo left: " + JSON.stringify(errWriteLogoLeft));
 											} else {
-												successResizingLogos(width, height);
+												successResizingLogos(realWidth, realHeight);
 											}
 										});
 								}
@@ -329,7 +329,7 @@ class PhotoboxUtils {
 				var watermark_height = (image.height() * 10) / 100;
 
 				if (!logoRight) {
-					watermark_height = (image.height() * 20) / 100;
+					watermark_height = (image.height() * 15) / 100;
 				}
 				PhotoboxUtils.createWatermark(watermark_width, watermark_height, logoLeft, logoRight, successCreateWatermark, fail);
 			}

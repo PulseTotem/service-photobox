@@ -12,7 +12,7 @@ class Subscribe extends SourceItf {
 		Logger.debug("Retrieve subscribe with params:");
 		Logger.debug(this.getParams());
 
-		if (this.checkParams(["InfoDuration","CMSAlbumId","CounterDuration","Limit","AppliURL","LogoLeftURL","LogoRightURL"])) {
+		if (this.checkParams(["InfoDuration","CMSAlbumId","CounterDuration","Limit","AppliURL","LogoLeftURL"])) {
 			photoboxNamespaceManager.setParams(params);
 			this.run();
 		}
@@ -50,6 +50,7 @@ class Subscribe extends SourceItf {
 		var infoDuration = parseInt(this.getParams().InfoDuration);
 		var socketId = this.getSourceNamespaceManager().socket.id;
 		var appliUrl = this.getParams().AppliURL;
+		var messages = this.getParams().Messages;
 
 		var callbackLastpicture = function (idLastPic) {
 			var cmd : Cmd = new Cmd(self.getParams().CMSAlbumId);
@@ -59,6 +60,7 @@ class Subscribe extends SourceItf {
 			var args : Array<string> = new Array<string>();
 			args.push(socketId);
 			args.push(appliUrl);
+			args.push(messages);
 
 			if (idLastPic !== null) {
 				var urlLastPic = PhotoboxUtils.getMediumUrlFromId(idLastPic);

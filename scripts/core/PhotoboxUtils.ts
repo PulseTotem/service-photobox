@@ -68,9 +68,15 @@ class PhotoboxUtils {
 		var leftExtension;
 		var rightExtension;
 
-		var counterDownload = 0;
+		var borderPixel = 4;
 
-		var successResizingLogos = function () {
+		var counterDownload = 0;
+		var downloadLimit = 2;
+		if (!logoRightUrl) {
+			downloadLimit = 1;
+		}
+
+		var successResizingLogos = function (realWidth, realHeight) {
 			var successCreateImage = function (errCreateImage, image) {
 				if (errCreateImage) {
 					failCallback("Error when creating watermark image: "+JSON.stringify(errCreateImage));
@@ -79,43 +85,60 @@ class PhotoboxUtils {
 						if (errOpenLogoLeft) {
 							failCallback("Error when opening new logo left to paste it : "+JSON.stringify(errOpenLogoLeft));
 						} else {
-							lwip.open(localLogoRight, rightExtension, function (errOpenLogoRight, newLogoRight) {
-								if (errOpenLogoRight) {
-									failCallback("Error when opening new logo right to paste it : "+JSON.stringify(errOpenLogoRight));
-								} else {
-									var logoLeftLeft : number = 10; //10px from border left;
-									var logoLeftTop : number = Math.round((image.height() - newLogoLeft.height())/2);
+							if (logoRightUrl) {
+								lwip.open(localLogoRight, rightExtension, function (errOpenLogoRight, newLogoRight) {
+									if (errOpenLogoRight) {
+										failCallback("Error when opening new logo right to paste it : "+JSON.stringify(errOpenLogoRight));
+									} else {
+										var logoLeftLeft : number = 10; //10px from border left;
+										var logoLeftTop : number = Math.round((image.height() - newLogoLeft.height())/2);
 
-									var logoRightLeft : number = image.width() - newLogoRight.width() - 10;
-									var logoRightTop : number = Math.round((image.height() - newLogoRight.height()) /2);
+										var logoRightLeft : number = image.width() - newLogoRight.width() - 10;
+										var logoRightTop : number = Math.round((image.height() - newLogoRight.height()) /2);
 
-									Logger.debug("Position of left logo: left: "+logoLeftLeft+" | top: "+logoLeftTop);
-									Logger.debug("Position of right logo: left: "+logoRightLeft+" | top: "+logoRightTop);
-									image.batch()
-										.paste(logoLeftLeft, logoLeftTop, newLogoLeft)
-										.paste(logoRightLeft, logoRightTop, newLogoRight)
-										.writeFile(pathWatermark, function (errPasteWrite) {
-											if (errPasteWrite) {
-												failCallback("Error when pasting logos or writing final file: "+JSON.stringify(errPasteWrite));
-											} else {
-												fs.unlinkSync(localLogoLeft);
-												fs.unlinkSync(localLogoRight);
-												successCallback(pathWatermark);
-											}
-										});
-								}
-							});
+										Logger.debug("Position of left logo: left: "+logoLeftLeft+" | top: "+logoLeftTop);
+										Logger.debug("Position of right logo: left: "+logoRightLeft+" | top: "+logoRightTop);
+										image.batch()
+											.paste(logoLeftLeft, logoLeftTop, newLogoLeft)
+											.paste(logoRightLeft, logoRightTop, newLogoRight)
+											.writeFile(pathWatermark, function (errPasteWrite) {
+												if (errPasteWrite) {
+													failCallback("Error when pasting logos or writing final file: "+JSON.stringify(errPasteWrite));
+												} else {
+													fs.unlinkSync(localLogoLeft);
+													fs.unlinkSync(localLogoRight);
+													successCallback(pathWatermark);
+												}
+											});
+									}
+								});
+							} else {
+								var logoLeftLeft : number = borderPixel; //10px from border left;
+								var logoLeftTop : number = borderPixel;
+								image.batch()
+									.paste(logoLeftLeft, logoLeftTop, newLogoLeft)
+									.writeFile(pathWatermark, function (errPasteWrite) {
+										if (errPasteWrite) {
+											failCallback("Error when pasting logos or writing final file: "+JSON.stringify(errPasteWrite));
+										} else {
+											fs.unlinkSync(localLogoLeft);
+											fs.unlinkSync(localLogoRight);
+											successCallback(pathWatermark);
+										}
+									});
+							}
+
 						}
 					});
 				}
 			};
 			Logger.debug("Create image with following dimension: W: "+width+" | H: "+height);
-			lwip.create(width, height, {r: 255, g: 255, b: 255, a: 70}, successCreateImage);
+			lwip.create(realWidth, realHeight, {r: 255, g: 255, b: 255, a: 70}, successCreateImage);
 		};
 
 		var successDownloadLogo = function() {
 			counterDownload++;
-			if (counterDownload == 2) {
+			if (counterDownload == downloadLimit) {
 				mime.lookup(localLogoLeft, function(errSniffMimeLogoLeft, infoLogoLeft: any) {
 					if (errSniffMimeLogoLeft) {
 						failCallback("Error when detecting mimetype of logo left: "+JSON.stringify(errSniffMimeLogoLeft));
@@ -130,58 +153,83 @@ class PhotoboxUtils {
 									if (errOpenLogoLeft) {
 										failCallback("Error when opening left logo: "+JSON.stringify(errOpenLogoLeft));
 									} else {
-										lwip.open(localLogoRight, rightExtension, function (errOpenLogoRight, logoRight) {
-											if (errOpenLogoRight) {
-												failCallback("Error when opening right logo: "+JSON.stringify(errOpenLogoRight));
-											} else {
-												var newLogoLeftHeight : number = height;
-												var newLogoLeftWidth : number = Math.round((newLogoLeftHeight*logoLeft.width()) / logoLeft.height());
 
-												Logger.debug("Compute new dimension for logo left: H:"+newLogoLeftHeight+" | W:"+newLogoLeftWidth);
+										if (logoRightUrl) {
+											lwip.open(localLogoRight, rightExtension, function (errOpenLogoRight, logoRight) {
+												if (errOpenLogoRight) {
+													failCallback("Error when opening right logo: " + JSON.stringify(errOpenLogoRight));
+												} else {
+													var newLogoLeftHeight:number = height;
+													var newLogoLeftWidth:number = Math.round((newLogoLeftHeight * logoLeft.width()) / logoLeft.height());
 
-												var newLogoRightHeight : number = height;
-												var newLogoRightWidth : number = Math.round((newLogoRightHeight*logoRight.width()) / logoRight.height());
+													Logger.debug("Compute new dimension for logo left: H:" + newLogoLeftHeight + " | W:" + newLogoLeftWidth);
 
-												Logger.debug("Compute new dimension for logo right: H:"+newLogoRightHeight+" | W:"+newLogoRightWidth);
+													var newLogoRightHeight:number = height;
+													var newLogoRightWidth:number = Math.round((newLogoRightHeight * logoRight.width()) / logoRight.height());
 
-												if ((newLogoLeftWidth + newLogoRightWidth) > (width-50)) {
-													var maxSize = (width-50)/2;
+													Logger.debug("Compute new dimension for logo right: H:" + newLogoRightHeight + " | W:" + newLogoRightWidth);
 
-													Logger.debug("Sum of logo width is higher than image width + 50px. Max width: "+maxSize);
+													if ((newLogoLeftWidth + newLogoRightWidth) > (width - 50)) {
+														var maxSize = (width - 50) / 2;
 
-													if (newLogoLeftWidth > maxSize) {
-														newLogoLeftWidth = maxSize;
-														newLogoLeftHeight = Math.round((newLogoLeftWidth*logoLeft.height())/logoLeft.width());
+														Logger.debug("Sum of logo width is higher than image width + 50px. Max width: " + maxSize);
 
-														Logger.debug("Compute new logo left dimension: H:"+newLogoLeftHeight+"| W:"+newLogoLeftWidth);
-													}
+														if (newLogoLeftWidth > maxSize) {
+															newLogoLeftWidth = maxSize;
+															newLogoLeftHeight = Math.round((newLogoLeftWidth * logoLeft.height()) / logoLeft.width());
 
-
-													if (newLogoRightWidth > maxSize) {
-														newLogoRightWidth = maxSize;
-														newLogoRightHeight = Math.round((newLogoRightWidth*logoRight.height())/logoRight.width());
-														Logger.debug("Compute new logo right dimension: H:"+newLogoRightHeight+"| W:"+newLogoRightWidth);
-													}
-												}
-
-												// Try interpolation to solve http://jira.the6thscreen.fr/browse/SERVICES-151
-												logoLeft.batch().resize(newLogoLeftWidth, newLogoLeftHeight, "linear")
-													.writeFile(localLogoLeft, leftExtension, function (errWriteLogoLeft) {
-														if (errWriteLogoLeft) {
-															failCallback("Error when resizing logo left: "+JSON.stringify(errWriteLogoLeft));
-														} else {
-															logoRight.batch().resize(newLogoRightWidth, newLogoRightHeight, "linear")
-																.writeFile(localLogoRight, rightExtension, function (errWriteLogoRight) {
-																	if (errWriteLogoRight) {
-																		failCallback("Error when resizing logo right: "+JSON.stringify(errWriteLogoRight));
-																	} else {
-																		successResizingLogos();
-																	}
-																});
+															Logger.debug("Compute new logo left dimension: H:" + newLogoLeftHeight + "| W:" + newLogoLeftWidth);
 														}
-													});
-											};
-										})
+
+
+														if (newLogoRightWidth > maxSize) {
+															newLogoRightWidth = maxSize;
+															newLogoRightHeight = Math.round((newLogoRightWidth * logoRight.height()) / logoRight.width());
+															Logger.debug("Compute new logo right dimension: H:" + newLogoRightHeight + "| W:" + newLogoRightWidth);
+														}
+													}
+
+													// Try interpolation to solve http://jira.the6thscreen.fr/browse/SERVICES-151
+													logoLeft.batch().resize(newLogoLeftWidth, newLogoLeftHeight, "linear")
+														.writeFile(localLogoLeft, leftExtension, function (errWriteLogoLeft) {
+															if (errWriteLogoLeft) {
+																failCallback("Error when resizing logo left: " + JSON.stringify(errWriteLogoLeft));
+															} else {
+																logoRight.batch().resize(newLogoRightWidth, newLogoRightHeight, "linear")
+																	.writeFile(localLogoRight, rightExtension, function (errWriteLogoRight) {
+																		if (errWriteLogoRight) {
+																			failCallback("Error when resizing logo right: " + JSON.stringify(errWriteLogoRight));
+																		} else {
+																			successResizingLogos(width, height);
+																		}
+																	});
+															}
+														});
+												}
+											});
+										} else {
+											var newLogoLeftHeight:number = height-(borderPixel*2);
+											var newLogoLeftWidth:number = Math.round((newLogoLeftHeight * logoLeft.width()) / logoLeft.height());
+
+											var maxSize = (width - 50) / 2;
+											if (newLogoLeftWidth > maxSize) {
+												newLogoLeftWidth = maxSize;
+												newLogoLeftHeight = Math.round((newLogoLeftWidth * logoLeft.height()) / logoLeft.width());
+
+												Logger.debug("Compute new logo left dimension: H:" + newLogoLeftHeight + "| W:" + newLogoLeftWidth);
+											}
+
+											var realWidth = newLogoLeftWidth+(borderPixel*2);
+											var realHeight = newLogoLeftHeight+(borderPixel*2);
+											logoLeft.batch().resize(newLogoLeftWidth, newLogoLeftHeight, "linear")
+												.writeFile(localLogoLeft, leftExtension, function (errWriteLogoLeft) {
+													if (errWriteLogoLeft) {
+														failCallback("Error when resizing logo left: " + JSON.stringify(errWriteLogoLeft));
+													} else {
+														successResizingLogos(width, height);
+													}
+												});
+										}
 									}
 								});
 							}
@@ -192,7 +240,10 @@ class PhotoboxUtils {
 		};
 		Logger.debug("Download logo files...");
 		PhotoboxUtils.downloadFile(logoLeftUrl, localLogoLeft, successDownloadLogo, failCallback);
-		PhotoboxUtils.downloadFile(logoRightUrl, localLogoRight, successDownloadLogo, failCallback);
+
+		if (logoRightUrl) {
+			PhotoboxUtils.downloadFile(logoRightUrl, localLogoRight, successDownloadLogo, failCallback);
+		}
 	}
 
 	private static guessImageExtensionFromB64(data) {
@@ -278,6 +329,10 @@ class PhotoboxUtils {
 				Logger.debug("Opening success. Launch watermark creation.");
 				var watermark_width = image.width();
 				var watermark_height = (image.height() * 10) / 100;
+
+				if (!logoRight) {
+					watermark_height = (image.height() * 20) / 100;
+				}
 				PhotoboxUtils.createWatermark(watermark_width, watermark_height, logoLeft, logoRight, successCreateWatermark, fail);
 			}
 		});

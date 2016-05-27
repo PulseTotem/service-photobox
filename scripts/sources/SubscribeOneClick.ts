@@ -15,7 +15,7 @@ class SubscribeOneClick extends SourceItf {
 		Logger.debug(this.getParams());
 		this._isManagerInitialized = photoboxNamespaceManager.isClientInitialized();
 
-		if (this.checkParams(["InfoDuration","CMSAlbumId","CounterDuration","Limit","LogoLeftURL","LogoRightURL"])) {
+		if (this.checkParams(["InfoDuration","CMSAlbumId","CounterDuration","Limit","LogoLeftURL"])) {
 			photoboxNamespaceManager.setParams(params);
 			this.run();
 		}
@@ -25,11 +25,13 @@ class SubscribeOneClick extends SourceItf {
 		var self = this;
 		var infoDuration = parseInt(this.getParams().InfoDuration);
 		var counterDuration = this.getParams().CounterDuration;
+		var messages = this.getParams().Messages;
 
 		var cmd : Cmd = new Cmd(self.getParams().CMSAlbumId);
 		cmd.setDurationToDisplay(infoDuration);
 		cmd.setCmd("WaitOneClick");
 		cmd.setArgs(counterDuration);
+		cmd.setArgs(messages);
 
 		var list : CmdList = new CmdList(uuid.v1());
 		list.addCmd(cmd);

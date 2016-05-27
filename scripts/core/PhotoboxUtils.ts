@@ -122,7 +122,6 @@ class PhotoboxUtils {
 											failCallback("Error when pasting logos or writing final file: "+JSON.stringify(errPasteWrite));
 										} else {
 											fs.unlinkSync(localLogoLeft);
-											fs.unlinkSync(localLogoRight);
 											successCallback(pathWatermark);
 										}
 									});
@@ -132,7 +131,7 @@ class PhotoboxUtils {
 					});
 				}
 			};
-			Logger.debug("Create image with following dimension: W: "+width+" | H: "+height);
+			Logger.debug("Create image with following dimension: W: "+realWidth+" | H: "+realHeight);
 			lwip.create(realWidth, realHeight, {r: 255, g: 255, b: 255, a: 70}, successCreateImage);
 		};
 

@@ -144,17 +144,16 @@ class PhotoboxUtils {
 						failCallback("Error when detecting mimetype of logo left: "+JSON.stringify(errSniffMimeLogoLeft));
 					} else {
 						leftExtension = infoLogoLeft.extension;
-						mime.lookup(localLogoRight, function (errSniffMimeLogoRight, infoLogoRight : any) {
-							if (errSniffMimeLogoRight) {
-								failCallback("Error when detecting mimetype of logo right: "+JSON.stringify(errSniffMimeLogoRight));
+						lwip.open(localLogoLeft, leftExtension, function (errOpenLogoLeft, logoLeft) {
+							if (errOpenLogoLeft) {
+								failCallback("Error when opening left logo: "+JSON.stringify(errOpenLogoLeft));
 							} else {
-								rightExtension = infoLogoRight.extension;
-								lwip.open(localLogoLeft, leftExtension, function (errOpenLogoLeft, logoLeft) {
-									if (errOpenLogoLeft) {
-										failCallback("Error when opening left logo: "+JSON.stringify(errOpenLogoLeft));
-									} else {
-
-										if (logoRightUrl) {
+								if (logoRightUrl) {
+									mime.lookup(localLogoRight, function (errSniffMimeLogoRight, infoLogoRight:any) {
+										if (errSniffMimeLogoRight) {
+											failCallback("Error when detecting mimetype of logo right: " + JSON.stringify(errSniffMimeLogoRight));
+										} else {
+											rightExtension = infoLogoRight.extension;
 											lwip.open(localLogoRight, rightExtension, function (errOpenLogoRight, logoRight) {
 												if (errOpenLogoRight) {
 													failCallback("Error when opening right logo: " + JSON.stringify(errOpenLogoRight));
@@ -207,31 +206,31 @@ class PhotoboxUtils {
 														});
 												}
 											});
-										} else {
-											var newLogoLeftHeight:number = height-(borderPixel*2);
-											var newLogoLeftWidth:number = Math.round((newLogoLeftHeight * logoLeft.width()) / logoLeft.height());
-
-											var maxSize = (width - 50) / 2;
-											if (newLogoLeftWidth > maxSize) {
-												newLogoLeftWidth = maxSize;
-												newLogoLeftHeight = Math.round((newLogoLeftWidth * logoLeft.height()) / logoLeft.width());
-
-												Logger.debug("Compute new logo left dimension: H:" + newLogoLeftHeight + "| W:" + newLogoLeftWidth);
-											}
-
-											var realWidth = newLogoLeftWidth+(borderPixel*2);
-											var realHeight = newLogoLeftHeight+(borderPixel*2);
-											logoLeft.batch().resize(newLogoLeftWidth, newLogoLeftHeight, "linear")
-												.writeFile(localLogoLeft, leftExtension, function (errWriteLogoLeft) {
-													if (errWriteLogoLeft) {
-														failCallback("Error when resizing logo left: " + JSON.stringify(errWriteLogoLeft));
-													} else {
-														successResizingLogos(width, height);
-													}
-												});
 										}
+									});
+								} else {
+									var newLogoLeftHeight:number = height - (borderPixel * 2);
+									var newLogoLeftWidth:number = Math.round((newLogoLeftHeight * logoLeft.width()) / logoLeft.height());
+
+									var maxSize = (width - 50) / 2;
+									if (newLogoLeftWidth > maxSize) {
+										newLogoLeftWidth = maxSize;
+										newLogoLeftHeight = Math.round((newLogoLeftWidth * logoLeft.height()) / logoLeft.width());
+
+										Logger.debug("Compute new logo left dimension: H:" + newLogoLeftHeight + "| W:" + newLogoLeftWidth);
 									}
-								});
+
+									var realWidth = newLogoLeftWidth + (borderPixel * 2);
+									var realHeight = newLogoLeftHeight + (borderPixel * 2);
+									logoLeft.batch().resize(newLogoLeftWidth, newLogoLeftHeight, "linear")
+										.writeFile(localLogoLeft, leftExtension, function (errWriteLogoLeft) {
+											if (errWriteLogoLeft) {
+												failCallback("Error when resizing logo left: " + JSON.stringify(errWriteLogoLeft));
+											} else {
+												successResizingLogos(width, height);
+											}
+										});
+								}
 							}
 						});
 					}

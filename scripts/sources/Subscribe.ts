@@ -60,7 +60,6 @@ class Subscribe extends SourceItf {
 			var args : Array<string> = new Array<string>();
 			args.push(socketId);
 			args.push(appliUrl);
-			args.push(messages);
 
 			if (idLastPic !== null) {
 				var urlLastPic = PhotoboxUtils.getMediumUrlFromId(idLastPic);
@@ -70,6 +69,8 @@ class Subscribe extends SourceItf {
 			} else {
 				Logger.debug("IdLastPic:"+idLastPic);
 			}
+
+			args.push(messages);
 
 			cmd.setArgs(args);
 

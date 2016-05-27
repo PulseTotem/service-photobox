@@ -30,8 +30,8 @@ class SubscribeOneClick extends SourceItf {
 		var cmd : Cmd = new Cmd(self.getParams().CMSAlbumId);
 		cmd.setDurationToDisplay(infoDuration);
 		cmd.setCmd("WaitOneClick");
-		cmd.setArgs(counterDuration);
-		cmd.setArgs(messages);
+		cmd.pushArg(counterDuration);
+		cmd.pushArg(messages);
 
 		var list : CmdList = new CmdList(uuid.v1());
 		list.addCmd(cmd);

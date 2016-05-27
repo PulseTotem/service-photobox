@@ -211,7 +211,7 @@ class PhotoboxUtils {
 									var newLogoLeftHeight:number = height - (borderPixel * 2);
 									var newLogoLeftWidth:number = Math.round((newLogoLeftHeight * logoLeft.width()) / logoLeft.height());
 
-									var maxSize = (width - 50) / 2;
+									var maxSize = width / 4;
 									if (newLogoLeftWidth > maxSize) {
 										newLogoLeftWidth = maxSize;
 										newLogoLeftHeight = Math.round((newLogoLeftWidth * logoLeft.height()) / logoLeft.width());
@@ -328,9 +328,6 @@ class PhotoboxUtils {
 				var watermark_width = image.width();
 				var watermark_height = (image.height() * 10) / 100;
 
-				if (!logoRight) {
-					watermark_height = (image.height() * 15) / 100;
-				}
 				PhotoboxUtils.createWatermark(watermark_width, watermark_height, logoLeft, logoRight, successCreateWatermark, fail);
 			}
 		});

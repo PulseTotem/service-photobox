@@ -12,7 +12,7 @@ class Subscribe extends SourceItf {
 		Logger.debug("Retrieve subscribe with params:");
 		Logger.debug(this.getParams());
 
-		if (this.checkParams(["InfoDuration","CMSAlbumId","CounterDuration","Limit","AppliURL","LogoLeftURL"])) {
+		if (this.checkParams(["InfoDuration","CMSAlbumId","CounterDuration","Limit","AppliURL","LogoLeftURL","EndMessageDuration"])) {
 			photoboxNamespaceManager.setParams(params);
 			this.run();
 		}

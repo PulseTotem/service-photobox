@@ -15,7 +15,7 @@ class SubscribeOneClick extends SourceItf {
 		Logger.debug(this.getParams());
 		this._isManagerInitialized = photoboxNamespaceManager.isClientInitialized();
 
-		if (this.checkParams(["InfoDuration","CMSAlbumId","CounterDuration","Limit","LogoLeftURL"])) {
+		if (this.checkParams(["InfoDuration","CMSAlbumId","CounterDuration","Limit","LogoLeftURL","EndMessageDuration"])) {
 			photoboxNamespaceManager.setParams(params);
 			this.run();
 		}

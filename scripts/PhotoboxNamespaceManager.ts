@@ -349,7 +349,7 @@ class PhotoboxNamespaceManager extends SessionSourceNamespaceManager {
 	}
 
 	private endSession(idSession) {
-		var time = 3;
+		var time = parseInt(this.getParams().EndMessageDuration);
 		var cmd:Cmd = new Cmd(idSession);
 
 
